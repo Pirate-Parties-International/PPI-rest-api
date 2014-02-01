@@ -20,6 +20,7 @@ class AppKernel extends Kernel
             new JMS\DiExtraBundle\JMSDiExtraBundle($this),
             new Snc\RedisBundle\SncRedisBundle(),
             new JMS\AopBundle\JMSAopBundle(),
+            new PPI\ApiBundle\PPIApiBundle(),
         );
 
         if (in_array($this->getEnvironment(), array('dev', 'test', 'stage'))) {

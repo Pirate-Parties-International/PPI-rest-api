@@ -1,0 +1,5 @@
+ppi_api:
+    resource: "@PPIApiBundle/Controller/"
+    type:     annotation
+    prefix:   /
+

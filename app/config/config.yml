@@ -30,7 +30,7 @@ twig:
 assetic:
     debug:          %kernel.debug%
     use_controller: false
-    bundles:        [ MopaBootstrapBundle ]
+    bundles:        [ MopaBootstrapBundle, PPIApiBundle ]
     #java: /usr/bin/java
     filters:
         cssrewrite: ~
