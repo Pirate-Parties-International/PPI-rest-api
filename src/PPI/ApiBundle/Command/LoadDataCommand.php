@@ -56,6 +56,8 @@ class LoadDataCommand extends ContainerAwareCommand
         			$partyData->partyCode = $matches[2];
         		}
         	}
+            $partyData->lastUpdate = date('c');
+            $partyData->id = $partyKey;
         	$redis->set('ppi:orgs:' . $partyKey, json_encode($partyData));
         }
 
