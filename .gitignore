@@ -11,7 +11,8 @@
 /composer.phar
 /web/js/*
 /web/css/*
-data/
+/web/img/pp-flag/*
+/web/img/pp-logo/*
 *~
 
 *.sublime*
