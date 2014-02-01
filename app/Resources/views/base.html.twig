@@ -1,0 +1,165 @@
+{% from 'MopaBootstrapBundle::flash.html.twig' import session_flash %}
+
+<!DOCTYPE html>
+
+{% block html_tag %}
+<html>
+{% endblock html_tag %}
+
+{% block head %}
+<head>
+    <meta charset="UTF-8" />
+    {% block head_style %}
+    {# Override this block to add your own files! #}
+    {% stylesheets filter='?yui_css'
+        '@MopaBootstrapBundle/Resources/public/sass/mopabootstrapbundle.scss'
+        '@PiratiDashboardBundle/Resources/public/css/main.css'
+    %}
+    <link href="{{ asset_url }}" type="text/css" rel="stylesheet" media="screen" />
+    {% endstylesheets %}
+    {# To use this without less use the base_css.html.twig template as your base
+     # Be sure you understand whats going on: have a look into
+     # https://github.com/phiamo/MopaBootstrapBundle/blob/master/Resources/doc/css-vs-less.md
+     #}
+    {% endblock head_style %}
+    {% block extra_style %}{% endblock %}
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% block head_script %}
+    {# Overwrite this block to add your own js here, to get them generated into final files #}
+    {% javascripts
+        'http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'
+    %}
+        <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+    {% endblock head_script %}
+
+    <title>{% block title %}{% trans %}Pirate Dashboard{% endtrans %}{% endblock title %}</title>
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" />
+    {% block head_bottom %}
+    {% endblock head_bottom %}
+</head>
+{% endblock head %}
+
+{% block body_tag %}
+<body data-spy="scroll">
+{% endblock body_tag %}
+
+{% block body_start %}
+{% endblock body_start %}
+
+{% block body %}
+    {% block navbar %}
+    <div class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">Piratska nadzorna pološča</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="http://forum.piratskastranka.si/">{% trans %}Forum{% endtrans %}</a></li>
+            <li><a href="http://dokumenti.piratskastranka.si/w/Glavna_stran">{% trans %}Dokumenti{% endtrans %}</a></li>
+            <li><a href="http://wiki.piratskastranka.si/w/Glavna_stran">{% trans %}Wiki{% endtrans %}</a></li>
+            <li><a href="http://lists.piratskastranka.si/listinfo">{% trans %}Mailingliste{% endtrans %}</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Drugo <b class="caret"></b></a>
+              <ul class="dropdown-menu">
+                <li><a href="https://trello.com/piratskastranka1">Trello</a></li>
+                <li><a href="https://piratskastranka.piratenpad.de/">Pad</a></li>
+                <li><a href="https://www.facebook.com/groups/337353959646706/">FB: Piratske ideje</a></li>
+                <li><a href="https://www.facebook.com/groups/434339253244577/">FB: Prevodi</a></li>
+                <li><a href="https://www.facebook.com/groups/261831347249166/">FB: Produkcija</a></li>
+                <li><a href="https://www.facebook.com/groups/434339253244577/">FB: Prevodi</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Mednarodno</li>
+                <li><a href="http://pp-international.net/">Pirate Parties International</a></li>
+                <li><a href="http://wiki.pp-international.net/">PPI: Wiki</a></li>
+                <li><a href="http://www.pp-international.net/phpBB3/">PPI: Forum</a></li>
+                <li><a href="https://www.facebook.com/groups/Piraty/">FB: Mednarodna skupina</a></li>
+                <li><a href="http://piratetimes.net/">Pirate Times</a></li>
+                <li><a href="http://lists.pirateweb.net/mailman/listinfo/">Vse mednarodne mailingliste</a></li>
+              </ul>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="user-nav">
+                {% if app.user %}
+                    <a href="/profile"><img src="{{ asset('bundles/piratidashboard/images/mm.png') }}" style="width:30px; height: 30px; margin-right: 10px;">{{ app.user.username }}</a>
+                {% else %}
+                    <a href="/login">{% trans %}Login{% endtrans %}</a>
+                {% endif %}
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </div>
+    {% endblock navbar %}
+
+    {% block container %}
+    {% block container_div_start %}<div class="{% block container_class %}container{% endblock container_class %}">{% endblock container_div_start %}
+
+        {% block header %}
+        {% endblock header %}
+
+        {% block content_div_start %}<div class="content">{% endblock content_div_start %}
+            {% block page_header %}
+            
+            {% endblock page_header %}
+
+            {% block flashes %}
+                {% if app.session.flashbag.peekAll|length > 0 %}
+                <div class="row">
+                    <div class="col-sm-12">
+                    {{ session_flash() }}
+                    </div>
+                </div>
+                {% endif %}
+            {% endblock flashes %}
+
+            {% block content_row %}
+            
+            {% endblock content_row %}
+
+        {% block content_div_end %}</div>{% endblock content_div_end %}
+        <footer>
+            {% block footer %}
+            
+            {% endblock footer %}
+        </footer>
+    {% block container_div_end %}</div><!-- /container -->{% endblock container_div_end %}
+    {% endblock container %}
+    {% block foot_script %}
+    {# To only use a subset or add more js overwrite and copy paste this block
+    To speed up page loads save a copy of jQuery in your project and override this block to include the correct path
+    Otherwise the regeneration is done on every load in dev more with use_controller: true
+     #}
+     
+    {% javascripts
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/tooltip.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/affix.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/alert.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/button.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/carousel.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/collapse.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/dropdown.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/modal.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/popover.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/scrollspy.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/tab.js'
+        '@MopaBootstrapBundle/Resources/bootstrap-sass/js/transition.js'
+        '@MopaBootstrapBundle/Resources/public/js/mopabootstrap-collection.js'
+        '@MopaBootstrapBundle/Resources/public/js/mopabootstrap-subnav.js'
+        '@MopaBootstrapBundle/Resources/public/js/eyecon-bootstrap-datepicker.js'
+    %}
+        <script type="text/javascript" src="{{ asset_url }}"></script>
+    {% endjavascripts %}
+{% endblock foot_script %}
+{% endblock body %}
+</body>
+</html>

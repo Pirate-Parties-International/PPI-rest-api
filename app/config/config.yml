@@ -1,0 +1,86 @@
+imports:
+    - { resource: parameters.yml }
+    - { resource: security.yml }
+
+framework:
+    #esi:             ~
+    translator:      { fallback: %locale% }
+    secret:          %secret%
+    router:
+        resource: "%kernel.root_dir%/config/routing.yml"
+        strict_requirements: ~
+    form:            ~
+    csrf_protection: ~
+    validation:      { enable_annotations: true }
+    templating:
+        engines: ['twig']
+        #assets_version: SomeVersionScheme
+    default_locale:  "%locale%"
+    trusted_proxies: ~
+    session:         ~
+    fragments:       ~
+    http_method_override: true
+
+# Twig Configuration
+twig:
+    debug:            %kernel.debug%
+    strict_variables: %kernel.debug%
+
+# Assetic Configuration
+assetic:
+    debug:          %kernel.debug%
+    use_controller: false
+    bundles:        [ MopaBootstrapBundle ]
+    #java: /usr/bin/java
+    filters:
+        cssrewrite: ~
+        sass:
+            bin: /usr/local/bin/sass
+            apply_to: "\.sass$"
+        scss:
+            sass: /usr/local/bin/sass
+            apply_to: "\.scss$"        
+        yui_css:
+            jar: %kernel.root_dir%/Resources/java/yuicompressor-2.4.6.jar
+            apply_to: "\.css$"
+        yui_js:
+            jar: %kernel.root_dir%/Resources/java/yuicompressor-2.4.6.jar
+
+# Swiftmailer Configuration
+swiftmailer:
+    transport: %mailer_transport%
+    host:      %mailer_host%
+    username:  %mailer_user%
+    password:  %mailer_password%
+    spool:     { type: memory }
+
+mopa_bootstrap:
+    form:
+        show_legend: false # default is true
+        show_child_legend: false # default is true
+        error_type: block # or inline which is default
+
+snc_redis:
+    clients:
+        default:
+            type: predis
+            alias: default
+            dsn: redis://localhost
+            logging: %kernel.debug%
+        cache:
+            type: predis
+            alias: cache
+            dsn: redis://secret@localhost/1
+            options:
+                profile: 2.2
+                connection_timeout: 10
+                read_write_timeout: 30
+        session:
+            type: predis
+            alias: session
+            dsn: redis://localhost/2
+    session:
+        client: session
+        prefix: ppi-api
+        use_as_default: false
+        ttl: 1200

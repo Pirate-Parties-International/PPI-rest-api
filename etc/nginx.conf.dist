@@ -1,0 +1,33 @@
+server {
+  listen 80;
+ 
+  server_name ppi-rest-api.lan;
+ 
+  root /var/www/projects/pirates/PPI-rest-api/web;
+ 
+  include /etc/nginx/mime.types; 
+  error_log /var/www/projects/pirates/PPI-rest-api/app/logs/nginx_error.log;
+  access_log /var/www/projects/pirates/PPI-rest-api/app/logs/nginx_access.log;
+ 
+  # strip app.php/ prefix if it is present
+  rewrite ^/app_dev\.php/?(.*)$ /$1 permanent;
+ 
+  location / {
+    index app_dev.php;
+    try_files $uri @rewriteapp;
+  }
+ 
+  location @rewriteapp {
+    rewrite ^(.*)$ /app_dev.php/$1 last;
+  }
+ 
+  # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+  location ~ ^/(app|app_dev)\.php(/|$) {
+    fastcgi_pass   unix:/var/run/php-fpm.sock;
+    fastcgi_split_path_info ^(.+\.php)(/.*)$;
+    include fastcgi_params;
+    fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+    fastcgi_param  HTTPS              off;
+  }
+}
+
