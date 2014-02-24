@@ -20,15 +20,7 @@ class ApiController extends BaseController
      */
     public function partiesAction()
     {
-    	$redis = $this->getRedis();
-
-    	$keys = $redis->keys('ppi:orgs:*');
-    	
-    	$allData = array();
-    	foreach ($keys as $key) {
-    		$pdata = json_decode($redis->get($key));
-    		$allData[$pdata->id] = $pdata;
-    	}
+    	$allData = $this->getAllPartiesData();
 
 		return new JsonResponse($allData, 200);
     }
@@ -38,9 +30,9 @@ class ApiController extends BaseController
      * @Method({"GET"})
      */
     public function partyAction($id) {
-    	$redis = $this->getRedis();
+    	
+        $data = $this->getOnePartyData($id);
 
-    	$data = $redis->get('ppi:orgs:' . $id);
     	if ($data === null) {
     		return new JsonResponse(array("error"=>"Party with this ID does not exsist"), 404);
     	}

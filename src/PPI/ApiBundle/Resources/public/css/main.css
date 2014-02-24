@@ -1,0 +1,96 @@
+/* Space out content a bit */
+body {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+/* Everything but the jumbotron gets side spacing for mobile first views */
+.header,
+.marketing,
+.footer {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+/* Make the masthead heading the same height as the navigation */
+.header h3 {
+  margin-top: 0;
+  margin-bottom: 0;
+  line-height: 40px;
+  padding-bottom: 19px;
+}
+
+/* Custom page footer */
+.footer {
+  padding-top: 19px;
+  color: #777;
+  border-top: 1px solid #e5e5e5;
+}
+
+/* Customize container */
+@media (min-width: 768px) {
+  .container {
+    max-width: 730px;
+  }
+}
+.container-narrow > hr {
+  margin: 30px 0;
+}
+
+h1, .other-lables {
+  text-align: center;
+}
+
+.header-image {
+  display: block;
+  max-width: 150px;
+  max-height: 150px;
+  margin: 15px auto 25px auto;
+
+}
+
+.party-list {
+  list-style-type: none;
+  display: block;
+  margin: 20px auto 20px 130px;
+  max-width: 560px;
+  padding: 0 0 0 0;
+
+  columns: 2;
+  -webkit-columns: 2;
+  -moz-columns: 2;
+}
+
+.party-list li {
+  margin-top: 30px;
+}
+
+.party-list-api-link a {
+  color: gray;
+  font-size: small;
+}
+
+.party-list-api-link {
+  margin-left: 50px;
+}
+/*  PARTY DETAIL */
+.party-elements {
+  list-style-type: none;
+  display: block;
+  margin: 50px auto 20px 130px;
+  max-width: 560px;
+  padding: 0 0 0 0;
+
+  columns: 2;
+  -webkit-columns: 2;
+  -moz-columns: 2;
+}
+
+.party-element {
+  margin: 30px 0 0 0;
+
+}
+
+.fa-twitter {
+  font-size: 30px;
+}

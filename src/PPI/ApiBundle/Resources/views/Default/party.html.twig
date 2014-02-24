@@ -1,0 +1,99 @@
+{% extends '::base.html.twig' %}
+
+{% block title %}{% trans %}PPI API{% endtrans %}{% endblock %}
+
+{% block header %}
+    <div class="header">
+        <ul class="nav nav-pills pull-right">
+        	<li><a href="/">Home</a></li>
+            <li class="active"><a href="/doc/v1/">API Documentation</a></li>
+        </ul>
+        <h3 class="text-muted">PPI API</h3>
+    </div>
+{% endblock header %}
+
+{% block page_header %}
+	{% if party.logo %}
+		<img class="header-image" src="{{ party.logo }}">
+	{% else %}
+		<img class="header-image" src="/bundles/ppiapi/images/pp.png">
+	{% endif %}
+	<h1>{{ party.label }}</h1>
+	<div class="other-lables">{{ party.nativeLabel }}</div>
+{% endblock page_header %}
+
+{% block content_row %}
+	<ul class="party-elements">
+
+		{# Basic information #}
+		<li>
+			<dl>
+			  <dt>Country</dt>
+			  <dd>{{ party.country }}</dd>
+			  <dt>Type of organisation</dt>
+			  <dd>{{ party.type }}</dd>
+			  <dt>Party Code</dt>
+			  <dd>{{ party.partyCode }}</dd>
+			  {# <dt>PPI Membership</dt>
+			  <dd>{{ party.membership.ppi }}</dd>
+			  <dt>PPEU Membership</dt>
+			  <dd>unknown</dd> #}
+			</dl>
+		</li>
+
+		{# contact #}
+		{% if party.contact.general %}
+		    <li class="party-element element-contact">
+		    	{% if party.contact.general.email %}
+		    		{{ party.contact.general.email }}
+		    	{% else %}
+		    		<a href="{{ party.contact.general.url }}">{{ party.contact.general.url }}</a>
+		    	{% endif %}
+		    </li>
+		{% endif %}
+
+
+		{# WEBSITES #}
+		{% if party.websites %}
+			{% for website in party.websites %}
+			    <li class="party-element element-website">
+			    	<a href="{{ website }}">{{ website }}</a>
+			    </li>
+			{% endfor %}
+		{% endif %}
+
+		{# Facebook #}
+		{% if party.socialNetworks.facebook %}
+		    <li class="party-element element-facebook">
+		    	<a href="https://www.facebook.com/{{ party.socialNetworks.facebook.username }}">{{ party.socialNetworks.facebook.username }}</a>
+		    </li>
+		{% endif %}
+
+		{# Twitter #}
+		{% if party.socialNetworks.twitter %}
+		    <li class="party-element element-twitter">
+		    	<i class="fa fa-twitter"></i>
+
+		    	<a href="https://twitter.com/{{ party.socialNetworks.twitter.username }}">@{{ party.socialNetworks.twitter.username }}</a>
+		    </li>
+		{% endif %}
+
+		{# googlePlus #}
+		{% if party.socialNetworks.googlePlus %}
+		    <li class="party-element element-googlePlus">
+		    	<a href="https://plus.google.com/{{ party.socialNetworks.googlePlus }}">Official page</a>
+		    </li>
+		{% endif %}
+
+		{# youtube #}
+		{% if party.socialNetworks.youtube %}
+		    <li class="party-element element-youtube">
+		    	<a href="http://www.youtube.com/{{ party.socialNetworks.youtube }}">{{ party.socialNetworks.youtube }}</a>
+		    </li>
+		{% endif %}
+
+
+
+
+	</ul>
+{% endblock content_row %}

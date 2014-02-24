@@ -75,12 +75,12 @@ snc_redis:
                 profile: 2.2
                 connection_timeout: 10
                 read_write_timeout: 30
-        session:
-            type: predis
-            alias: session
-            dsn: redis://localhost/2
-    session:
-        client: session
-        prefix: ppi-api
-        use_as_default: false
-        ttl: 1200
+    #     session:
+    #         type: predis
+    #         alias: session
+    #         dsn: redis://localhost/2
+    # session:
+    #     client: session
+    #     prefix: ppi-api
+    #     use_as_default: false
+    #     ttl: 1200

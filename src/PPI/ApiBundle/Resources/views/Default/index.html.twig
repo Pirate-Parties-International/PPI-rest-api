@@ -1,1 +1,16 @@
-Hello {{ name }}!
+{% extends '::base.html.twig' %}
+
+{% block title %}{% trans %}PPI API{% endtrans %}{% endblock %}
+
+{% block page_header %}
+	<img class="header-image" src="/bundles/ppiapi/images/pp.png">
+	<h1>International Pirate Parties</h1>
+{% endblock page_header %}
+
+{% block content_row %}
+	<ul class="party-list">
+	{% for party in parties %}
+		<li><a href="{{ party.link }}">{{ party.label }}</a> <div class="party-list-api-link"><a href="{{ party.apiLink }}">{{ party.apiLink }}</a></div></li>
+	{% endfor %}
+	</ul>
+{% endblock content_row %}

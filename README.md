@@ -20,6 +20,13 @@ cap dev deploy
 Manual Deploy
 ------
 
+### Retrive repo
+
+    git clone
+
+    git submodule init
+
+
 ### Configure nginx
 Copy etc/nginx.conf.dist to etc/nginx.conf and configure it
 
@@ -54,3 +61,13 @@ Install dependencies
 
 ### Install redis (don't forget about security)
 	sudo apt-get install redis-server
+
+Notes
+-----
+
+This repo includes the following repo as a git submodule
+
+https://github.com/Pirate-Parties-International/PPI-party-info
+
+This submodule includes all the data that the API serves. All data updates go thrugh that repo via pull requests.
+
