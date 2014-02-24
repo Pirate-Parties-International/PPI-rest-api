@@ -1,6 +1,6 @@
-set :application, "PPI REST API"
-set :domain,      "api.piratetimes.net"
-set :deploy_to,   "/var/www/sites/ppi/"
+set :application, "PPI rest api"
+set :domain,      "deploy.pss.web"
+set :deploy_to,   "/var/www/sites/ppi/rest-api.dev"
 set :app_path,    "app"
 set :user,        "deploy"
 

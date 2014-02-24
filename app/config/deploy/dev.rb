@@ -1,2 +1,3 @@
-server 'deploy.pss.central', :app, :web, :primary => true
-set :deploy_to,   "/var/www/sites/sso.dev"
+server 'deploy.pss.web', :app, :web, :primary => true
+
+set :deploy_to,   "/var/www/sites/ppi/rest-api.dev"
