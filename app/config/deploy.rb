@@ -11,6 +11,7 @@ set :repository,  "git@github.com:Putr/PPI-rest-api.git"
 set :scm,         :git
 set :branch,      "master"
 set :deploy_via, :remote_cache
+set :git_enable_submodules, 1
 
 set :use_composer, true
 set :update_vendors, false # to update vendors just change to true before deploy

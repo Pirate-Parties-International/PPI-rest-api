@@ -23,8 +23,8 @@
         "sonata-project/easy-extends-bundle": "2.1.*",
         "kriswallsmith/assetic": "@dev",
         "mopa/bootstrap-bundle": "dev-master",
-        "twbs/bootstrap": "v3.0.0",
-        "jlong/sass-twitter-bootstrap": "3.0.x",
+        "twbs/bootstrap-sass": "3.1.*",
+
         "jms/security-extra-bundle": "1.5.x-dev",
         "snc/redis-bundle": "1.1.x-dev",
         "predis/predis": "0.8.x-dev"
