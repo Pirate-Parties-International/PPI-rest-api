@@ -3,6 +3,7 @@
 {% block title %}{% trans %}PPI API{% endtrans %}{% endblock %}
 
 {% block header %}
+
     <div class="header">
         <ul class="nav nav-pills pull-right">
         	<li><a href="/">Home</a></li>
@@ -23,77 +24,96 @@
 {% endblock page_header %}
 
 {% block content_row %}
-	<ul class="party-elements">
-
 		{# Basic information #}
-		<li>
-			<dl>
-			  <dt>Country</dt>
-			  <dd>{{ party.country }}</dd>
-			  <dt>Type of organisation</dt>
-			  <dd>{{ party.type }}</dd>
-			  <dt>Party Code</dt>
-			  <dd>{{ party.partyCode }}</dd>
-			  {# <dt>PPI Membership</dt>
-			  <dd>{{ party.membership.ppi }}</dd>
-			  <dt>PPEU Membership</dt>
-			  <dd>unknown</dd> #}
-			</dl>
-		</li>
 
-		{# contact #}
-		{% if party.contact.general %}
-		    <li class="party-element element-contact">
-		    	{% if party.contact.general.email %}
-		    		{{ party.contact.general.email }}
-		    	{% else %}
-		    		<a href="{{ party.contact.general.url }}">{{ party.contact.general.url }}</a>
-		    	{% endif %}
-		    </li>
-		{% endif %}
+<div class="panel panel-default">
+  <div class="panel-heading">Basic info</div>
+  <div class="panel-body">
+    <dl class="dl-horizontal">
+	  <dt>Country</dt>
+	  <dd>{{ party.country }}</dd>
+	  <dt>Type of organisation</dt>
+	  <dd>{{ party.type|capitalize }}</dd>
+	  <dt>Party Code</dt>
+	  <dd>{{ party.partyCode }}</dd>
+	  {# <dt>PPI Membership</dt>
+	  <dd>{{ party.membership.ppi }}</dd>
+	  <dt>PPEU Membership</dt>
+	  <dd>unknown</dd> #}
+	</dl>
+  </div>
+</div>
 
 
-		{# WEBSITES #}
-		{% if party.websites %}
-			{% for website in party.websites %}
-			    <li class="party-element element-website">
-			    	<a href="{{ website }}">{{ website }}</a>
-			    </li>
+{# contact #}
+{% if party.contact.general %}
+    <div class="panel panel-default">
+		<div class="panel-heading">Contact</div>
+		<div class="panel-body">
+			{% if party.contact.general.email %}
+				<dl class="dl-horizontal">
+					  <dt>Email</dt>
+					  <dd>{{ party.contact.general.email }}</dd>
+				</dl>
+	    		
+	    	{% else %}
+	    		<dl class="dl-horizontal">
+					  <dt>URL</dt>
+					  <dd><a href="{{ party.contact.general.url }}">{{ party.contact.general.url }}</a></dd>
+				</dl>
+	    	{% endif %}
+	</div>
+</div>
+{% endif %}
+
+{# WEBSITES #}
+{% if party.websites %}
+<div class="panel panel-default">
+	<div class="panel-heading">Websites</div>
+	<div class="panel-body">
+		<dl class="dl-horizontal">
+			{% for wtype, website in party.websites %}
+				<dt>{{ wtype|capitalize }}</dt>
+				<dd><a href="{{ website }}">{{ website }}</a></dd>
 			{% endfor %}
-		{% endif %}
+		</dl>
+</div>
+</div>
+{% endif %}	
 
-		{# Facebook #}
-		{% if party.socialNetworks.facebook %}
-		    <li class="party-element element-facebook">
-		    	<a href="https://www.facebook.com/{{ party.socialNetworks.facebook.username }}">{{ party.socialNetworks.facebook.username }}</a>
-		    </li>
-		{% endif %}
+{# SOCIAL #}
 
-		{# Twitter #}
-		{% if party.socialNetworks.twitter %}
-		    <li class="party-element element-twitter">
-		    	<i class="fa fa-twitter"></i>
+<div class="panel panel-default">
+	<div class="panel-heading">Social</div>
+	<div class="panel-body">
+	
+		<dl class="dl-horizontal">
+			{# Facebook #}
+			{% if party.socialNetworks.facebook %}
+				<dt>Facebook</dt>
+				<dd><a href="https://www.facebook.com/{{ party.socialNetworks.facebook.username }}">{{ party.socialNetworks.facebook.username }}</a></dd>
+			{% endif %}
 
-		    	<a href="https://twitter.com/{{ party.socialNetworks.twitter.username }}">@{{ party.socialNetworks.twitter.username }}</a>
-		    </li>
-		{% endif %}
+			{# Twitter #}
+			{% if party.socialNetworks.twitter %}
+				<dt>Twitter</dt>
+				<dd><a href="https://twitter.com/{{ party.socialNetworks.twitter.username }}">@{{ party.socialNetworks.twitter.username }}</a></dd>
+			{% endif %}
 
-		{# googlePlus #}
-		{% if party.socialNetworks.googlePlus %}
-		    <li class="party-element element-googlePlus">
-		    	<a href="https://plus.google.com/{{ party.socialNetworks.googlePlus }}">Official page</a>
-		    </li>
-		{% endif %}
+			{# googlePlus #}
+			{% if party.socialNetworks.googlePlus %}
+				<dt>Google+</dt>
+				<dd><a href="https://plus.google.com/{{ party.socialNetworks.googlePlus }}">Official page</a></dd>
+			{% endif %}
 
-		{# youtube #}
-		{% if party.socialNetworks.youtube %}
-		    <li class="party-element element-youtube">
-		    	<a href="http://www.youtube.com/{{ party.socialNetworks.youtube }}">{{ party.socialNetworks.youtube }}</a>
-		    </li>
-		{% endif %}
+			{# youtube #}
+			{% if party.socialNetworks.youtube %}
+				<dt>YouTube</dt>
+				<dd><a href="http://www.youtube.com/{{ party.socialNetworks.youtube }}">{{ party.socialNetworks.youtube }}</a></dd>
+			{% endif %}
+		</dl>
 
-
-
-
-	</ul>
+	</div>
+</div>
+	
 {% endblock content_row %}

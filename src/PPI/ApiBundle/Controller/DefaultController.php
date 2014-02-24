@@ -55,8 +55,18 @@ class DefaultController extends BaseController
 		if ($logo !== null) {
 			$party->logo = $logo;
 		}	
+        $party->websites = (array) $party->websites;
     	// var_dump($party); die;
         return array("party" => $party);
+    }
+
+    /**
+     * @Route("/doc/v1/")
+     * @Template()
+     */
+    public function docAction()
+    {
+        return array();
     }
 
 

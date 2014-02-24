@@ -37,7 +37,6 @@ class ApiController extends BaseController
     		return new JsonResponse(array("error"=>"Party with this ID does not exsist"), 404);
     	}
 
-    	$data = json_decode($data);
     	return new JsonResponse($data, 200);
     }
 

@@ -74,23 +74,7 @@ h1, .other-lables {
   margin-left: 50px;
 }
 /*  PARTY DETAIL */
-.party-elements {
-  list-style-type: none;
-  display: block;
-  margin: 50px auto 20px 130px;
-  max-width: 560px;
-  padding: 0 0 0 0;
 
-  columns: 2;
-  -webkit-columns: 2;
-  -moz-columns: 2;
-}
-
-.party-element {
-  margin: 30px 0 0 0;
-
-}
-
-.fa-twitter {
-  font-size: 30px;
+.other-lables { 
+  padding-bottom: 50px;
 }

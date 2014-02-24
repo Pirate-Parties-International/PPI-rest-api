@@ -14,8 +14,19 @@ Install rest via manual deploy
 Capistrano deploy
 -----------------
 
-cap dev deploy
+First, make sure to properly configure the app/config/deploy.rb and /app/config/deploy/* files
 
+Then, start setup
+
+    cap dev:setup
+
+Deploy to target
+    cap dev deploy
+
+Load data
+    cap dev symfony
+
+Execute command "ppi:api:loadData"
 
 Manual Deploy
 ------
@@ -49,7 +60,7 @@ Install dependencies
 
 ### Install SASS
 - Java
-- youcompressor
+- yuicompressor (see app/Resources/java)
 - sudo apt-get install ruby rubygems
 - gem install sass
 

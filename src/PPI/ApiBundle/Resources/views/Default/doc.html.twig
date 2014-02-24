@@ -1,0 +1,22 @@
+{% extends '::base.html.twig' %}
+
+{% block title %}{% trans %}PPI API{% endtrans %}{% endblock %}
+
+{% block page_header %}
+	<img class="header-image" src="/bundles/ppiapi/images/pp.png">
+	<h1>PPI Documentation</h1>
+{% endblock page_header %}
+
+{% block header %}
+    <div class="header">
+        <ul class="nav nav-pills pull-right">
+        	<li><a href="/">Home</a></li>
+            <li class="active"><a href="/doc/v1/">API Documentation</a></li>
+        </ul>
+        <h3 class="text-muted">PPI API</h3>
+    </div>
+{% endblock header %}
+
+{% block content_row %}
+	<div style="margin-top: 40px"><p>Documentation to be added. For now you can find quite a bit about data structure here in the <a href="https://github.com/Pirate-Parties-International/PPI-party-info"> data github repo.</a></p></div>
+{% endblock content_row %}
