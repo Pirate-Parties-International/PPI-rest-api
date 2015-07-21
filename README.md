@@ -80,5 +80,5 @@ This repo includes the following repo as a git submodule
 
 https://github.com/Pirate-Parties-International/PPI-party-info
 
-This submodule includes all the data that the API serves. All data updates go thrugh that repo via pull requests.
+This submodule includes all the data that the API serves. All data updates go through that repo via pull requests.
 
