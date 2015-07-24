@@ -13,6 +13,7 @@
 /web/css/*
 /web/img/pp-flag/*
 /web/img/pp-logo/*
+/web/fonts/*
 *~
 
 *.sublime*

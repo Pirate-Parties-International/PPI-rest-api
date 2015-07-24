@@ -1,9 +1,9 @@
 <?php
 
-namespace PPI\ApiBundle;
+namespace AppBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class PPIApiBundle extends Bundle
+class AppBundle extends Bundle
 {
 }

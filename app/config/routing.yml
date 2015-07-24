@@ -1,5 +1,3 @@
-ppi_api:
-    resource: "@PPIApiBundle/Controller/"
+app:
+    resource: "@AppBundle/Controller/"
     type:     annotation
-    prefix:   /
-
