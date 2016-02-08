@@ -7,7 +7,7 @@ set :user,        "deploy"
 role :web,        domain                         # Your HTTP server, Apache/etc
 role :app,        domain, :primary => true       # This may be the same as your `Web` server
 
-set :repository,  "git@github.com:Putr/PPI-rest-api.git"
+set :repository,  "git@github.com:Pirate-Parties-International/PPI-rest-api.git"
 set :scm,         :git
 set :branch,      "master"
 set :deploy_via, :remote_cache
