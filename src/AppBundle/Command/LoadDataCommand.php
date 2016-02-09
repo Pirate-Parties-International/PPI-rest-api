@@ -58,7 +58,7 @@ class LoadDataCommand extends ContainerAwareCommand
             preg_match('/.+\/(([a-zA-Z-]+)\.(png|jpg))$/i', $logoPath, $matches);
             $filename = $matches[1];
             copy($logoPath, $logoDir . $filename);
-            $redis->set('ppi:logos:' . strtolower($logoKey), '/img/pp-logo/' . $filename);
+            $redis->set('ppi:logos:pp' . strtolower($logoKey), '/img/pp-logo/' . $filename);
         }
 
         $this->log("Processing flags");

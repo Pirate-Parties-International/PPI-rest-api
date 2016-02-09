@@ -41,6 +41,10 @@ class BaseController extends Controller
 		$redis = $this->getRedis();
 
     	$data = $redis->get('ppi:logos:' . $id);
+
+    	if (!$data) {
+    		$data = '/img/generic.png';
+    	}
     	return $data;
 	}
 
