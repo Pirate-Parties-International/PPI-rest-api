@@ -23,7 +23,7 @@ Clone the repository
 
 ### Setup permissions
 
-[Follow instucrions here][http://symfony.com/doc/current/book/installation.html#book-installation-permissions] or, if you use Ubuntu just do:
+[Follow instucrions here](http://symfony.com/doc/current/book/installation.html#book-installation-permissions) or, if you use Ubuntu just do:
 
 Install setfacl
 
@@ -35,7 +35,7 @@ Setup permission
 
 ### Install dependencies
 
-Install composer [globally][https://getcomposer.org/doc/00-intro.md#globally]
+Install composer [globally](https://getcomposer.org/doc/00-intro.md#globally)
 
     curl -sS https://getcomposer.org/installer | php
     mv composer.phar /usr/local/bin/composer
@@ -64,7 +64,7 @@ Update your:
 
 * project paths
 * php-fpm sock file path
-* server_name (I recommend dashbaord.lan, with an alias in /etc/hosts file)
+* server_name (I recommend dashboard.lan, with an alias in /etc/hosts file)
 
 ### Install assets
 
