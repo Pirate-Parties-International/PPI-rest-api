@@ -7,12 +7,14 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use Pirates\PapiInfo\Compile;
+
 class LoadDataCommand extends ContainerAwareCommand
 {
     protected function configure()
     {
         $this
-            ->setName('ppi:api:loadData')
+            ->setName('api:loadData')
             ->setDescription('Load JSON data into redis')
         ;
     }
@@ -26,8 +28,9 @@ class LoadDataCommand extends ContainerAwareCommand
         $appRoot = $this->container->get('kernel')->getRootDir() . '/..';
 
         $this->log("Starting data import");
-        define('INCLUDE_RETURN_DATA', true);
-        $data = include 'data/compile.php';
+        
+        $compile = new Compile;
+        $data = $compile->getAllData();
 
         $this->log("Data retrived sucessfully");
 
@@ -35,7 +38,7 @@ class LoadDataCommand extends ContainerAwareCommand
 
         $this->log(sprintf("Processing meta data for %s organisations.", count($data)));
 
-        foreach ($data['data'] as $partyKey => $partyData) {
+        foreach ($data as $partyKey => $partyData) {
         	$this->log("    - Processing " . $partyKey);
             $partyData->lastUpdate = date('c');
         	$redis->set('ppi:orgs:' . strtolower($partyKey), json_encode($partyData));
@@ -50,7 +53,8 @@ class LoadDataCommand extends ContainerAwareCommand
             mkdir($logoDir, 0755, true);
         }
 
-        foreach ($data['logo'] as $logoKey => $logoPath) {
+        $logos = $compile->getLogoFiles();
+        foreach ($logos as $logoKey => $logoPath) {
             preg_match('/.+\/(([a-zA-Z-]+)\.(png|jpg))$/i', $logoPath, $matches);
             $filename = $matches[1];
             copy($logoPath, $logoDir . $filename);
@@ -64,7 +68,8 @@ class LoadDataCommand extends ContainerAwareCommand
             mkdir($flagDir, 0755, true);
         }
 
-        foreach ($data['flag'] as $flagKey => $flagPath) {
+        $flags = $compile->getFlagFiles();
+        foreach ($flags as $flagKey => $flagPath) {
             preg_match('/.+\/(([a-zA-Z-]+)\.(png|jpg))$/i', $flagPath, $matches);
             $filename = $matches[1];
             copy($flagPath, $flagDir . $filename);
