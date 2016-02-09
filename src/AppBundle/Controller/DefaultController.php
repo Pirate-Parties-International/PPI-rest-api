@@ -5,11 +5,13 @@ namespace AppBundle\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 
 class DefaultController extends BaseController
 {
     /**
      * @Route("/")
+     * @Template()
      */
     public function indexAction()
     {
@@ -34,6 +36,7 @@ class DefaultController extends BaseController
 
     /**
      * @Route("/party/{id}")
+     * @Template()
      */
     public function partyAction($id)
     {
@@ -58,11 +61,4 @@ class DefaultController extends BaseController
         return array("party" => $party);
     }
 
-    /**
-     * @Route("/doc/v1/")
-     */
-    public function docAction()
-    {
-        return array();
-    }
 }
