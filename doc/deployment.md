@@ -54,7 +54,7 @@ Explanation:
 
 Go to config folder
 
-    mv etc/
+    cd etc/
 
 Copy distribution file
 
