@@ -27,7 +27,8 @@
         "stof/doctrine-extensions-bundle": "1.1.*",
         "snc/redis-bundle": "1.1.x-dev",
         "predis/predis": "1.0.x",
-        "pirates/papi-info": "^1.0@alpha"
+        "pirates/papi-info": "^1.0@alpha",
+        "nelmio/api-doc-bundle": "^2.11"
     },
     "require-dev": {
         "sensio/generator-bundle": "~3.0",
