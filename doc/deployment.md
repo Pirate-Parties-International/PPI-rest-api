@@ -58,7 +58,7 @@ Go to config folder
 
 Copy distribution file
 
-    cp nginx.conf.dist ngnix.conf
+    cp nginx.conf.dist nginx.conf
 
 Update your:
 
