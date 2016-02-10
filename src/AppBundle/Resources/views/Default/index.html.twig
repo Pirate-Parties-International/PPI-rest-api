@@ -22,19 +22,19 @@
 	                    		<img src="{{ party.logo }}" class="valign">
 	                    	</div>
 	                    	<div class="col s9 valign pplabel">
-		                        <h5 class=""><a href="{{ party.link }}">{{ party.label }}</a></h5>
+		                        <h5 class=""><a href="{{ path('papi_party_show', {'id': party.code}) | lower }}">{{ party.name.en }}</a></h5>
 		                        <p class="left-align">
 		                        	<div class="chip">
-									    {{ party.type | title }}
+									    {{ party.type | humanize }}
 									</div>
 
 									{% if party.membership %}
-										{% if party.membership.ppeu %}
+										{% if party.membership.ppeu is defined and party.membership.ppeu %}
 											<div class="chip">
 											    PPEU
 											</div>
 										{% endif %}
-										{% if party.membership.ppi %}
+										{% if party.membership.ppi is defined and party.membership.ppi %}
 											<div class="chip">
 											    PPI
 											</div>
