@@ -6,11 +6,21 @@ use Doctrine\ORM\Mapping as ORM;
 
 use AppBundle\Entity\IntOrgMembership;
 
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Exclude;
+use JMS\Serializer\Annotation\Expose;
+use JMS\Serializer\Annotation\AccessorOrder;
+use JMS\Serializer\Annotation\SerializedName;
+use JMS\Serializer\Annotation\Accessor;
+use JMS\Serializer\Annotation\Type as SerializerType;
+
 /**
  * Party
  *
  * @ORM\Table(name="party")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\PartyRepository")
+ * @ExclusionPolicy("none")
+ * @AccessorOrder("custom", custom = {"code"})
  */
 class Party
 {
@@ -20,6 +30,7 @@ class Party
      * @ORM\Column(name="id", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @Exclude
      */
     private $id;
 
@@ -102,6 +113,9 @@ class Party
 
     /**
      * @ORM\OneToMany(targetEntity="IntOrgMembership", mappedBy="party", cascade={"persist"})
+     * @Accessor(getter="getMembership")
+     * @SerializedName("membership")
+     * @SerializerType("array")
      */
     private $intMemberships;
 
@@ -114,11 +128,24 @@ class Party
 
     /**
      * @var string
-     *
+     * @Expose
      * @ORM\Column(name="countryFlag", type="string", length=50, nullable=true)
      */
     private $countryFlag;
 
+    /**
+     * @var string
+     * @Expose
+     */
+    private $membership;
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->intMemberships = new \Doctrine\Common\Collections\ArrayCollection();
+    }
 
     /**
      * Get id
@@ -129,6 +156,20 @@ class Party
     {
         return $this->id;
     }
+
+    /**
+     * Get membership
+     *
+     * @return array
+     */
+    public function getMembership() {
+        $out = [];
+        foreach ($this->intMemberships as $key => $value) {
+            $out[strtolower($value->getIntOrg()->getCode())] = $value->getType();
+        }
+        return $out;
+    }
+
 
     /**
      * Set code
@@ -392,13 +433,6 @@ class Party
     public function getContact()
     {
         return $this->contact;
-    }
-    /**
-     * Constructor
-     */
-    public function __construct()
-    {
-        $this->intMemberships = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**

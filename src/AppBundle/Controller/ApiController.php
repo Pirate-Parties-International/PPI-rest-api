@@ -32,9 +32,11 @@ class ApiController extends BaseController
      */
     public function partiesAction()
     {
-    	$allData = $this->getAllPartiesData();
+    	$allData = $this->getAllParties();
 
-		return new JsonResponse($allData, 200);
+        $serializer = $this->get('jms_serializer');
+        $allData = $serializer->serialize($allData, 'json');
+		return new Response($allData, 200);
     }
 
     /**
@@ -57,13 +59,16 @@ class ApiController extends BaseController
      */
     public function partyAction($id) {
     	
-        $data = $this->getOnePartyData($id);
+        $data = $this->getOneParty($id);
+
+        $serializer = $this->get('jms_serializer');
+        $data = $serializer->serialize($data, 'json');
 
     	if ($data === null) {
     		return new JsonResponse(array("error"=>"Party with this ID does not exsist"), 404);
     	}
 
-    	return new JsonResponse($data, 200);
+    	return new Response($data, 200);
     }
 
 
