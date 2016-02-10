@@ -3,15 +3,15 @@ Deployment
 
 ## Note
 
-This repo includes the following repo as a git submodule
+This repo includes the following repo as a capistrano dependency
 
 https://github.com/Pirate-Parties-International/PPI-party-info
 
-This submodule includes all the data that the API serves. All data updates go through that repo via pull requests.
+This repo includes all the data that the API serves. All data updates go through that repo via pull requests.
 
 ## 1) Prerequesits
 
-Nginx, php5-fpm, redis
+Nginx, php5-fpm, MySQL
 
 ## 2) Deployment (development)
 
@@ -66,18 +66,20 @@ Update your:
 * php-fpm sock file path
 * server_name (I recommend dashboard.lan, with an alias in /etc/hosts file)
 
-### Install assets
+### Setup DB
 
-    sudo apt-get install nodejs npm
+First setup the schema:
 
-Make sure nodejs is installed at /usr/bin/node, if it installed elsewhere symlink it there.
+    php app/console doctrine:schema:create
 
-    npm install -g less
+Run fixtures import
 
-    php app/console assets:dump
-    php app/console assets:install --symlink
+    php app/console doctrine:fixtures:load
 
-(you can also use assets:watch)
+Than run the data import:
+
+    php app/console papi:loadData
+
 
 
 ## Production deploy
@@ -99,4 +101,4 @@ Deploy to target
 Load data
     cap dev symfony
 
-Execute command "ppi:api:loadData"
+Execute command "papi:loadData"

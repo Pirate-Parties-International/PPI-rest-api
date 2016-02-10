@@ -66,20 +66,4 @@ swiftmailer:
     password:  "%mailer_password%"
     spool:     { type: memory }
 
-snc_redis:
-    clients:
-        default:
-            type: predis
-            alias: default
-            dsn: redis://localhost
-            logging: %kernel.debug%
-        cache:
-            type: predis
-            alias: cache
-            dsn: redis://secret@localhost/1
-            options:
-                profile: 2.2
-                connection_timeout: 10
-                read_write_timeout: 30
-
 nelmio_api_doc: ~
