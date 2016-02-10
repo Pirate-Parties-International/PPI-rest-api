@@ -12,16 +12,16 @@
         </div>
     </div>
     <div class="container">
-        <div class="section">
-            <div class="row">
+        <div class="section valign-wrapper">
+            <div class="row pplist valign">
 
             	{% for party in parties %}
 	                <div class="col s12 m8 l6 ppcard">
 	                    <div class="valign-wrapper">
-	                    	<div class="col s3 valign-wrapper">
+	                    	<div class="col s3 valign-wrapper logo-wrapper">
 	                    		<img src="{{ party.logo }}" class="valign">
 	                    	</div>
-	                    	<div class="col s9 valign">
+	                    	<div class="col s9 valign pplabel">
 		                        <h5 class=""><a href="{{ party.link }}">{{ party.label }}</a></h5>
 		                        <p class="left-align">
 		                        	<div class="chip">

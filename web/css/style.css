@@ -1,0 +1,28 @@
+/* Custom Stylesheet */
+
+.ppcard img {
+	max-width: 100px;
+	max-height: 100px;
+}
+
+.ppcard .logo-wrapper {
+	min-width: 120px;
+}
+
+div.ppcard > div {
+	min-height: 150px;
+}
+
+.section .row div.ppcard {
+	max-width: 450px;
+}
+
+.container div.section div.pplist {
+	max-width: 900px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.pplist .ppcard .pplabel {
+	min-width: 230px;
+}
