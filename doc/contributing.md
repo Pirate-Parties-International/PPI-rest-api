@@ -16,3 +16,6 @@ Menu must be edited in the [base template](app/Resources/views/base.html.twig).
 
     /app/Resources/views/base.html.twig
 
+## Template
+
+Website was created with [Materializecss](http://materializecss.com/).
