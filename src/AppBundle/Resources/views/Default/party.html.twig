@@ -150,7 +150,8 @@
 				 #
             	 #}
 
-            	{% if party.intMemberships %}
+            	{% if party.intMemberships is empty %}
+            	{% else %}
 				<div class="col s12 m6">
 					<div class="card membership">
 						<div class="card-content clearfix">
