@@ -24,15 +24,6 @@ class ScraperCommand extends ContainerAwareCommand
     protected $stats = [];
     protected $meta = [];
 
-    const TYPE_FACEBOOK_COVER = 'fb_cover';
-    const TYPE_FACEBOOK       = 'fb';
-    const TYPE_TWITTER        = 'tw';
-    const TYPE_GOOGLEPLUS     = 'g+';
-
-    const SUBTYPE_LIKES     = 'L';
-    const SUBTYPE_FOLLOWERS = 'F';
-    const SUBTYPE_TWEETS    = 'T';
-
     public $coverRoot = "";
 
     protected function configure()
@@ -72,15 +63,15 @@ class ScraperCommand extends ContainerAwareCommand
 
             if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
                 $fd = $this->getFBData($sn['facebook']['username']); 
-                
+
                 if ($fd == false) {
                     $output->writeln("     + ERROR while retrieving FB data");
                 } else {
                     $output->writeln("     + Facebook data retrived");
                     $this->addStatistic(
                         $code, 
-                        self::TYPE_FACEBOOK, 
-                        self::SUBTYPE_LIKES, 
+                        Statistic::TYPE_FACEBOOK, 
+                        Statistic::SUBTYPE_LIKES, 
                         $fd['likes']
                     );
                     $output->writeln("     + Statistic added");
@@ -91,7 +82,7 @@ class ScraperCommand extends ContainerAwareCommand
 
                     $this->addMeta(
                         $code,
-                        self::TYPE_FACEBOOK_COVER,
+                        Metadata::TYPE_FACEBOOK_COVER,
                         $cover
                     );
                     $output->writeln("     + Meta added");
@@ -186,7 +177,7 @@ class ScraperCommand extends ContainerAwareCommand
 
         $this->cropImage($fullPath);
 
-        return '/web/img/fb-cover/' . $filename; 
+        return '/img/fb-covers/' . $filename; 
     }
 
     /**

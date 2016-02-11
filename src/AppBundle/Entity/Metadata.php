@@ -12,6 +12,8 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Metadata
 {
+    const TYPE_FACEBOOK_COVER = 'fb_cover';
+    
     /**
      * @var int
      *

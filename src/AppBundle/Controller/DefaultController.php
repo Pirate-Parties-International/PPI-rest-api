@@ -37,7 +37,9 @@ class DefaultController extends BaseController
 
         return array(
             "party"     => $party,
-            "parentOrg" => $parentOrg
+            "parentOrg" => $parentOrg,
+            "facebookLikes" => $this->getFacebookLikes($party->getCode()),
+            "cover" => $this->getCoverImage($party->getCode())
         );
     }
 

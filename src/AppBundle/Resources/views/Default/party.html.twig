@@ -12,7 +12,7 @@
 			<div class="card large party-detail-header">
 				<div class="card-image">
 					<div class="pickgradient">
-						<img src="https://scontent-frt3-1.xx.fbcdn.net/hphotos-xfa1/t31.0-8/c0.52.851.315/p851x315/329372_10151988277890648_892470793_o.jpg">
+						<img src="{{ cover }}">
 					</div>
 					
 					<span class="card-title">
@@ -185,7 +185,7 @@
 						<a href="https://facebook.com/{{party.socialNetworks.facebook.username}}">
 							<div class="card-content clearfix blue white-text valign-wrapper">
 								<div class="blue darken-1 icon-wrapper"><i class="icon-facebook small darken-1"></i></div>
-								<span class="social-text valign">Facebook</span>
+								<span class="social-text valign"> {{ facebookLikes | number_format }} <small>likes</small></span>
 							</div>
 						</a>
 					</div>

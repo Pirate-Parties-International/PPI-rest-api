@@ -12,6 +12,14 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Statistic
 {
+    const TYPE_FACEBOOK     = 'fb';
+    const TYPE_TWITTER      = 'tw';
+    const TYPE_GOOGLEPLUS   = 'g+';
+    const SUBTYPE_LIKES     = 'L';
+    const SUBTYPE_FOLLOWERS = 'F';
+    const SUBTYPE_TWEETS    = 'T';
+    
+
     /**
      * @var int
      *
