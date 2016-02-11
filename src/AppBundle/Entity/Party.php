@@ -139,6 +139,8 @@ class Party
      */
     private $membership;
 
+    public $socialReach;
+
     /**
      * Constructor
      */
@@ -168,6 +170,21 @@ class Party
             $out[strtolower($value->getIntOrg()->getCode())] = $value->getType();
         }
         return $out;
+    }
+
+    public function getCleanOfficialWebsite() {
+        if (!empty($this->getWebsites()) && !empty($this->getWebsites()['official'])) {
+            $official = $this->getWebsites()['official'];
+            $official = parse_url($official, PHP_URL_HOST);
+            $official = str_replace('www.', '', $official);
+            return $official;
+        }
+        return false;
+
+    }
+
+    public function getSocialReach() {
+        return $this->socialReach;
     }
 
 

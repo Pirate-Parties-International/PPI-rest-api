@@ -12,9 +12,9 @@
  Front page
  */
 
-.ppcard img {
-	max-width: 100px;
-	max-height: 100px;
+.pplist tbody img {
+	max-width: 80px;
+	max-height: 80px;
 }
 
 .ppcard .logo-wrapper {
@@ -35,8 +35,18 @@ div.ppcard > div {
 	margin-right: auto;
 }
 
-.pplist .ppcard .pplabel {
-	min-width: 230px;
+.pplist .social-reach {
+	min-width: 140px;
+	text-align: left;
+}
+
+.pplist .party-name {
+	font-size: 1.2em;
+	padding-right: 50px;
+}
+
+.pplist a {
+	color: rgba(0, 0, 0, 0.870588);
 }
 
 /*

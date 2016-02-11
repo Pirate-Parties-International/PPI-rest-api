@@ -14,38 +14,49 @@
     <div class="container">
         <div class="section valign-wrapper">
             <div class="row pplist valign">
-
-            	{% for party in parties %}
-	                <div class="col s12 m8 l6 ppcard">
-	                    <div class="valign-wrapper">
-	                    	<div class="col s3 valign-wrapper logo-wrapper">
-	                    		<img src="{{ party.logo }}" class="valign">
-	                    	</div>
-	                    	<div class="col s9 valign pplabel">
-		                        <h5 class=""><a href="{{ path('papi_party_show', {'id': party.code}) | lower }}">{{ party.name.en }}</a></h5>
-		                        <p class="left-align">
-		                        	<div class="chip">
-									    {{ party.type | humanize }}
-									</div>
-
-									{% if party.membership %}
-										{% if party.membership.ppeu is defined and party.membership.ppeu %}
-											<div class="chip">
-											    PPEU
-											</div>
-										{% endif %}
-										{% if party.membership.ppi is defined and party.membership.ppi %}
-											<div class="chip">
-											    PPI
-											</div>
-										{% endif %}
-									{% endif %}
-								</p>
-	                    	</div>
-
-	                    </div>
-	                </div>
-            	{% endfor %}
+            	<table class="highlight">
+			        <thead class="hide-on-small-only">
+			          <tr>
+			              <th data-field="logo"></th>
+			              <th data-field="name">Party name</th>
+			              <th data-field="ppeu" class="">Social reach</th>
+			              <th data-field="reach" class="right-align">Official website</th>
+			          </tr>
+			        </thead>
+			        <tbody>
+		            	{% for party in parties %}
+		            		<tr>
+					            <td class="valign-wrapper">
+					            	<a href="{{ path('papi_party_show', {'id': party.code}) | lower }}">
+					            		<img src="{{ party.logo }}" class="valign">
+					            	</a>
+					            </td>
+					            <td class="party-name">
+					            	<a href="{{ path('papi_party_show', {'id': party.code}) | lower }}">{{ party.name.en }}</a>
+					            </td>
+					            <td class="hide-on-small-only social-reach">
+					            	<a href="{{ path('papi_party_show', {'id': party.code}) | lower }}">
+					            	<i class="icon-{{ party.socialReach.type }} tiny darken-1"></i>{{ party.socialReach.value |number_format}}
+					            	<small>
+					            	{% if party.socialReach.type == 'facebook' %}
+					            		likes
+					            	{% else %}
+					            		followers
+					            	{% endif %}
+					            </small>
+					           		 </a>
+					            </td>
+					            <td class="hide-on-small-only right-align">
+					            	{% if party.cleanOfficialWebsite %}
+					            	<a href="{{party.websites.official}}" target="_blank">
+					            		{{ party.cleanOfficialWebsite }}
+					            	</a>
+					            	{% endif %}
+					            </td>
+					          </tr>
+		            	{% endfor %}
+            		</tbody>
+      			</table>
                 
             </div>
         </div>

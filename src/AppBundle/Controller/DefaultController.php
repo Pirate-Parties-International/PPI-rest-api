@@ -17,6 +17,26 @@ class DefaultController extends BaseController
     {
     	$parties = $this->getAllParties();
 
+        // Yes, I know this is stupid and slow but it's late 
+        // and I'm gonna do file caching anyway :/
+        foreach ($parties as $code => $party) {
+            $social = [];
+
+            $social['twitter']  = $this->getTwitterFollowers($code);     
+            $social['facebook'] = $this->getFacebookLikes($code);     
+            $social['gplus']    = $this->getGooglePlusFollowers($code);
+
+            $social;
+
+            $max = max($social); 
+
+            $party->socialReach = [
+                'value' => $max,
+                'type'  => array_search($max, $social)
+            ];
+
+        }
+
         return array("parties" => $parties);
     }
 
