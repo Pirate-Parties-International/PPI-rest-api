@@ -1,5 +1,10 @@
 {% extends 'base.html.twig' %}
 
+{% block stylesheets_extra %}
+	{% if party.headquarters %}
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+	{% endif %}
+{% endblock %}
 
 {% block content %}
     <div class="section no-pad-bot" id="index-banner">
@@ -214,6 +219,18 @@
 				{% endif %}
 			{% endif %}
 
+			{% if party.headquarters %}
+				<div class="col s12 m12 l12">
+					<div class="card headquarters">
+						<div class="card-content clearfix">
+							<span class="card-title">Headquarters</span>
+							<div id="map"></div>
+							
+						</div>
+					</div>
+				</div>
+			{% endif %}
+
             
             </div>
             
@@ -223,3 +240,29 @@
         </div>
     </div>
 {% endblock content%}
+
+
+{% block javascripts_extra %}
+
+	{% if party.headquarters %}
+		<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+
+		<script type="text/javascript">
+			var address = '{{party.headquarters.address}}';
+			var longitude = '{{party.headquarters.coordinates.longitude}}';
+			var latitude = '{{party.headquarters.coordinates.latitude}}'
+
+			var map = L.map('map').setView([latitude, longitude], 16);
+
+			L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+			    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+			    maxZoom: 18,
+			    id: 'mapbox.streets',
+			    accessToken: 'pk.eyJ1IjoicHV0ciIsImEiOiJjaWtpM3BreW0wMzMwdnRrbXlzaWk5empvIn0.Hi3t4ftPGc2ZMqTo3GUXEw'
+			}).addTo(map);
+			var marker = L.marker([latitude, longitude]).addTo(map);
+			marker.bindPopup(address).openPopup();
+		</script>
+	{% endif %}
+
+{% endblock javascripts_extra %}

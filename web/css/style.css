@@ -192,3 +192,7 @@ dd {
 .social div.card-content {
 	padding: 0;
 }
+
+.headquarters #map {
+	height: 380px;
+}
