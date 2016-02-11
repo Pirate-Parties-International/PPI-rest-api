@@ -7,9 +7,9 @@
 {% endblock %}
 
 {% block content %}
-    <div class="section no-pad-bot" id="index-banner">
+    <div class="section no-pad-bot hide-on-small-only" id="index-banner">
         <div class="container valign-wrapper">
-			<div class="card large party-detail-header">
+			<div class="card party-detail-header">
 				<div class="card-image">
 					<div class="pickgradient">
 						<img src="{{ cover }}">
@@ -25,6 +25,19 @@
 			</div>
         </div>
     </div>
+
+    <div class="section no-pad-bot hide-on-med-and-up" id="index-banner">
+        <div class="container valign-wrapper">
+			<div class="party-detail-header-mobile">
+					<div class="logo center-align">
+						<img src="{{ party.logo }}" class="">
+					</div>
+					<h2 class="center-align">
+						{{ party.name.en }}
+					</h2>
+			</div>
+        </div>
+    </div>
     <div class="container">
         <div class="section party-detail-cards">
             <div class="row">
@@ -34,7 +47,7 @@
             	 # BASIC INFO 
 				 #
             	 #}
-				<div class="col s12 m6">
+				<div class="col s12 m12 l6">
 					<div class="card basic-info">
 						<div class="card-content">
 							<span class="card-title">Basic information</span>
@@ -62,7 +75,7 @@
             	 # Contact
 				 #
             	 #}
-				<div class="col s12 m6">
+				<div class="col s12 m12 l6">
 					<div class="card contact-details">
 						<div class="card-content">
 							<span class="card-title">Contact</span>
@@ -99,7 +112,7 @@
             	 # Websites
 				 #
             	 #}
-				<div class="col s12 m6">
+				<div class="col s12 m12 l6">
 					<div class="card contact-details">
 						<div class="card-content websites">
 							<span class="card-title">Websites</span>
@@ -129,7 +142,7 @@
             	 #}
 
             	{% if party.parentParty %}
-				<div class="col s12 m6">
+				<div class="col s12 m12 l6">
 					<div class="card parent-org">
 						<div class="card-content clearfix">
 							<span class="card-title">Parent organisation</span>
@@ -152,7 +165,7 @@
 
             	{% if party.intMemberships is empty %}
             	{% else %}
-				<div class="col s12 m6">
+				<div class="col s12 m12 l6">
 					<div class="card membership">
 						<div class="card-content clearfix">
 							<span class="card-title">Member of</span>
@@ -181,7 +194,7 @@
             {% if party.socialNetworks %}
 
             	{% if party.socialNetworks.facebook %}
-				<div class="col s6 m4">
+				<div class="col s12 m6 l4">
 					<div class="card social facebook">
 						<a href="https://facebook.com/{{party.socialNetworks.facebook.username}}">
 							<div class="card-content clearfix blue white-text valign-wrapper">
@@ -194,12 +207,12 @@
 				{% endif %}
 
 				{% if party.socialNetworks.twitter %}
-				<div class="col s6 m4">
+				<div class="col s12 m6 l4">
 					<div class="card social twitter">
 						<a href="https://twitter.com/{{party.socialNetworks.twitter.username}}">
 							<div class="card-content clearfix cyan white-text valign-wrapper">
 								<div class="cyan darken-1 icon-wrapper"><i class="icon-twitter small darken-1"></i></div>
-								<span class="social-text valign"> {{ twitterFollowers | number_format }} <small>likes</small></span>
+								<span class="social-text valign"> {{ twitterFollowers | number_format }} <small>followers</small></span>
 							</div>
 						</a>
 					</div>
@@ -207,12 +220,12 @@
 				{% endif %}
 
 				{% if party.socialNetworks.googlePlus %}
-				<div class="col s6 m4">
+				<div class="col s12 m6 l4">
 					<div class="card social facebook">
 						<a href="https://plus.google.com/{{party.socialNetworks.googlePlus}}">
 							<div class="card-content clearfix red white-text valign-wrapper">
 								<div class="red darken-1 icon-wrapper"><i class="icon-gplus small darken-1"></i></div>
-								<span class="social-text valign"> {{ googlePlusFollowers | number_format }} <small>likes</small></span>
+								<span class="social-text valign"> {{ googlePlusFollowers | number_format }} <small>followers</small></span>
 							</div>
 						</a>
 					</div>

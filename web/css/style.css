@@ -49,8 +49,9 @@ div.ppcard > div {
 		margin-left: auto;
 		margin-right: auto;
 		position:relative;
-		  z-index:-2;
-		  display:block;
+		z-index:-2;
+		display:block;
+		box-shadow: none;
 }
 
 .container div.party-detail-header .card-image {
@@ -76,7 +77,7 @@ div.ppcard > div {
 }
 
 .party-detail-header span.card-title {
-	font-size: 34px;
+	font-size: 2em;
     font-weight: 400;
     text-shadow: 0 1px 0 black;
     margin-left: 170px;
@@ -92,6 +93,24 @@ div.ppcard > div {
     z-index: 20;
     border: 1px solid gray;
     background-color: white;
+}
+
+.party-detail-header-mobile {
+	width: 100%;
+}
+
+.party-detail-header-mobile .logo img {
+	width: 120px;
+	max-width: 40%;
+	max-height: 40%;
+}
+
+.party-detail-header-mobile h2 {
+	font-size: 2em;
+}
+
+.party-detail-header-mobile .logo {
+	margin-top: 20px;
 }
 
 .party-detail-cards {
@@ -182,7 +201,8 @@ dd {
 .social .card-content .social-text {
 	font-size: 1.4em;
 	font-weight: 400;
-	margin-left:20px;
+	width:80%;
+	text-align: center;
 }
 
 .social .icon-wrapper {

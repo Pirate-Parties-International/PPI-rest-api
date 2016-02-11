@@ -70,7 +70,7 @@ class ScraperCommand extends ContainerAwareCommand
                 $output->writeln("     + Starting Facebook import");
                 $fd = $this->getFBData($sn['facebook']['username']); 
 
-                if ($fd == false) {
+                if ($fd == false || empty($fd['likes'])) {
                     $output->writeln("     + ERROR while retrieving FB data");
                 } else {
                     $output->writeln("     + Facebook data retrived");
@@ -102,7 +102,10 @@ class ScraperCommand extends ContainerAwareCommand
                 $output->writeln("     + Starting Twitter import");
                 $td = $this->getTwitterData($sn['twitter']['username']);
 
-                if ($fd == false) {
+                if ($fd == false ||
+                    empty($td['followers']) ||
+                    empty($td['tweets'])
+                    ) {
                     $output->writeln("     + ERROR while retrieving TW data");
                 } else {
                     $output->writeln("     + Twitter data retrived");
@@ -129,7 +132,9 @@ class ScraperCommand extends ContainerAwareCommand
                 $output->writeln("     + Starting GooglePlus import");
                 $gd = $this->getGooglePlusData($sn['googlePlus']);
 
-                if ($gd == false) {
+                if ($gd == false ||
+                    empty($gd)
+                    ) {
                     $output->writeln("     + ERROR while retrieving G+ data");
                 } else {
                     $output->writeln("     + Twitter data retrived");
@@ -137,7 +142,7 @@ class ScraperCommand extends ContainerAwareCommand
                         $code, 
                         Statistic::TYPE_GOOGLEPLUS, 
                         Statistic::SUBTYPE_FOLLOWERS, 
-                        $td
+                        $gd
                     );
                     $output->writeln("     + Statistic added");
                 }
