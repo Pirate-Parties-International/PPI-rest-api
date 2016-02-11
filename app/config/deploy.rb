@@ -22,7 +22,7 @@ set :composer_options,  "--no-dev --verbose --prefer-dist --optimize-autoloader"
 set :use_sudo,    false
 
 
-set :dump_assetic_assets, true
+set :dump_assetic_assets, false
 
 set :writable_dirs,       ["app/cache", "app/logs"]
 set :webserver_user,      "www-data"
