@@ -8,3 +8,5 @@ Live version can be found here:
 api.piratetimes.net
 
 **[Deployment documentation](doc/deployment.md)**
+
+**[CONTRIBUTING](doc/contributing.md)**

@@ -41,4 +41,23 @@ class DefaultController extends BaseController
         );
     }
 
+    /**
+     * @Route("/{id}", name="papi_page_show")
+     * @Template()
+     */
+    public function pageAction($id)
+    {   
+        $pagesPath = __DIR__ . '/../Resources/staticContent';
+        
+        $data = @file_get_contents(sprintf('%s/%s.md', $pagesPath, $id));
+
+        if ($data === false) {
+            throw $this->createNotFoundException(
+                'Page not found.'
+            );
+        }
+
+        return ['page' => $data];
+    } 
+
 }

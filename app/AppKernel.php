@@ -18,6 +18,7 @@ class AppKernel extends Kernel
             new Nelmio\ApiDocBundle\NelmioApiDocBundle(),
             new Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle(),
             new JMS\SerializerBundle\JMSSerializerBundle(),
+            new Knp\Bundle\MarkdownBundle\KnpMarkdownBundle(),
             new AppBundle\AppBundle(),
         );
 

@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+
+{% block content %}
+    <div class="container">
+        <div class="section valign-wrapper">
+            <div class="row singlePage valign">
+
+            	{{page | markdown}}
+                
+            </div>
+        </div>
+        <br><br>
+
+    </div>
+{% endblock content%}

@@ -201,3 +201,15 @@ dd {
 	max-height: 50px;
 	vertical-align: middle;
 }
+
+/*
+	Static pages
+ */
+
+.singlePage h1 {
+	font-size: 2.5em;
+}
+
+.singlePage h2 {
+	font-size: 1.5em;
+}
