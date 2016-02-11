@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+
+{% block content %}
+    <div class="section no-pad-bot" id="index-banner">
+        <div class="container">
+            <br><br>
+            <h1 class="header center orange-text">Pirate Party Registry</h1>
+            <div class="row center">
+                <h5 class="header col s12 light">Central list of all Pirate Parties active around the world.</h5>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="section valign-wrapper">
+            <div class="row pplist valign">
+            	<table class="highlight">
+			        <thead class="hide-on-small-only">
+			          <tr>
+			              <th data-field="logo"></th>
+			              <th data-field="name">Party name</th>
+			              <th data-field="ppeu" class="">Social reach</th>
+			              <th data-field="reach" class="right-align">Official website</th>
+			          </tr>
+			        </thead>
+			        <tbody>
+		            	{% for party in parties %}
+		            		<tr>
+					            <td class="valign-wrapper">
+					            	<a href="{{ path('papi_party_show', {'id': party.code}) | lower }}">
+					            		<img src="{{ party.logo }}" class="valign">
+					            	</a>
+					            </td>
+					            <td class="party-name">
+					            	<a href="{{ path('papi_party_show', {'id': party.code}) | lower }}">{{ party.name.en }}</a>
+					            </td>
+					            <td class="hide-on-small-only social-reach">
+					            	<a href="{{ path('papi_party_show', {'id': party.code}) | lower }}">
+					            	<i class="icon-{{ party.socialReach.type }} tiny darken-1"></i>{{ party.socialReach.value |number_format}}
+					            	<small>
+					            	{% if party.socialReach.type == 'facebook' %}
+					            		likes
+					            	{% else %}
+					            		followers
+					            	{% endif %}
+					            </small>
+					           		 </a>
+					            </td>
+					            <td class="hide-on-small-only right-align">
+					            	{% if party.cleanOfficialWebsite %}
+					            	<a href="{{party.websites.official}}" target="_blank">
+					            		{{ party.cleanOfficialWebsite }}
+					            	</a>
+					            	{% endif %}
+					            </td>
+					          </tr>
+		            	{% endfor %}
+            		</tbody>
+      			</table>
+                
+            </div>
+        </div>
+        <br><br>
+        <div class="section">
+        </div>
+    </div>
+{% endblock content%}

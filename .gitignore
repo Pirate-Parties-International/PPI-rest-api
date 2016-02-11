@@ -9,10 +9,10 @@
 /vendor/
 /bin/
 /composer.phar
-/web/js/*
-/web/css/*
 /web/img/pp-flag/*
 /web/img/pp-logo/*
+/web/img/fb-covers/*
+/web/fonts/*
 *~
 
 *.sublime*

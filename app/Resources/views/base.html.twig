@@ -1,103 +1,121 @@
-{% from 'MopaBootstrapBundle::flash.html.twig' import session_flash %}
-
 <!DOCTYPE html>
-
-{% block html_tag %}
 <html>
-{% endblock html_tag %}
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+        <title>{% block title %}PAPI{% endblock %}</title>
+        {% block stylesheets %}
+            <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+            <link href="/css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+            <link href="/css/social-fa.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+            <link href="/css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+        {% endblock %}
 
-{% block head %}
-<head>
-    <meta charset="UTF-8" />
-    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
-    {% block head_style %}
-    {# Override this block to add your own files! #}
-    {% stylesheets filter='?yui_css'
-        '@MopaBootstrapBundle/Resources/public/sass/mopabootstrapbundle.scss'
-        '@PPIApiBundle/Resources/public/css/main.css'
-    %}
-    <link href="{{ asset_url }}" type="text/css" rel="stylesheet" media="screen" />
-    {% endstylesheets %}
-    {# To use this without less use the base_css.html.twig template as your base
-     # Be sure you understand whats going on: have a look into
-     # https://github.com/phiamo/MopaBootstrapBundle/blob/master/Resources/doc/css-vs-less.md
-     #}
-    {% endblock head_style %}
-    {% block extra_style %}{% endblock %}
+        {% block stylesheets_extra %}{% endblock %}
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    {% block head_script %}
-    {# Overwrite this block to add your own js here, to get them generated into final files #}
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
+    </head>
+    <body>
+        {% block body %}
+            <nav class="light-blue lighten-1 valign-wrapper" role="navigation">
+                <div class="nav-wrapper container valign"><a id="logo-container" href="/" class="brand-logo ">
+                    <img src="/img/piratePartyRegistry_smaller.png" class="">
+                </a>
+                    <ul class="right hide-on-med-and-down">
+                        <li><a href="/faq">FAQ</a></li>
+                        <li><a href="/doc/api/v1">API Documentation</a></li>
+                        <li><a href="https://github.com/Pirate-Parties-International/PPI-party-info"><i class="icon-github"></i></a></li>
+                    </ul>
+                    <ul id="nav-mobile" class="side-nav">
+                        <li><a href="/faq">FAQ</a></li>
+                        <li><a href="/doc/api/v1">API Documentation</a></li>
+                        <li><a href="https://github.com/Pirate-Parties-International/PPI-party-info">Data on Github</a></li>
+                    </ul>
+                    <a href="#" data-activates="nav-mobile" class="button-collapse"><i class="material-icons">menu</i></a>
+                </div>
+            </nav>
 
-    {% endblock head_script %}
-
-    <title>{% block title %}{% trans %}PPI API{% endtrans %}{% endblock title %}</title>
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}" />
-    {% block head_bottom %}
-    {% endblock head_bottom %}
-</head>
-{% endblock head %}
-
-{% block body_tag %}
-<body data-spy="scroll">
-{% endblock body_tag %}
-
-{% block body_start %}
-{% endblock body_start %}
-
-{% block body %}
-    {% block navbar %}
-    
-    {% endblock navbar %}
-
-    {% block container %}
-    {% block container_div_start %}<div class="{% block container_class %}container{% endblock container_class %}">{% endblock container_div_start %}
-
-        {% block header %}
-            <div class="header">
-                <ul class="nav nav-pills pull-right">
-                    <li class="active"><a href="/doc/v1/">API Documentation</a></li>
-                </ul>
-                <h3 class="text-muted">PPI API</h3>
-            </div>
-        {% endblock header %}
-
-        {% block content_div_start %}<div class="content">{% endblock content_div_start %}
-            {% block page_header %}
-            
-            {% endblock page_header %}
-
-            {% block flashes %}
-                {% if app.session.flashbag.peekAll|length > 0 %}
-                <div class="row">
-                    <div class="col-sm-12">
-                    {{ session_flash() }}
+            {% block content %}
+                <div class="section no-pad-bot" id="index-banner">
+                    <div class="container">
+                        <br><br>
+                        <h1 class="header center orange-text">Pirate Party Registry</h1>
+                        <div class="row center">
+                            <h5 class="header col s12 light">Central list of all Pirate Parties active around the world.</h5>
+                        </div>
+                        <div class="row center">
+                            <a href="http://materializecss.com/getting-started.html" id="download-button" class="btn-large waves-effect waves-light orange">Get Started</a>
+                        </div>
+                        <br><br>
                     </div>
                 </div>
-                {% endif %}
-            {% endblock flashes %}
+                <div class="container">
+                    <div class="section">
+                        <!--   Icon Section   -->
+                        <div class="row">
+                            <div class="col s12 m4">
+                                <div class="icon-block">
+                                    <h2 class="center light-blue-text"><i class="material-icons">flash_on</i></h2>
+                                    <h5 class="center">Speeds up development</h5>
+                                    <p class="light">We did most of the heavy lifting for you to provide a default stylings that incorporate our custom components. Additionally, we refined animations and transitions to provide a smoother experience for developers.</p>
+                                </div>
+                            </div>
+                            <div class="col s12 m4">
+                                <div class="icon-block">
+                                    <h2 class="center light-blue-text"><i class="material-icons">group</i></h2>
+                                    <h5 class="center">User Experience Focused</h5>
+                                    <p class="light">By utilizing elements and principles of Material Design, we were able to create a framework that incorporates components and animations that provide more feedback to users. Additionally, a single underlying responsive system across all platforms allow for a more unified user experience.</p>
+                                </div>
+                            </div>
+                            <div class="col s12 m4">
+                                <div class="icon-block">
+                                    <h2 class="center light-blue-text"><i class="material-icons">settings</i></h2>
+                                    <h5 class="center">Easy to work with</h5>
+                                    <p class="light">We have provided detailed documentation as well as specific code examples to help new users get started. We are also always open to feedback and can answer any questions a user may have about Materialize.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br><br>
+                    <div class="section">
+                    </div>
+                </div>
+            {% endblock content%}
 
-            {% block content_row %}
-            
-            {% endblock content_row %}
-
-        {% block content_div_end %}</div>{% endblock content_div_end %}
-        <footer>
             {% block footer %}
-            
-            {% endblock footer %}
-        </footer>
-    {% block container_div_end %}</div><!-- /container -->{% endblock container_div_end %}
-    {% endblock container %}
-    {% block foot_script %}
-    {# To only use a subset or add more js overwrite and copy paste this block
-    To speed up page loads save a copy of jQuery in your project and override this block to include the correct path
-    Otherwise the regeneration is done on every load in dev more with use_controller: true
-     #}
-     
-    
-{% endblock foot_script %}
-{% endblock body %}
-</body>
+            <footer class="page-footer blue-grey lighten-1" style="padding-top:0px;">
+                <div class="footer-copyright">
+                    <div class="container">
+                        Maintained by <a class="orange-text text-lighten-3" href="http://piratetimes.net/">Pirate Times</a> and <a class="orange-text text-lighten-3" href="http://www.pp-international.net/">Pirate Parties International</a>.
+                    </div>
+                </div>
+            </footer>
+            {% endblock footer%}
+        {% endblock body %}
+        {% block javascripts %}
+            <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+            <script src="/js/materialize.js"></script>
+            <script src="/js/init.js"></script>
+        {% endblock javascripts %}
+        
+        {% block javascripts_extra %}
+        {% endblock javascripts_extra %}
+
+        <!-- Piwik -->
+        <script type="text/javascript">
+          var _paq = _paq || [];
+          _paq.push(['trackPageView']);
+          _paq.push(['enableLinkTracking']);
+          (function() {
+            var u="//track.piratskastranka.si/";
+            _paq.push(['setTrackerUrl', u+'piwik.php']);
+            _paq.push(['setSiteId', 14]);
+            var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+            g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+          })();
+        </script>
+        <!-- End Piwik Code -->
+        <noscript><p><img src="//track.piratskastranka.si/piwik.php?idsite=14" style="border:0;" alt="" /></p></noscript>
+    </body>
 </html>

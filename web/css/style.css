@@ -1,0 +1,245 @@
+/* Custom Stylesheet */
+
+/* 
+	General
+*/
+.material-icons .md-light { 
+	color: rgba(255, 255, 255, 1); 
+}
+
+
+/*
+ Front page
+ */
+
+.pplist tbody img {
+	max-width: 80px;
+	max-height: 80px;
+}
+
+.ppcard .logo-wrapper {
+	min-width: 120px;
+}
+
+div.ppcard > div {
+	min-height: 150px;
+}
+
+.section .row div.ppcard {
+	max-width: 450px;
+}
+
+.container div.section div.pplist {
+	max-width: 900px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.pplist .social-reach {
+	min-width: 140px;
+	text-align: left;
+}
+
+.pplist .party-name {
+	font-size: 1.2em;
+	padding-right: 50px;
+}
+
+.pplist a {
+	color: rgba(0, 0, 0, 0.870588);
+}
+
+/*
+	Party detail page
+ */
+.container div.party-detail-header {
+		max-width: 851px;
+		max-height: 315px;
+		margin-top: 40px;
+		margin-left: auto;
+		margin-right: auto;
+		position:relative;
+		z-index:-2;
+		display:block;
+		box-shadow: none;
+}
+
+.container div.party-detail-header .card-image {
+	max-height: 100%;
+	overflow: visible;
+}
+
+.pickgradient {
+  display:inline-block;
+  background: -moz-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.65)), color-stop(100%,rgba(0,0,0,0))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%); /* IE10+ */
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a6000000', endColorstr='#00000000',GradientType=0 ); /* IE6-9 */
+}
+
+.container div.party-detail-header .card-image .pickgradient img {
+  position:relative;
+  z-index:-1;
+  display:block;
+}
+
+.party-detail-header span.card-title {
+	font-size: 2em;
+    font-weight: 400;
+    text-shadow: 0 1px 0 black;
+    margin-left: 170px;
+}
+
+.party-detail-header .logo {
+	max-width: 150px;
+	max-height: 150px;
+	position: absolute;
+    bottom: -70px;
+    left: 0;
+    margin: 20px;
+    z-index: 20;
+    border: 1px solid gray;
+    background-color: white;
+}
+
+.party-detail-header-mobile {
+	width: 100%;
+}
+
+.party-detail-header-mobile .logo img {
+	width: 120px;
+	max-width: 40%;
+	max-height: 40%;
+}
+
+.party-detail-header-mobile h2 {
+	font-size: 2em;
+}
+
+.party-detail-header-mobile .logo {
+	margin-top: 20px;
+}
+
+.party-detail-cards {
+	max-width: 851px;
+	margin-left: auto;
+	margin-right: auto;
+	padding-top: 60px;
+}
+
+dt {
+	float: left;
+	clear: left;
+	width: 100px;
+	text-align: right;
+	font-weight: bold;
+	color: black;
+}
+dt:after {
+	content: ":";
+}
+dd {
+	margin: 0 0 0 110px;
+	padding: 0 0 0.5em 0;
+}
+
+.party-detail-cards .basic-info .flag img {
+	max-width: 70px;
+	max-height: 70px;
+	position: absolute;
+    top: 10px;
+    right: 10px;
+    margin: 20px;
+}
+
+.contact-details .card-content p {
+	padding-left: 15px;
+	vertical-align: middle;
+}
+
+.contact-title {
+	font-weight: bold;
+	padding-top: 10px;
+}
+
+.websites div {
+	padding-top: 10px;
+}
+
+.parent-org img {
+	max-width: 50px;
+	max-height: 50px;
+}
+
+.parent-org .org-body {
+	vertical-align: middle;
+    line-height: 50px;
+    font-size: 1.2em;
+    margin-top: 5px;
+    margin-left: 15px;
+}
+
+.parent-org .org-body img {
+	margin-right:15px;
+}
+
+.membership img {
+	max-width: 50px;
+	max-height: 50px;
+}
+
+.membership .org-body {
+	vertical-align: middle;
+    line-height: 50px;
+    font-size: 1.1em;
+    margin-top: 5px;
+    margin-left: 15px;
+}
+
+.membership .org-body small {
+	font-size:0.8em;
+	color: gray;
+}
+
+.membership .org-body img {
+	margin-right:15px;
+}
+
+.social .card-content .social-text {
+	font-size: 1.4em;
+	font-weight: 400;
+	width:80%;
+	text-align: center;
+}
+
+.social .icon-wrapper {
+	padding: 20px;
+}
+
+.social div.card-content {
+	padding: 0;
+}
+
+.headquarters #map {
+	height: 380px;
+}
+
+.brand-logo img {
+	max-height: 50px;
+	vertical-align: middle;
+}
+
+/*
+	Static pages
+ */
+
+.singlePage h1 {
+	font-size: 2.5em;
+}
+
+.singlePage h2 {
+	font-size: 1.5em;
+}

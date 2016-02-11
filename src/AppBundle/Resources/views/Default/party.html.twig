@@ -1,0 +1,282 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets_extra %}
+	{% if party.headquarters %}
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+	{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="section no-pad-bot hide-on-small-only" id="index-banner">
+        <div class="container valign-wrapper">
+			<div class="card party-detail-header">
+				<div class="card-image">
+					<div class="pickgradient">
+						<img src="{{ cover }}">
+					</div>
+					
+					<span class="card-title">
+						{{ party.name.en }}
+					</span>
+					<div class="logo">
+						<img src="{{ party.logo }}">
+					</div>
+				</div>
+			</div>
+        </div>
+    </div>
+
+    <div class="section no-pad-bot hide-on-med-and-up" id="index-banner">
+        <div class="container valign-wrapper">
+			<div class="party-detail-header-mobile">
+					<div class="logo center-align">
+						<img src="{{ party.logo }}" class="">
+					</div>
+					<h2 class="center-align">
+						{{ party.name.en }}
+					</h2>
+			</div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="section party-detail-cards">
+            <div class="row">
+
+            	{# 
+            	 #
+            	 # BASIC INFO 
+				 #
+            	 #}
+				<div class="col s12 m12 l6">
+					<div class="card basic-info">
+						<div class="card-content">
+							<span class="card-title">Basic information</span>
+							<dl class="dl-horizontal">
+							  <dt>Type</dt>
+							  <dd>{{ party.type | humanize }}</dd>
+							  <dt>Country</dt>
+							  <dd>{{ party.countryName }}</dd>
+							  {% if party.region is defined and party.region %}
+								  <dt>Region</dt>
+								  <dd>{{ party.region | humanize }}</dd>
+							  {% endif %}
+							  <dt>Party Code</dt>
+							  <dd>{{ party.code | upper }}</dd>
+		  					</dl>
+		  					<div class="flag">
+								<img src="{{ party.countryFlag }}">
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{# 
+            	 #
+            	 # Contact
+				 #
+            	 #}
+				<div class="col s12 m12 l6">
+					<div class="card contact-details">
+						<div class="card-content">
+							<span class="card-title">Contact</span>
+							{% for key, contact in party.contact %}
+								{% if contact %}
+									<div>
+										<p class="contact-title">{{ key | humanize }}</p>
+										{% for type, link in contact %}
+											<p>
+												{% if type == 'email' %}
+													<i class="tiny material-icons md-light">email</i>
+												{% else %}
+													<i class="tiny material-icons md-light">link</i>
+												{% endif %}
+												 {{ link }}
+											</p>
+										{% endfor %}
+									</div>
+								{% else %}
+									<p>
+										This contact seems to be missing. <a href="https://github.com/Pirate-Parties-International/PPI-party-info#how-to-updatecontribute-information">Can you add it?</a>
+									</p>
+								{% endif %}
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row">
+
+				{# 
+            	 #
+            	 # Websites
+				 #
+            	 #}
+				<div class="col s12 m12 l6">
+					<div class="card contact-details">
+						<div class="card-content websites">
+							<span class="card-title">Websites</span>
+							{% for key, website in party.websites %}
+								{% if website %}	
+									<div>
+											<p class="">
+												<i class="small material-icons md-light left">link</i>
+												<span class="contact-title">{{ key | humanize }}</span><br />
+												 {{ website }}
+											</p>
+									</div>
+								{% else %}
+									<p>
+										This website seems to be missing. <a href="https://github.com/Pirate-Parties-International/PPI-party-info#how-to-updatecontribute-information">Can you add it?</a>
+									</p>
+								{% endif %}
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+
+				{# 
+            	 #
+            	 # Parent organisation
+				 #
+            	 #}
+
+            	{% if party.parentParty %}
+				<div class="col s12 m12 l6">
+					<div class="card parent-org">
+						<div class="card-content clearfix">
+							<span class="card-title">Parent organisation</span>
+								
+							<div class="org-body">
+								<img src="{{ parentOrg.logo }}" class="left">
+								{{ parentOrg.name.en }}
+								<div class="clearfix"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				{% endif %}
+
+				{# 
+            	 #
+            	 # Membership
+				 #
+            	 #}
+
+            	{% if party.intMemberships is empty %}
+            	{% else %}
+				<div class="col s12 m12 l6">
+					<div class="card membership">
+						<div class="card-content clearfix">
+							<span class="card-title">Member of</span>
+							
+							{% for org in party.intMemberships if org %}
+								<div class="org-body">
+									<img src="/img/{{ org.intOrg.code | lower }}.png" class="left">
+									{{ org.intOrg.name }} <small>({{ org.type | humanize }})</small>
+									<div class="clearfix"></div>
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+				{% endif %}
+			</div>
+
+			<div class="row">
+
+				{# 
+            	 #
+            	 # Social
+				 #
+            	 #}
+
+            {% if party.socialNetworks %}
+
+            	{% if party.socialNetworks.facebook %}
+				<div class="col s12 m6 l4">
+					<div class="card social facebook">
+						<a href="https://facebook.com/{{party.socialNetworks.facebook.username}}">
+							<div class="card-content clearfix blue white-text valign-wrapper">
+								<div class="blue darken-1 icon-wrapper"><i class="icon-facebook small darken-1"></i></div>
+								<span class="social-text valign"> {{ facebookLikes | number_format }} <small>likes</small></span>
+							</div>
+						</a>
+					</div>
+				</div>
+				{% endif %}
+
+				{% if party.socialNetworks.twitter %}
+				<div class="col s12 m6 l4">
+					<div class="card social twitter">
+						<a href="https://twitter.com/{{party.socialNetworks.twitter.username}}">
+							<div class="card-content clearfix cyan white-text valign-wrapper">
+								<div class="cyan darken-1 icon-wrapper"><i class="icon-twitter small darken-1"></i></div>
+								<span class="social-text valign"> {{ twitterFollowers | number_format }} <small>followers</small></span>
+							</div>
+						</a>
+					</div>
+				</div>
+				{% endif %}
+
+				{% if party.socialNetworks.googlePlus %}
+				<div class="col s12 m6 l4">
+					<div class="card social facebook">
+						<a href="https://plus.google.com/{{party.socialNetworks.googlePlus}}">
+							<div class="card-content clearfix red white-text valign-wrapper">
+								<div class="red darken-1 icon-wrapper"><i class="icon-gplus small darken-1"></i></div>
+								<span class="social-text valign"> {{ googlePlusFollowers | number_format }} <small>followers</small></span>
+							</div>
+						</a>
+					</div>
+				</div>
+				{% endif %}
+			{% endif %}
+
+			{% if party.headquarters %}
+				<div class="col s12 m12 l12">
+					<div class="card headquarters">
+						<div class="card-content clearfix">
+							<span class="card-title">Headquarters</span>
+							<div id="map"></div>
+							
+						</div>
+					</div>
+				</div>
+			{% endif %}
+
+            
+            </div>
+            
+        </div>
+        <br><br>
+        <div class="section">
+        </div>
+    </div>
+{% endblock content%}
+
+
+{% block javascripts_extra %}
+
+	{% if party.headquarters %}
+		<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+
+		<script type="text/javascript">
+			var address = '{{party.headquarters.address}}';
+			var longitude = '{{party.headquarters.coordinates.longitude}}';
+			var latitude = '{{party.headquarters.coordinates.latitude}}'
+
+			var map = L.map('map').setView([latitude, longitude], 16);
+
+			L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+			    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+			    maxZoom: 18,
+			    id: 'mapbox.streets',
+			    accessToken: 'pk.eyJ1IjoicHV0ciIsImEiOiJjaWtpM3BreW0wMzMwdnRrbXlzaWk5empvIn0.Hi3t4ftPGc2ZMqTo3GUXEw'
+			}).addTo(map);
+			var marker = L.marker([latitude, longitude]).addTo(map);
+			marker.bindPopup(address).openPopup();
+		</script>
+	{% endif %}
+
+{% endblock javascripts_extra %}
