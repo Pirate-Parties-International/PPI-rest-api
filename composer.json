@@ -28,6 +28,7 @@
         "jms/serializer-bundle": "1.1.*",
         "knplabs/knp-markdown-bundle": "~1.4",
         "pirates/papi-info": "^1.0@alpha",
+        "facebook/php-sdk-v4" : "~5.0",
         "nelmio/api-doc-bundle": "^2.11"
     },
     "require-dev": {
