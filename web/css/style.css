@@ -196,3 +196,8 @@ dd {
 .headquarters #map {
 	height: 380px;
 }
+
+.brand-logo img {
+	max-height: 50px;
+	vertical-align: middle;
+}
