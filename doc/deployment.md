@@ -3,7 +3,7 @@ Deployment
 
 ## Note
 
-This repo includes the following repo as a capistrano dependency
+This repo includes the following repo as a composer dependency
 
 https://github.com/Pirate-Parties-International/PPI-party-info
 
