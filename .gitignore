@@ -9,9 +9,6 @@
 /vendor/
 /bin/
 /composer.phar
-/web/img/pp-flag/*
-/web/img/pp-logo/*
-/web/img/fb-covers/*
 *~
 
 *.sublime*
