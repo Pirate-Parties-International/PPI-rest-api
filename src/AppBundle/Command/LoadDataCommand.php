@@ -131,8 +131,8 @@ class LoadDataCommand extends ContainerAwareCommand
 
         $this->log(sprintf("## Processing meta data for %s organisations.", count($data)));
 
-        $genericLogo = '/web/img/generic.png';
-        $genericFlag = '/web/img/genericFlag.png';
+        $genericLogo = '/img/generic.png';
+        $genericFlag = '/img/genericFlag.png';
 
         foreach ($data as $partyKey => $partyData) {
         	$this->log("    - Processing " . $partyKey);

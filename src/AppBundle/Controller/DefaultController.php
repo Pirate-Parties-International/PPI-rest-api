@@ -15,7 +15,6 @@ class DefaultController extends BaseController
      */
     public function indexAction()
     {
-
     	$parties = $this->getAllParties();
 
         return array("parties" => $parties);
@@ -27,25 +26,19 @@ class DefaultController extends BaseController
      */
     public function partyAction($id)
     {
-    	$party = $this->getOnePartyData($id);
-		$cc = $party->countryCode;
+    	$party = $this->getOneParty($id);
 
-    	$partyKey = strtolower($party->partyCode);
+        $parentOrg = [];
+        if ($party->getParentParty()) {
+            $parentOrg = $this->getDoctrine()
+                ->getRepository('AppBundle:Party')
+                ->findOneByCode($party->getParentParty());
+        }
 
-		$party->label       = $party->partyName->en;
-		$party->partyCode   = $party->partyCode;
-		$party->link        = '/party/' . $partyKey;
-		$party->apiLink     = '/api/v1/parties/' . $partyKey;
-		$party->logo        = false;
-		$party->nativeLabel = $party->partyName->$cc;
-		
-		$logo = $this->getPartyLogo($partyKey);
-		if ($logo !== null) {
-			$party->logo = $logo;
-		}	
-        $party->websites = (array) $party->websites;
-    	// var_dump($party); die;
-        return array("party" => $party);
+        return array(
+            "party"     => $party,
+            "parentOrg" => $parentOrg
+        );
     }
 
 }
