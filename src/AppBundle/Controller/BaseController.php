@@ -68,5 +68,45 @@ class BaseController extends Controller
         return $stat->getValue();
     }
 
+    public function getTwitterFollowers($code) {
+        $stat = $this->getDoctrine()
+        ->getRepository('AppBundle:Statistic')
+        ->findOneBy([
+                'code'    => strtolower($code),
+                'type'    => Stat::TYPE_TWITTER,
+                'subType' => Stat::SUBTYPE_FOLLOWERS
+            ],
+            [
+                'timestamp' => 'DESC'
+            ]
+        );
+
+        if (!$stat) {
+            return '????';
+        }
+
+        return $stat->getValue();
+    }
+
+    public function getGooglePlusFollowers($code) {
+        $stat = $this->getDoctrine()
+        ->getRepository('AppBundle:Statistic')
+        ->findOneBy([
+                'code'    => strtolower($code),
+                'type'    => Stat::TYPE_GOOGLEPLUS,
+                'subType' => Stat::SUBTYPE_FOLLOWERS
+            ],
+            [
+                'timestamp' => 'DESC'
+            ]
+        );
+
+        if (!$stat) {
+            return '????';
+        }
+
+        return $stat->getValue();
+    }
+
 
 }

@@ -21,3 +21,10 @@ parameters:
     fb_app_id: ~
     fb_app_secret: ~
     fb_access_token: ~
+
+    tw_consumer_key: ~
+    tw_consumer_secret: ~
+    tw_oauth_access_token: ~
+    tw_oauth_access_token_secret: ~
+
+    gplus_api_key: ~

@@ -198,7 +198,7 @@
 						<a href="https://twitter.com/{{party.socialNetworks.twitter.username}}">
 							<div class="card-content clearfix cyan white-text valign-wrapper">
 								<div class="cyan darken-1 icon-wrapper"><i class="icon-twitter small darken-1"></i></div>
-								<span class="social-text valign">Twitter</span>
+								<span class="social-text valign"> {{ twitterFollowers | number_format }} <small>likes</small></span>
 							</div>
 						</a>
 					</div>
@@ -211,7 +211,7 @@
 						<a href="https://plus.google.com/{{party.socialNetworks.googlePlus}}">
 							<div class="card-content clearfix red white-text valign-wrapper">
 								<div class="red darken-1 icon-wrapper"><i class="icon-gplus small darken-1"></i></div>
-								<span class="social-text valign">Google+</span>
+								<span class="social-text valign"> {{ googlePlusFollowers | number_format }} <small>likes</small></span>
 							</div>
 						</a>
 					</div>

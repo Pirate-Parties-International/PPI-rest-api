@@ -9,6 +9,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use Pirates\PapiInfo\Compile;
 
+use TwitterAPIExchange;
+
 use AppBundle\Entity\Party;
 use AppBundle\Entity\Metadata;
 use AppBundle\Entity\Statistic;
@@ -61,7 +63,11 @@ class ScraperCommand extends ContainerAwareCommand
                 continue;
             }
 
+            //
+            // FACEBOOK
+            // 
             if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
+                $output->writeln("     + Starting Facebook import");
                 $fd = $this->getFBData($sn['facebook']['username']); 
 
                 if ($fd == false) {
@@ -78,7 +84,6 @@ class ScraperCommand extends ContainerAwareCommand
 
                     $cover = $this->getFacebookCover($code, $fd['cover']);
                     $output->writeln("     + Cover retrived");
-                    $output->writeln("     + " . $fd['cover']);
 
                     $this->addMeta(
                         $code,
@@ -89,17 +94,63 @@ class ScraperCommand extends ContainerAwareCommand
                 }
 
             }
+
+            //
+            // TWITTER
+            // 
+            if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
+                $output->writeln("     + Starting Twitter import");
+                $td = $this->getTwitterData($sn['twitter']['username']);
+
+                if ($fd == false) {
+                    $output->writeln("     + ERROR while retrieving TW data");
+                } else {
+                    $output->writeln("     + Twitter data retrived");
+                    $this->addStatistic(
+                        $code, 
+                        Statistic::TYPE_TWITTER, 
+                        Statistic::SUBTYPE_FOLLOWERS, 
+                        $td['followers']
+                    );
+                    $this->addStatistic(
+                        $code, 
+                        Statistic::TYPE_TWITTER, 
+                        Statistic::SUBTYPE_TWEETS, 
+                        $td['tweets']
+                    );
+                    $output->writeln("     + Statistic added");
+                }
+            }
+
+            //
+            // Google+
+            // 
+            if (!empty($sn['googlePlus'])) {
+                $output->writeln("     + Starting GooglePlus import");
+                $gd = $this->getGooglePlusData($sn['googlePlus']);
+
+                if ($gd == false) {
+                    $output->writeln("     + ERROR while retrieving G+ data");
+                } else {
+                    $output->writeln("     + Twitter data retrived");
+                    $this->addStatistic(
+                        $code, 
+                        Statistic::TYPE_GOOGLEPLUS, 
+                        Statistic::SUBTYPE_FOLLOWERS, 
+                        $td
+                    );
+                    $output->writeln("     + Statistic added");
+                }
+            }
+
+
             
         }
 
+        $output->writeln("# Saving to DB");
         $this->em->flush();
 
-        die("?????");
-
-
-
-
-        
+        $output->writeln("# Done");        
         
     }
 
@@ -336,5 +387,67 @@ class ScraperCommand extends ContainerAwareCommand
         return $out;
     }
 
-  
+    public function getTwitterData($username) {
+        $settings = array(
+            'oauth_access_token' => $this->container->getParameter('tw_oauth_access_token'),
+            'oauth_access_token_secret' => $this->container->getParameter('tw_oauth_access_token_secret'),
+            'consumer_key' => $this->container->getParameter('tw_consumer_key'),
+            'consumer_secret' => $this->container->getParameter('tw_consumer_secret')
+        );
+
+        $url = 'https://api.twitter.com/1.1/users/show.json';
+        $getfield = '?screen_name='.str_replace("@", "", $username);
+        $requestMethod = 'GET';
+
+        $twitter = new TwitterAPIExchange($settings);
+        $data = $twitter->setGetfield($getfield)
+            ->buildOauth($url, $requestMethod)
+            ->performRequest();
+
+        if (empty($data)) {
+            return false;
+        }
+
+        $data = json_decode($data);
+
+        if (empty($data->followers_count)) {
+            return false;
+        }
+
+        $out['followers'] = $data->followers_count;
+        $out['tweets'] = $data->statuses_count;
+
+        return $out;
+    }
+
+    public function getGooglePlusData($id) {
+        $apikey = $this->container->getParameter('gplus_api_key');
+        $google = $this->curl(
+            sprintf('https://www.googleapis.com/plus/v1/people/%s?key=%s',
+                $id, $apikey)
+            );
+        $data = json_decode( $google );
+        if (empty($data) || !isset($data->circledByCount)) {
+            return false;
+        }
+        return $data->circledByCount;
+
+    }
+
+    public function curl($url) {
+        // Get cURL resource
+        $curl = curl_init();
+        // Set some options - we are passing in a useragent too here
+        curl_setopt_array($curl, array(
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_URL => $url,
+            CURLOPT_USERAGENT => 'PAPI'
+        ));
+        // Send the request & save response to $resp
+        $resp = curl_exec($curl);
+        // Close request to clear up some resources
+        curl_close($curl);
+
+        return $resp;
+    }
 }

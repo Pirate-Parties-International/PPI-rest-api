@@ -39,6 +39,8 @@ class DefaultController extends BaseController
             "party"     => $party,
             "parentOrg" => $parentOrg,
             "facebookLikes" => $this->getFacebookLikes($party->getCode()),
+            "googlePlusFollowers" => $this->getGooglePlusFollowers($party->getCode()),
+            "twitterFollowers" => $this->getTwitterFollowers($party->getCode()),
             "cover" => $this->getCoverImage($party->getCode())
         );
     }
