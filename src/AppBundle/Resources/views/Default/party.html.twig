@@ -1,5 +1,27 @@
 {% extends 'base.html.twig' %}
 
+{% block social_meta %}
+<!-- Search engines -->
+<meta name="description" content="Party profile on the Pirate Piraty Registry.">
+<meta itemprop="name" content="{{ party.name.en }}">
+<meta itemprop="description" content="Party profile on the Pirate Piraty Registry.">
+<meta itemprop="image" content="{{ party.logo }}">
+<!-- Twitter -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:site" content="@piratetimes">
+<meta name="twitter:title" content="{{ party.name.en }}">
+<meta name="twitter:description" content="Party profile on the Pirate Piraty Registry.">
+<meta name="twitter:image" content="{{ party.logo }}">
+<!-- Open Graph General (Facebook & Pinterest) -->
+<meta property="og:url" content="{{ app.request.schemeAndHttpHost ~ app.request.requestUri }}">
+<meta property="og:title" content="{{ party.name.en }}">
+<meta property="og:description" content="Party profile on the Pirate Piraty Registry.">
+<meta property="og:site_name" content="Pirate Party Registry">
+<meta property="og:image" content="{{ party.logo }}">
+<meta property="og:type" content="website">
+{% endblock %}
+{% block title %}{{ party.name.en }}{% endblock %}
+
 {% block stylesheets_extra %}
 	{% if party.headquarters %}
 		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
@@ -7,6 +29,7 @@
 {% endblock %}
 
 {% block content %}
+<div itemscope itemtype="http://schema.org/Organization">
     <div class="section no-pad-bot hide-on-small-only" id="index-banner">
         <div class="container valign-wrapper">
 			<div class="card party-detail-header">
@@ -15,10 +38,10 @@
 						<img src="{{ cover }}">
 					</div>
 					
-					<span class="card-title">
+					<span class="card-title" itemprop="name">
 						{{ party.name.en }}
 					</span>
-					<div class="logo">
+					<div class="logo" itemprop="logo">
 						<img src="{{ party.logo }}">
 					</div>
 				</div>
@@ -32,7 +55,7 @@
 					<div class="logo center-align">
 						<img src="{{ party.logo }}" class="">
 					</div>
-					<h2 class="center-align">
+					<h2 class="center-align" >
 						{{ party.name.en }}
 					</h2>
 			</div>
@@ -81,16 +104,19 @@
 							<span class="card-title">Contact</span>
 							{% for key, contact in party.contact %}
 								{% if contact %}
-									<div>
+									<div itemprop="contactPoint" >
 										<p class="contact-title">{{ key | humanize }}</p>
 										{% for type, link in contact %}
 											<p>
 												{% if type == 'email' %}
 													<i class="tiny material-icons md-light">email</i>
+													<span itemprop="email">
 												{% else %}
 													<i class="tiny material-icons md-light">link</i>
+													<span itemprop="url">
 												{% endif %}
-												 {{ link }}
+													 {{ link }}
+													</span>
 											</p>
 										{% endfor %}
 									</div>
@@ -249,10 +275,8 @@
             </div>
             
         </div>
-        <br><br>
-        <div class="section">
-        </div>
     </div>
+</div>
 {% endblock content%}
 
 
