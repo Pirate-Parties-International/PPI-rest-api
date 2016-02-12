@@ -260,20 +260,70 @@
 				</div>
 				{% endif %}
 			{% endif %}
+			</div>
 
-			{% if party.headquarters %}
+			<div class="row">
+            {% if party.socialNetworks %}
+            	{% if party.socialNetworks.youtube %}
 				<div class="col s12 m12 l12">
-					<div class="card headquarters">
-						<div class="card-content clearfix">
-							<span class="card-title">Headquarters</span>
-							<div id="map"></div>
-							
-						</div>
+					<div class="card social youtube">
+						<a href="https://www.youtube.com/user/{{party.socialNetworks.youtube}}">
+							<div class="card-content clearfix red white-text valign-wrapper">
+								<div class="red darken-1 icon-wrapper"><i class="icon-youtube small darken-1"></i></div>
+								<span class="social-text valign"> 
+									<span class="social-text-item">
+										{{ youtube.subscribers | number_format }} <small>subsribers</small>
+									</span>
+									<span class="social-text-item hide-on-small-only">
+										{{ youtube.views | number_format }} <small>views</small>
+									</span>
+									<span class="social-text-item hide-on-med-and-down">
+										{{ youtube.videoCount | number_format }} <small>videos</small>
+									</span>
+								</span>
+							</div>
+						</a>
 					</div>
 				</div>
+				{% endif %}
+			{% endif %}
+			</div>
+
+			{% if youtube.videos is defined %}
+			<div class="row youtube-videos">
+				<h3>Latest videos</h3>
+				{% for vid in youtube.videos | slice(0,3) %}
+					<a href="https://www.youtube.com/watch?v={{vid.id}}">
+						<div class="col s12 m6 l4">
+							<div class="card">
+								<div class="card-image">
+									<div class="pickgradient">
+										<img src="{{ vid.tumb }}">
+									</div>
+									
+									<span class="card-title truncate" itemprop="name">
+										{{ vid.title }}
+									</span>
+								</div>
+							</div>
+						</div>
+					</a>
+				{% endfor %}
+			</div>
 			{% endif %}
 
-            
+			<div class="row">
+				{% if party.headquarters %}
+					<div class="col s12 m12 l12">
+						<div class="card headquarters">
+							<div class="card-content clearfix">
+								<span class="card-title">Headquarters</span>
+								<div id="map"></div>
+								
+							</div>
+						</div>
+					</div>
+				{% endif %}
             </div>
             
         </div>

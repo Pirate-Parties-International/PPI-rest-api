@@ -34,47 +34,57 @@ class BaseController extends Controller
 	}
 
     public function getCoverImage($code) {
-        $meta = $this->getDoctrine()
-        ->getRepository('AppBundle:Metadata')
-        ->findOneBy([
-            'code' => strtolower($code),
-            'type' => Metadata::TYPE_FACEBOOK_COVER
-        ]);
+        $meta = $this->getMeta($code, Metadata::TYPE_FACEBOOK_COVER);
 
         if(!$meta) {
             return '/img/generic_cover.jpg';
         }
 
-        return $meta->getValue();
+        return $meta;
     }
 
     public function getFacebookLikes($code) {
-        $stat = $this->getDoctrine()
-        ->getRepository('AppBundle:Statistic')
-        ->findOneBy([
-                'code'    => strtolower($code),
-                'type'    => Stat::TYPE_FACEBOOK,
-                'subType' => Stat::SUBTYPE_LIKES
-            ],
-            [
-                'timestamp' => 'DESC'
-            ]
-        );
-
-        if (!$stat) {
-            return '????';
-        }
-
-        return $stat->getValue();
+        return $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES);
     }
 
     public function getTwitterFollowers($code) {
+        return $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWERS);
+    }
+
+    public function getGooglePlusFollowers($code) {
+        return $this->getStat($code, Stat::TYPE_GOOGLEPLUS, Stat::SUBTYPE_FOLLOWERS);
+    }
+
+    public function getYoutubeStatistics($code) {
+        $out = [
+            'subscribers' => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_SUBSCRIBERS),
+            'views'       => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_VIEWS),
+            'videoCount'  => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_VIDEOS),
+        ];
+
+        $videos = $this->getMeta($code, Metadata::TYPE_YOUTUBE_VIDEOS);
+
+        if (!empty($videos)) {
+            $out['videos'] = $videos;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Queries for a single statistic
+     * @param  string  $code    Party Code
+     * @param  string  $type    
+     * @param  string $subType  <optional>
+     * @return Statistic
+     */
+    public function getStat($code, $type, $subType) {
         $stat = $this->getDoctrine()
         ->getRepository('AppBundle:Statistic')
         ->findOneBy([
                 'code'    => strtolower($code),
-                'type'    => Stat::TYPE_TWITTER,
-                'subType' => Stat::SUBTYPE_FOLLOWERS
+                'type'    => $type,
+                'subType' => $subType
             ],
             [
                 'timestamp' => 'DESC'
@@ -82,30 +92,31 @@ class BaseController extends Controller
         );
 
         if (!$stat) {
-            return '????';
+            return '?';
         }
 
         return $stat->getValue();
     }
 
-    public function getGooglePlusFollowers($code) {
-        $stat = $this->getDoctrine()
-        ->getRepository('AppBundle:Statistic')
+    /**
+     * Queries for a single meta value
+     * @param  string $code
+     * @param  string $type
+     * @return Metadata
+     */
+    public function getMeta($code, $type) {
+        $meta = $this->getDoctrine()
+        ->getRepository('AppBundle:Metadata')
         ->findOneBy([
-                'code'    => strtolower($code),
-                'type'    => Stat::TYPE_GOOGLEPLUS,
-                'subType' => Stat::SUBTYPE_FOLLOWERS
-            ],
-            [
-                'timestamp' => 'DESC'
-            ]
-        );
+            'code' => strtolower($code),
+            'type' => $type
+        ]);
 
-        if (!$stat) {
-            return '????';
+        if(!$meta) {
+            return false;
         }
 
-        return $stat->getValue();
+        return $meta->getValue();
     }
 
 

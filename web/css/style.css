@@ -223,6 +223,34 @@ dd {
 	padding: 0;
 }
 
+.youtube .social-text-item {
+	padding-left: 30px;
+    padding-right: 30px;
+}
+
+.youtube-videos .card {
+	box-shadow: none;
+	z-index: -2;
+}
+
+.youtube-videos h3 {
+	font-size: 1.7em;
+    color: gray;
+    padding-left: 12px;
+}
+
+.youtube-videos .card .card-image .card-title {
+	font-size: 1em;
+	font-weight: bold;
+	max-width: 100%;
+}
+
+.youtube-videos .card .card-image img {
+	position:relative;
+	z-index:-1;
+	display:block;
+}
+
 .headquarters #map {
 	height: 380px;
 }

@@ -127,7 +127,7 @@ class Metadata
     public function getValue()
     {
         if ($this->type == self::TYPE_YOUTUBE_VIDEOS) {
-            return json_decode($this->value);
+            return json_decode($this->value, true);
         }
 
         return $this->value;
