@@ -5,19 +5,19 @@
 <meta name="description" content="Party profile on the Pirate Piraty Registry.">
 <meta itemprop="name" content="{{ party.name.en }}">
 <meta itemprop="description" content="Party profile on the Pirate Piraty Registry.">
-<meta itemprop="image" content="{{ party.logo }}">
+<meta itemprop="image" content="{{app.request.schemeAndHttpHost}}{{ party.logo }}">
 <!-- Twitter -->
 <meta name="twitter:card" content="summary">
 <meta name="twitter:site" content="@piratetimes">
 <meta name="twitter:title" content="{{ party.name.en }}">
 <meta name="twitter:description" content="Party profile on the Pirate Piraty Registry.">
-<meta name="twitter:image" content="{{ party.logo }}">
+<meta name="twitter:image" content="{{app.request.schemeAndHttpHost}}{{ party.logo }}">
 <!-- Open Graph General (Facebook & Pinterest) -->
 <meta property="og:url" content="{{ app.request.schemeAndHttpHost ~ app.request.requestUri }}">
 <meta property="og:title" content="{{ party.name.en }}">
 <meta property="og:description" content="Party profile on the Pirate Piraty Registry.">
 <meta property="og:site_name" content="Pirate Party Registry">
-<meta property="og:image" content="{{ party.logo }}">
+<meta property="og:image" content="{{app.request.schemeAndHttpHost}}{{ party.logo }}">
 <meta property="og:type" content="website">
 {% endblock %}
 {% block title %}{{ party.name.en }}{% endblock %}
