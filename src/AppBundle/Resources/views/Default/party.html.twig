@@ -41,8 +41,8 @@
 					<span class="card-title" itemprop="name">
 						{{ party.name.en }}
 					</span>
-					<div class="logo" itemprop="logo">
-						<img src="{{ party.logo }}">
+					<div class="logo">
+						<img src="{{ party.logo }}" itemprop="logo">
 					</div>
 				</div>
 			</div>
@@ -111,12 +111,12 @@
 												{% if type == 'email' %}
 													<i class="tiny material-icons md-light">email</i>
 													<span itemprop="email">
+														 {{ link }}
+													</span>
 												{% else %}
 													<i class="tiny material-icons md-light">link</i>
-													<span>
+													<a href="">{{ link }}</a>
 												{% endif %}
-													 {{ link }}
-													</span>
 											</p>
 										{% endfor %}
 									</div>
