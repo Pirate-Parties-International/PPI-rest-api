@@ -10,6 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Pirates\PapiInfo\Compile;
 
 use TwitterAPIExchange;
+use Madcoda\Youtube;
 
 use AppBundle\Entity\Party;
 use AppBundle\Entity\Metadata;
@@ -38,6 +39,7 @@ class ScraperCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        
         $this->container = $this->getContainer();
         $this->em = $this->container->get('doctrine')->getManager();
 
@@ -145,6 +147,55 @@ class ScraperCommand extends ContainerAwareCommand
                         $gd
                     );
                     $output->writeln("     + Statistic added");
+                }
+            }
+
+            //
+            // Youtube
+            // 
+            if (!empty($sn['youtube'])) {
+                $output->writeln("     + Starting Youtube import");
+                $yd = $this->getYoutubeData($sn['youtube']);
+
+                if ($yd == false ||
+                    empty($yd)
+                    ) {
+                    $output->writeln("     + ERROR while retrieving G+ data");
+                } else {
+                    $output->writeln("     + Youtube data retrived");
+                    $this->addStatistic(
+                        $code, 
+                        Statistic::TYPE_YOUTUBE, 
+                        Statistic::SUBTYPE_SUBSCRIBERS, 
+                        $yd['stats']['subscriberCount']
+                    );
+
+                    $this->addStatistic(
+                        $code, 
+                        Statistic::TYPE_YOUTUBE, 
+                        Statistic::SUBTYPE_VIEWS,
+                        $yd['stats']['viewCount']
+                    );
+
+                    $this->addStatistic(
+                        $code, 
+                        Statistic::TYPE_YOUTUBE, 
+                        Statistic::SUBTYPE_VIDEOS, 
+                        $yd['stats']['videoCount']
+                    );
+
+                    $output->writeln("     + Statistic added");
+
+                    if (!empty($yd['videos'])) {
+                        $this->addMeta(
+                            $code,
+                            Metadata::TYPE_YOUTUBE_VIDEOS,
+                            json_encode($yd['videos'])
+                        );
+                    }
+
+                    $output->writeln("     + Metadata added");
+                    
                 }
             }
 
@@ -436,6 +487,43 @@ class ScraperCommand extends ContainerAwareCommand
             return false;
         }
         return $data->circledByCount;
+
+    }
+
+    public function getYoutubeData($id) {
+        $apikey = $this->container->getParameter('gplus_api_key');
+        $youtube = new Youtube(array('key' => $apikey));
+
+        $data = $youtube->getChannelByName($id);
+
+        if (empty($data)) {
+            return false;
+        }
+        if (empty($data->statistics) || empty($data->statistics->viewCount)) {
+            return false;
+        }
+        $out['stats']['viewCount'] = $data->statistics->viewCount;
+        $out['stats']['subscriberCount'] = $data->statistics->subscriberCount;
+        $out['stats']['videoCount'] = $data->statistics->videoCount;
+
+        $playlist = $data->contentDetails->relatedPlaylists->uploads;
+
+        $videos = $youtube->getPlaylistItemsByPlaylistId($playlist);
+
+        if (!empty($videos)) {
+            $out['videos'] = [];
+
+            foreach ($videos as $key => $vid) {
+                if ($key > 4) break;
+
+                $out['videos'][] = [
+                    'title' => $vid->snippet->title,
+                    'tumb' => $vid->snippet->thumbnails->medium->url,
+                    'id' => $vid->snippet->resourceId->videoId
+                ];
+            }
+        }
+        return $out;
 
     }
 

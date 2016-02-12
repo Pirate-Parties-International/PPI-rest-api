@@ -13,6 +13,8 @@ use Doctrine\ORM\Mapping as ORM;
 class Metadata
 {
     const TYPE_FACEBOOK_COVER = 'fb_cover';
+
+    const TYPE_YOUTUBE_VIDEOS = 'yt_videos';
     
     /**
      * @var int
@@ -40,7 +42,7 @@ class Metadata
     /**
      * @var string
      *
-     * @ORM\Column(name="value", type="string", length=255)
+     * @ORM\Column(name="value", type="text")
      */
     private $value;
 
@@ -124,6 +126,10 @@ class Metadata
      */
     public function getValue()
     {
+        if ($this->type == self::TYPE_YOUTUBE_VIDEOS) {
+            return json_decode($this->value);
+        }
+
         return $this->value;
     }
 }
