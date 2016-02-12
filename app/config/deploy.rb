@@ -33,8 +33,8 @@ set :shared_files,      ["app/config/parameters.yml"]
 set :shared_children,   [app_path + "/logs", web_path + "/uploads", "vendor", 
 	"app/Resources/java", "etc", 
 	web_path + "/img/pp-flag",
-	web_path + "/img/pp-logo/",
-	web_path + "/img/fb-covers/"]
+	web_path + "/img/pp-logo",
+	web_path + "/img/fb-covers"]
 
 set :stages,        %w(production dev)
 set :default_stage, "dev"
