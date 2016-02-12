@@ -104,7 +104,7 @@
 							<span class="card-title">Contact</span>
 							{% for key, contact in party.contact %}
 								{% if contact %}
-									<div itemprop="contactPoint" >
+									<div >
 										<p class="contact-title">{{ key | humanize }}</p>
 										{% for type, link in contact %}
 											<p>
@@ -113,7 +113,7 @@
 													<span itemprop="email">
 												{% else %}
 													<i class="tiny material-icons md-light">link</i>
-													<span itemprop="url">
+													<span>
 												{% endif %}
 													 {{ link }}
 													</span>
@@ -148,7 +148,9 @@
 											<p class="">
 												<i class="small material-icons md-light left">link</i>
 												<span class="contact-title">{{ key | humanize }}</span><br />
+												<a href=="{{ website }}" itemprop="url">
 												 {{ website }}
+												 </a>
 											</p>
 									</div>
 								{% else %}
