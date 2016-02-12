@@ -91,6 +91,11 @@ div.ppcard > div {
     font-weight: 400;
     text-shadow: 0 1px 0 black;
     margin-left: 170px;
+    line-height: 0.8em;
+}
+
+.party-detail-header span.card-title small {
+	font-size: 0.5em;
 }
 
 .party-detail-header .logo {
@@ -117,6 +122,10 @@ div.ppcard > div {
 
 .party-detail-header-mobile h2 {
 	font-size: 2em;
+}
+
+.party-detail-header-mobile h2 small {
+	font-size: 0.5em;
 }
 
 .party-detail-header-mobile .logo {

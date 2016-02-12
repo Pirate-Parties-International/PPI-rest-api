@@ -187,6 +187,14 @@ class Party
         return $this->socialReach;
     }
 
+    public function getNativeNames() {
+        $names = $this->getName();
+        unset($names['en']);
+        foreach ($names as &$name) {
+            $name = str_replace(' && ', ', ', $name);
+        }
+        return $names;
+    }
 
     /**
      * Set code
