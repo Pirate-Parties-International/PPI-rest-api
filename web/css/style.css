@@ -49,6 +49,10 @@ div.ppcard > div {
 	color: rgba(0, 0, 0, 0.870588);
 }
 
+.pplist a:hover {
+	text-decoration: underline;
+}
+
 /*
 	Party detail page
  */
