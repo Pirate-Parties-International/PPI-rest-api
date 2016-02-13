@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "096a3769e20034edd7535d21b2ad7b70",
-    "content-hash": "8e3d012ad1fd8145f9d3b837a0f8a310",
+    "hash": "eef17478d8b989851f4c0e7ce3bbace8",
+    "content-hash": "0a598422367359af0e7f8b58b08d5fb6",
     "packages": [
         {
             "name": "behat/transliterator",
@@ -1951,16 +1951,16 @@
         },
         {
             "name": "pirates/papi-info",
-            "version": "v1.0.0-alpha",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Pirate-Parties-International/PPI-party-info.git",
-                "reference": "1e91a048f414d1e0b4570525367acb4a4eb6ac14"
+                "reference": "d4cd6274fa20a6eb89329269c87ed8511862e296"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Pirate-Parties-International/PPI-party-info/zipball/1e91a048f414d1e0b4570525367acb4a4eb6ac14",
-                "reference": "1e91a048f414d1e0b4570525367acb4a4eb6ac14",
+                "url": "https://api.github.com/repos/Pirate-Parties-International/PPI-party-info/zipball/d4cd6274fa20a6eb89329269c87ed8511862e296",
+                "reference": "d4cd6274fa20a6eb89329269c87ed8511862e296",
                 "shasum": ""
             },
             "require": {
@@ -1985,7 +1985,7 @@
                 }
             ],
             "description": "Data repository for Pirate Parties around the world.",
-            "time": "2016-02-09 15:11:18"
+            "time": "2016-02-13 17:32:59"
         },
         {
             "name": "psr/log",
@@ -3217,7 +3217,7 @@
     "minimum-stability": "alpha",
     "stability-flags": {
         "j7mbo/twitter-api-php": 20,
-        "pirates/papi-info": 15
+        "pirates/papi-info": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
