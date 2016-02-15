@@ -40,7 +40,7 @@ class InternationalOrg
     /**
      * @var string
      *
-     * @ORM\Column(name="website", type="string", length=200, unique=true)
+     * @ORM\Column(name="website", type="string", length=200)
      */
     private $website;
 
