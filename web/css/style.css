@@ -212,6 +212,10 @@ dd {
     margin-left: 15px;
 }
 
+.membership .org-body a {
+	color: inherit;
+}
+
 .membership .org-body small {
 	font-size:0.8em;
 	color: gray;

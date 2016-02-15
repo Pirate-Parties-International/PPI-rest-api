@@ -205,9 +205,11 @@
 							
 							{% for org in party.intMemberships if org %}
 								<div class="org-body">
-									<img src="/img/{{ org.intOrg.code | lower }}.png" class="left">
-									{{ org.intOrg.name }} <small>({{ org.type | humanize }})</small>
-									<div class="clearfix"></div>
+									<a href="{{ org.intOrg.website }}">
+										<img src="/img/{{ org.intOrg.code | lower }}.png" class="left">
+										{{ org.intOrg.name }} <small>({{ org.type | humanize }})</small>
+										<div class="clearfix"></div>
+									</a>
 								</div>
 							{% endfor %}
 						</div>
@@ -345,7 +347,7 @@
 		<script type="text/javascript">
 			var address = '{{party.headquarters.address}}';
 			var longitude = '{{party.headquarters.coordinates.longitude}}';
-			var latitude = '{{party.headquarters.coordinates.latitude}}'
+			var latitude = '{{party.headquarters.coordinates.latitude}}';
 
 			var map = L.map('map').setView([latitude, longitude], 16);
 
