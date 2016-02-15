@@ -32,11 +32,13 @@ class LoadIntOrgData implements FixtureInterface, ContainerAwareInterface
         $t = new IntOrg();
         $t->setCode('ppi');
         $t->setName('Pirate Parties International');
+        $t->setWebsite('http://www.pp-international.net/');
         $orgs[] = $t;
 
         $t = new IntOrg();
         $t->setCode('ppeu');
         $t->setName('European Pirate Party');
+        $t->setWebsite('http://europeanpirateparty.eu/');
         $orgs[] = $t;
 
         foreach ($orgs as $org) {
