@@ -205,9 +205,11 @@
 							
 							{% for org in party.intMemberships if org %}
 								<div class="org-body">
-									<img src="/img/{{ org.intOrg.code | lower }}.png" class="left">
-									{{ org.intOrg.name }} <small>({{ org.type | humanize }})</small>
-									<div class="clearfix"></div>
+									<a href="{{ org.intOrg.website }}">
+										<img src="/img/{{ org.intOrg.code | lower }}.png" class="left">
+										{{ org.intOrg.name }} <small>({{ org.type | humanize }})</small>
+										<div class="clearfix"></div>
+									</a>
 								</div>
 							{% endfor %}
 						</div>

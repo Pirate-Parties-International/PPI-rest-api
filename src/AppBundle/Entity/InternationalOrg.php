@@ -129,6 +129,8 @@ class InternationalOrg
      */
     public function getWebsite()
     {
+        $website = parse_url($this->website, PHP_URL_HOST);
+        $website = str_replace('www.', '', $website);
         return $this->website;
     }
     /**
