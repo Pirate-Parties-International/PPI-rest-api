@@ -38,6 +38,13 @@ class InternationalOrg
     private $name;
 
     /**
+     * @var string
+     *
+     * @ORM\Column(name="website", type="string", length=200, unique=true)
+     */
+    private $website;
+
+    /**
      * @ORM\OneToMany(targetEntity="IntOrgMembership", mappedBy="intOrg")
      */
     private $partyMemberships;
@@ -99,6 +106,32 @@ class InternationalOrg
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Set website
+     *
+     * @param string $website
+     *
+     * @return InternationalOrg
+     */
+    public function setWebsite($website)
+    {
+        $this->website = $website;
+
+        return $this;
+    }
+
+    /**
+     * Get website
+     *
+     * @return string
+     */
+    public function getWebsite()
+    {
+        $website = parse_url($this->website, PHP_URL_HOST);
+        $website = str_replace('www.', '', $website);
+        return $this->website;
     }
     /**
      * Constructor
