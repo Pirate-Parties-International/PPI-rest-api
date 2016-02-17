@@ -31,7 +31,8 @@
         "madcoda/php-youtube-api": "1.*",
         "pirates/papi-info": "dev-master",
         "facebook/php-sdk-v4" : "~5.0",
-        "nelmio/api-doc-bundle": "^2.11"
+        "nelmio/api-doc-bundle": "^2.11",
+        "doctrine/doctrine-migrations-bundle": "^1.0"
     },
     "require-dev": {
         "sensio/generator-bundle": "~3.0",
