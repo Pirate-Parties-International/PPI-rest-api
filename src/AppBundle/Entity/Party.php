@@ -139,6 +139,17 @@ class Party
      */
     private $membership;
 
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="defunct", type="boolean", nullable=false)
+     */
+    private $defunct;
+
+    /**
+     * NON ORM property
+     * @var array
+     */
     public $socialReach;
 
     /**
@@ -147,6 +158,7 @@ class Party
     public function __construct()
     {
         $this->intMemberships = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->defunct = false;
     }
 
     /**
@@ -540,5 +552,29 @@ class Party
     public function getCountryFlag()
     {
         return $this->countryFlag;
+    }
+
+    /**
+     * Set defunct
+     *
+     * @param boolean $defunct
+     *
+     * @return Party
+     */
+    public function setDefunct($defunct)
+    {
+        $this->defunct = $defunct;
+
+        return $this;
+    }
+
+    /**
+     * Get defunct
+     *
+     * @return boolean
+     */
+    public function getDefunct()
+    {
+        return $this->defunct;
     }
 }

@@ -144,6 +144,9 @@ class LoadDataCommand extends ContainerAwareCommand
             $party->setName($partyData->partyName);
             $party->setType($partyData->type);
 
+            if (!empty($partyData->defunct) && $partyData->defunct == true) {
+                $party->setDefunct(true);
+            }
             if (!empty($partyData->region)) {
                 $party->setRegion($partyData->region);
             }
