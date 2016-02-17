@@ -12,6 +12,8 @@
  Front page
  */
 
+
+
 .pplist tbody img {
 	max-width: 80px;
 	max-height: 80px;
@@ -287,4 +289,43 @@ dd {
 
 .singlePage h2 {
 	font-size: 1.5em;
+}
+
+/*
+Sorting
+ */
+
+.sort:after {
+  display:inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  content:"";
+  position: relative;
+  top:-10px;
+  right:-5px;
+}
+.sort.asc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid black;
+  content:"";
+  position: relative;
+  top:4px;
+  right:-5px;
+}
+.sort.desc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid black;
+  content:"";
+  position: relative;
+  top:-4px;
+  right:-5px;
 }
