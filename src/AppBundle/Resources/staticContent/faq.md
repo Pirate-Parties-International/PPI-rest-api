@@ -29,7 +29,7 @@ If the new category will be used by a lot of people and can be kept updated. If 
 Everyone. Information is for sharing. Use it, develop on top of it and share back to others that might be interested.
 
 ## Where is the API used?
-Take a look at the [API integrations](/integrations) for how people have used it. If you know about any usage not listed then please let us know. If you build your own integration we will add it to the list.
+The main usage is here at api.piratetimes.net where it is displayed as THE registry of Pirate Parties. Take a look at the [API integrations](/integrations) for how people have used it. If you know about any usage not listed then please let us know. If you build your own integration we will add it to the list.
 
 ## I developed 'xyz' using this API, now what?
 Great! Let us know so we can help and spread it to people that might be interested in using it! api@piratetimes.net
