@@ -120,7 +120,7 @@
 													</span>
 												{% else %}
 													<i class="tiny material-icons md-light">link</i>
-													<a href="">{{ link }}</a>
+													<a href="{{ link }}">{{ link }}</a>
 												{% endif %}
 											</p>
 										{% endfor %}
@@ -228,7 +228,7 @@
 
             {% if party.socialNetworks %}
 
-            	{% if party.socialNetworks.facebook %}
+            	{% if party.socialNetworks.facebook is defined and party.socialNetworks.facebook %}
 				<div class="col s12 m6 l4">
 					<div class="card social facebook">
 						<a href="https://facebook.com/{{party.socialNetworks.facebook.username}}">
@@ -241,7 +241,7 @@
 				</div>
 				{% endif %}
 
-				{% if party.socialNetworks.twitter %}
+				{% if party.socialNetworks.twitter is defined and party.socialNetworks.twitter %}
 				<div class="col s12 m6 l4">
 					<div class="card social twitter">
 						<a href="https://twitter.com/{{party.socialNetworks.twitter.username}}">
@@ -254,7 +254,7 @@
 				</div>
 				{% endif %}
 
-				{% if party.socialNetworks.googlePlus %}
+				{% if party.socialNetworks.googlePlus is defined and party.socialNetworks.googlePlus %}
 				<div class="col s12 m6 l4">
 					<div class="card social facebook">
 						<a href="https://plus.google.com/{{party.socialNetworks.googlePlus}}">
@@ -271,7 +271,7 @@
 
 			<div class="row">
             {% if party.socialNetworks %}
-            	{% if party.socialNetworks.youtube %}
+            	{% if party.socialNetworks.youtube is defined and  party.socialNetworks.youtube %}
 				<div class="col s12 m12 l12">
 					<div class="card social youtube">
 						<a href="https://www.youtube.com/user/{{party.socialNetworks.youtube}}">

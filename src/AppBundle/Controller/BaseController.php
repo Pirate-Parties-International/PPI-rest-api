@@ -11,11 +11,18 @@ use AppBundle\Entity\Statistic as Stat;
 class BaseController extends Controller
 {
 
-	public function getAllParties() {
+	public function getAllParties($includeDefunct = false) {
 		
 		$parties = $this->getDoctrine()
-        ->getRepository('AppBundle:Party')
-        ->findAll();
+        ->getRepository('AppBundle:Party');
+
+        if (!$includeDefunct) {
+            $parties = $parties->findBy([
+                'defunct' => $includeDefunct
+                ]);
+        } else {
+            $parties = $parties->findAll();
+        }
     	
     	$allData = array();
     	foreach ($parties as $party) {

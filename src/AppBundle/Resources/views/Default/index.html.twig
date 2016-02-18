@@ -34,17 +34,18 @@
     </div>
     <div class="container">
         <div class="section valign-wrapper">
-            <div class="row pplist valign">
+            <div class="row pplist valign" id="pplist">
+						
             	<table class="highlight">
 			        <thead class="hide-on-small-only">
 			          <tr>
 			              <th data-field="logo"></th>
-			              <th data-field="name">Party name</th>
-			              <th data-field="ppeu" class="">Social reach</th>
+			              <th data-field="name"><a href="#" data-sort="party-name" class="sort">Party name</a></th>
+			              <th data-field="ppeu" class=""><a href="#" data-sort="social-reach-data" class="sort">Social reach</a></th>
 			              <th data-field="reach" class="right-align">Official website</th>
 			          </tr>
 			        </thead>
-			        <tbody>
+			        <tbody class="list">
 		            	{% for party in parties %}
 		            		<tr>
 					            <td class="valign-wrapper">
@@ -67,6 +68,9 @@
 					            </small>
 					           		 </a>
 					            </td>
+					            <td style="display:none" class="social-reach-data">
+					            	{{ party.socialReach.value }}
+					            </td>
 					            <td class="hide-on-small-only right-align">
 					            	{% if party.cleanOfficialWebsite %}
 					            	<a href="{{party.websites.official}}" target="_blank">
@@ -86,3 +90,17 @@
         </div>
     </div>
 {% endblock content%}
+
+{% block javascripts_extra %}
+		<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.1.1/list.min.js"></script>
+		<script type="text/javascript">
+			var options = {
+			  valueNames: [ 'party-name', 'social-reach-data' ]
+			};
+
+			var ppList = new List('pplist', options);
+
+			ppList.sort('social-reach-data', { order: "desc" }); 
+		</script>
+
+{% endblock javascripts_extra %}
