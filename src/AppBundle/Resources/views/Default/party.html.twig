@@ -95,6 +95,12 @@
 							  {% endif %}
 							  <dt>Party Code</dt>
 							  <dd>{{ party.code | upper }}</dd>
+							  <dt>Status</dt>
+							  {% if not party.defunct %}
+							  	  <dd>Active</dd>
+							  {% else %}
+							  	  <dd>Defunct</dd>
+							  {% endif %}
 		  					</dl>
 		  					<div class="flag hide-on-small-only">
 								<img src="{{ party.countryFlag }}">
