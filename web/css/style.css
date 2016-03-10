@@ -116,6 +116,17 @@ div.ppcard > div {
     background-color: white;
 }
 
+.party-detail-header .defunct {
+	max-width: 200px;
+	position: absolute;
+    bottom: -40px;
+    right: 0;
+    margin: 20px;
+    z-index: 20;
+    border: 5px solid red;
+    background-color: white;
+}
+
 .party-detail-header-mobile {
 	width: 100%;
 }
