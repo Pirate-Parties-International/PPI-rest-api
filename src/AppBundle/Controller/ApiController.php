@@ -25,6 +25,12 @@ class ApiController extends BaseController
      * @ApiDoc(
      *  resource=false,
      *  section="Party",
+     *  filters={
+     *      {"name"="active_parties", "description"="List active parties.", "default"="yes"},
+     *      {"name"="defunct_parties", "description"="List defunct parties.", "default"="no"},
+     *      {"name"="ppi_members_only", "description"="Only list PPI members.", "default"="no"},
+     *      {"name"="ppeu_members_only", "description"="Only list PPEU members.", "default"="no"}
+     *  },
      *  statusCodes={
      *         200="Returned when successful."
      *     }
@@ -32,48 +38,32 @@ class ApiController extends BaseController
      */
     public function partiesAction()
     {
-    	$allData = $this->getAllParties();
+        // collect filter data
+        $active = $_GET['active_parties'];
+        $defunct = $_GET['defunct_parties'];
+        $ppi = $_GET['ppi_members_only'];
+        $ppeu = $_GET['ppeu_members_only'];
 
-        $serializer = $this->get('jms_serializer');
-        $allData = $serializer->serialize($allData, 'json');
-		return new Response($allData, 200);
-    }
+        // set default parameters before applying filters
+        $includeDefunct = false; $membership = false;
 
-    /**
-     * Lists data about SELECT parties
-     * 
-     * @Route("parties/{parameter}", name="ppi_api_parties_filter")
-     * @Method({"GET"})
-     *
-     * @ApiDoc(
-     *  resource=false,
-     *  section="Party",
-     *  requirements={
-     *      {"name"="parameter", "dataType"="string", "required"=true, "description"="Valid parameters: ppi_members, ppeu_members, include_defunct, only_defunct."}
-     *  },
-     *  statusCodes={
-     *         200="Returned when successful.",
-     *         404="Returned when not found."
-     *     }
-     * )
-     */
-    public function filterAction($parameter)
-    {
-        $includeDefunct = false; $membership = false; // reset parameters before search
-        if ($parameter === 'include_defunct') {$includeDefunct = true;}
-        else if ($parameter === 'only_defunct') {$includeDefunct = 'only';}
-        else if ($parameter === 'ppi_members') {$membership = 'ppi';}
-        else if ($parameter === 'ppeu_members') {$membership = 'ppeu';}
-        else {
-            return new JsonResponse(array("error"=>"Invalid search parameter"), 404);
+        // set 'includeDefunct' param
+        if ($defunct == 'yes') {
+            $includeDefunct = true;
+            if ($active != 'yes') $includeDefunct = 'only';
         }
-
+        
+        // set 'membership' param
+        if ($ppi == 'yes' && $ppeu == 'yes') $membership = 'ppi+ppeu';
+        else if ($ppi == 'yes') $membership = 'ppi';
+        else if ($ppeu == 'yes') $membership = 'ppeu';
+        
+        // run through BaseController
         $allData = $this->getAllParties($includeDefunct, $membership);
 
         $serializer = $this->get('jms_serializer');
         $allData = $serializer->serialize($allData, 'json');
-
-        return new Response($allData, 200);
+	    return new Response($allData, 200);
     }
 
     /**

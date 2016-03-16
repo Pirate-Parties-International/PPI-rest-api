@@ -16,28 +16,37 @@ class BaseController extends Controller
 		$parties = $this->getDoctrine()
         ->getRepository('AppBundle:Party');
 
-        if (!$includeDefunct) { // find only active parties
-            $parties = $parties->findBy([
-                'defunct' => false
-            ]);
-        } else if ($includeDefunct === 'only') { // find only defunct parties
-            $parties = $parties->findBy([
-                'defunct' => true
-            ]);
+        // if searching for active parties only
+        if (!$includeDefunct) {
+            $parties = $parties->findBy(['defunct' => false]);
+        // else if searching for defunct parties only
+        } else if ($includeDefunct === 'only') {
+            $parties = $parties->findBy(['defunct' => true]);
+        // else searching for all parties
         } else {
-            $parties = $parties->findAll(); // find all parties
+            $parties = $parties->findAll();
         }
     	
     	$allData = array();
-    	foreach ($parties as $party) { // for each party
+    	foreach ($parties as $party) {
 
-            if ($membership) { // if 'membership' filter is set ('ppi' or 'ppeu')
-                $memberships = $party->getMembership(); // check membership
-                if (array_key_exists($membership, $memberships)) { // if party is a member
+            // if 'membership' param is not false
+            if ($membership) {
+                $memberships = $party->getMembership();
+
+                // if searching for members of BOTH ppi and ppeu
+                if ($membership == 'ppi+ppeu') {
+                    if (array_key_exists('ppi', $memberships) && array_key_exists('ppeu', $memberships)) { // if party is a member of both
+                        $allData[strtolower($party->getCode())] = $party; // add to $allData
+                    } else {} //if not, skip
+                }
+                // else if searching for members of EITHER ppi or ppeu
+                else if (array_key_exists($membership, $memberships)) { // if party is a member
                     $allData[strtolower($party->getCode())] = $party; // add to $allData
                 } else {} // if not, skip
 
-            } else { // if 'membership' is not set, add all to $allData
+            // else if 'membership' param is false, add all parties
+            } else {
                 $allData[strtolower($party->getCode())] = $party;
             }
 
