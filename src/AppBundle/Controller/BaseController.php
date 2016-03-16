@@ -11,24 +11,37 @@ use AppBundle\Entity\Statistic as Stat;
 class BaseController extends Controller
 {
 
-	public function getAllParties($includeDefunct = false) {
+	public function getAllParties($includeDefunct = false, $membership = false) {
 		
 		$parties = $this->getDoctrine()
         ->getRepository('AppBundle:Party');
 
-        if (!$includeDefunct) {
+        if (!$includeDefunct) { // find only active parties
             $parties = $parties->findBy([
-                'defunct' => $includeDefunct
-                ]);
+                'defunct' => false
+            ]);
+        } else if ($includeDefunct === 'only') { // find only defunct parties
+            $parties = $parties->findBy([
+                'defunct' => true
+            ]);
         } else {
-            $parties = $parties->findAll();
+            $parties = $parties->findAll(); // find all parties
         }
     	
     	$allData = array();
-    	foreach ($parties as $party) {
-    		$allData[strtolower($party->getCode())] = $party;
-    	}
+    	foreach ($parties as $party) { // for each party
 
+            if ($membership) { // if 'membership' filter is set ('ppi' or 'ppeu')
+                $memberships = $party->getMembership(); // check membership
+                if (array_key_exists($membership, $memberships)) { // if party is a member
+                    $allData[strtolower($party->getCode())] = $party; // add to $allData
+                } else {} // if not, skip
+
+            } else { // if 'membership' is not set, add all to $allData
+                $allData[strtolower($party->getCode())] = $party;
+            }
+
+    	}
     	return $allData;
 	}
 

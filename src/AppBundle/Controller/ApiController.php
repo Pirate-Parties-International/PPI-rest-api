@@ -40,6 +40,43 @@ class ApiController extends BaseController
     }
 
     /**
+     * Lists data about SELECT parties
+     * 
+     * @Route("parties/{parameter}", name="ppi_api_parties_filter")
+     * @Method({"GET"})
+     *
+     * @ApiDoc(
+     *  resource=false,
+     *  section="Party",
+     *  requirements={
+     *      {"name"="parameter", "dataType"="string", "required"=true, "description"="Valid parameters: ppi_members, ppeu_members, include_defunct, only_defunct."}
+     *  },
+     *  statusCodes={
+     *         200="Returned when successful.",
+     *         404="Returned when not found."
+     *     }
+     * )
+     */
+    public function filterAction($parameter)
+    {
+        $includeDefunct = false; $membership = false; // reset parameters before search
+        if ($parameter === 'include_defunct') {$includeDefunct = true;}
+        else if ($parameter === 'only_defunct') {$includeDefunct = 'only';}
+        else if ($parameter === 'ppi_members') {$membership = 'ppi';}
+        else if ($parameter === 'ppeu_members') {$membership = 'ppeu';}
+        else {
+            return new JsonResponse(array("error"=>"Invalid search parameter"), 404);
+        }
+
+        $allData = $this->getAllParties($includeDefunct, $membership);
+
+        $serializer = $this->get('jms_serializer');
+        $allData = $serializer->serialize($allData, 'json');
+
+        return new Response($allData, 200);
+    }
+
+    /**
      * List data about ONE party
      * 
      * @Route("parties/{id}", name="ppi_api_parties_id")
