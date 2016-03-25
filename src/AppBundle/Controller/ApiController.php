@@ -39,7 +39,11 @@ class ApiController extends BaseController
      */
     public function partiesAction()
     {
-        $membershipFilter = $_GET['international_membership'];
+/*      $countryFilter = $_GET['country'];      # currently obsolete, no countries with multiple parties
+        $regionFilter = $_GET['region'];        # currently obsolete, always null
+        $typeFilter = $_GET['party_type'];      # currently obsolete, always national
+        $parentFilter = $_GET['parent_party'];  # currently obsolete, always null
+*/      $membershipFilter = $_GET['international_membership'];
         $orderBy = $_GET['sort_results_by'];
         $activeTemp = $_GET['show_active_parties'];
         $defunctTemp = $_GET['show_defunct_parties'];
@@ -55,7 +59,7 @@ class ApiController extends BaseController
         }
 
         # run through BaseController
-        $allData = $this->getAllParties($includeDefunct, $membershipFilter, $orderBy);
+        $allData = $this->getAllParties($includeDefunct, $membershipFilter, $orderBy); // , $countryFilter, $regionFilter, $typeFilter, $parentFilter);
 
         $serializer = $this->get('jms_serializer');
         $allData = $serializer->serialize($allData, 'json');

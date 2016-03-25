@@ -10,7 +10,15 @@ use AppBundle\Entity\Statistic as Stat;
 
 class BaseController extends Controller
 {
-	public function getAllParties($includeDefunct = false, $membershipFilter = 'all', $orderBy = 'code') {
+	public function getAllParties(
+/*      $countryFilter,     # currently obsolete, redundant with getOneParty()
+        $regionFilter,      # currently obsolete, always null
+        $typeFilter,        # currently obsolete, always 'national'
+        $parentFilter,      # currently obsolete, always null
+*/      $includeDefunct = false,
+        $membershipFilter = 'all',
+        $orderBy = 'code',
+        ) {
 
 		$parties = $this->getDoctrine()
           ->getRepository('AppBundle:Party');
@@ -52,6 +60,24 @@ class BaseController extends Controller
             case ('code'):
                 $query->orderBy('p.code', 'ASC');
         }
+
+/*      if (!is-null($countryFilter)) {
+            $query->where('p.countryCode = :country')
+              ->setParameter('country', $countryFilter);
+        }
+        if (!is_null($regionFilter)) {
+            $query->where('p.region = :region')
+              ->setParameter('region', $regionFilter);
+        }
+        if (!is_null($typeFilter)) {
+            $query->where('p.type = :type')
+              ->setParameter('type', $typeFilter);
+        }
+        if (!is_null($parentFilter)) {
+            $query->where('p.parentParty = :parent')
+              ->setParameter('parent', $parentFilter);
+        }
+*/
 
         $parties = $query->getQuery()->getResult();
     	$allData = array();
