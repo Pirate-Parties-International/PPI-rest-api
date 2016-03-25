@@ -26,10 +26,8 @@ class ApiController extends BaseController
      *  resource=false,
      *  section="Party",
      *  filters={
-     *      {"name"="active_parties", "description"="List active parties.", "default"="yes"},
-     *      {"name"="defunct_parties", "description"="List defunct parties.", "default"="no"},
-     *      {"name"="ppi_members_only", "description"="Only list PPI members.", "default"="no"},
-     *      {"name"="ppeu_members_only", "description"="Only list PPEU members.", "default"="no"}
+     *      {"name"="show_active_parties", "description"="List active parties.", "pattern"="yes|no", "default"="yes"},
+     *      {"name"="show_defunct_parties", "description"="List defunct parties.", "pattern"="yes|no", "default"="no"}
      *  },
      *  statusCodes={
      *         200="Returned when successful."
@@ -38,31 +36,25 @@ class ApiController extends BaseController
      */
     public function partiesAction()
     {
-        // collect filter data
-        $active = $_GET['active_parties'];
-        $defunct = $_GET['defunct_parties'];
-        $ppi = $_GET['ppi_members_only'];
-        $ppeu = $_GET['ppeu_members_only'];
-
-        // set default parameters before applying filters
-        $includeDefunct = false; $membership = false;
-
-        // set 'includeDefunct' param
-        if ($defunct == 'yes') {
-            $includeDefunct = true;
-            if ($active != 'yes') $includeDefunct = 'only';
+        $activeTemp = $_GET['show_active_parties'];
+        $defunctTemp = $_GET['show_defunct_parties'];
+        switch ($defunctTemp) {
+            case ('yes'):
+                $includeDefunct = true;
+                if ($activeTemp === 'no') {
+                    $includeDefunct = 'only';
+                }
+                break;
+            default:
+                $includeDefunct = false;
         }
-        
-        // set 'membership' param
-        if ($ppi == 'yes' && $ppeu == 'yes') $membership = 'ppi+ppeu';
-        else if ($ppi == 'yes') $membership = 'ppi';
-        else if ($ppeu == 'yes') $membership = 'ppeu';
-        
-        // run through BaseController
-        $allData = $this->getAllParties($includeDefunct, $membership);
+
+        # run through BaseController
+        $allData = $this->getAllParties($includeDefunct);
 
         $serializer = $this->get('jms_serializer');
         $allData = $serializer->serialize($allData, 'json');
+
 	    return new Response($allData, 200);
     }
 

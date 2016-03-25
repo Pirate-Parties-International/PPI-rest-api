@@ -10,47 +10,31 @@ use AppBundle\Entity\Statistic as Stat;
 
 class BaseController extends Controller
 {
+	public function getAllParties($includeDefunct = false) {
 
-	public function getAllParties($includeDefunct = false, $membership = false) {
-		
 		$parties = $this->getDoctrine()
-        ->getRepository('AppBundle:Party');
+          ->getRepository('AppBundle:Party');
+        $query = $parties->createQueryBuilder('qb')
+          ->select('p')->from('AppBundle:Party', 'p');
 
-        // if searching for active parties only
-        if (!$includeDefunct) {
-            $parties = $parties->findBy(['defunct' => false]);
-        // else if searching for defunct parties only
-        } else if ($includeDefunct === 'only') {
-            $parties = $parties->findBy(['defunct' => true]);
-        // else searching for all parties
-        } else {
-            $parties = $parties->findAll();
+        switch (true) {
+            case ($includeDefunct === false):
+                $query->where('p.defunct = false'); # show only non-defunct
+                break;
+            case ($includeDefunct === 'only'):
+                $query->where('p.defunct = true'); # show only defunct
+                break;
+            default:
+                # do nothing, i.e. exclude none, show all
         }
-    	
+
+        $parties = $query->getQuery()->getResult();
     	$allData = array();
+
     	foreach ($parties as $party) {
-
-            // if 'membership' param is not false
-            if ($membership) {
-                $memberships = $party->getMembership();
-
-                // if searching for members of BOTH ppi and ppeu
-                if ($membership == 'ppi+ppeu') {
-                    if (array_key_exists('ppi', $memberships) && array_key_exists('ppeu', $memberships)) { // if party is a member of both
-                        $allData[strtolower($party->getCode())] = $party; // add to $allData
-                    } else {} //if not, skip
-                }
-                // else if searching for members of EITHER ppi or ppeu
-                else if (array_key_exists($membership, $memberships)) { // if party is a member
-                    $allData[strtolower($party->getCode())] = $party; // add to $allData
-                } else {} // if not, skip
-
-            // else if 'membership' param is false, add all parties
-            } else {
-                $allData[strtolower($party->getCode())] = $party;
-            }
-
+            $allData[strtolower($party->getCode())] = $party;
     	}
+
     	return $allData;
 	}
 
