@@ -10,7 +10,7 @@ use AppBundle\Entity\Statistic as Stat;
 
 class BaseController extends Controller
 {
-	public function getAllParties($includeDefunct = false) {
+	public function getAllParties($includeDefunct = false, $membershipFilter = 'all') {
 
 		$parties = $this->getDoctrine()
           ->getRepository('AppBundle:Party');
@@ -26,6 +26,20 @@ class BaseController extends Controller
                 break;
             default:
                 # do nothing, i.e. exclude none, show all
+        }
+
+        switch ($membershipFilter) {
+            case ('all'):
+                break; # show all parties, i.e. do nothing
+            case ('any'):
+                $query->join('p.intMemberships', 'm');
+                break;
+            default: # if filter = 'ppi', 'ppeu' etc.
+                $query
+                  ->join('p.intMemberships', 'm')
+                  ->innerJoin('m.intOrg', 'o')
+                  ->where('o.code = :membership')
+                  ->setParameter('membership', $membershipFilter);
         }
 
         $parties = $query->getQuery()->getResult();

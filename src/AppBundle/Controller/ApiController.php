@@ -27,7 +27,9 @@ class ApiController extends BaseController
      *  section="Party",
      *  filters={
      *      {"name"="show_active_parties", "description"="List active parties.", "pattern"="yes|no", "default"="yes"},
-     *      {"name"="show_defunct_parties", "description"="List defunct parties.", "pattern"="yes|no", "default"="no"}
+     *      {"name"="show_defunct_parties", "description"="List defunct parties.", "pattern"="yes|no", "default"="no"},
+     *      {"name"="international_membership", "description"="List members of international organizations.",
+     *              "pattern"="ppi|ppeu|any|all", "default"="all"},
      *  },
      *  statusCodes={
      *         200="Returned when successful."
@@ -36,6 +38,7 @@ class ApiController extends BaseController
      */
     public function partiesAction()
     {
+        $membershipFilter = $_GET['international_membership'];
         $activeTemp = $_GET['show_active_parties'];
         $defunctTemp = $_GET['show_defunct_parties'];
         switch ($defunctTemp) {
@@ -50,7 +53,7 @@ class ApiController extends BaseController
         }
 
         # run through BaseController
-        $allData = $this->getAllParties($includeDefunct);
+        $allData = $this->getAllParties($includeDefunct, $membershipFilter);
 
         $serializer = $this->get('jms_serializer');
         $allData = $serializer->serialize($allData, 'json');
