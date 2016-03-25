@@ -10,7 +10,7 @@ use AppBundle\Entity\Statistic as Stat;
 
 class BaseController extends Controller
 {
-	public function getAllParties($includeDefunct = false, $membershipFilter = 'all') {
+	public function getAllParties($includeDefunct = false, $membershipFilter = 'all', $orderBy = 'code') {
 
 		$parties = $this->getDoctrine()
           ->getRepository('AppBundle:Party');
@@ -40,6 +40,17 @@ class BaseController extends Controller
                   ->innerJoin('m.intOrg', 'o')
                   ->where('o.code = :membership')
                   ->setParameter('membership', $membershipFilter);
+        }
+
+        switch ($orderBy) {
+            case ('name'):
+                $query->orderBy('p.name', 'ASC');
+                break;
+            case ('country'):
+                $query->orderBy('p.countryName', 'ASC');
+                break;
+            case ('code'):
+                $query->orderBy('p.code', 'ASC');
         }
 
         $parties = $query->getQuery()->getResult();
