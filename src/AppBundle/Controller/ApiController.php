@@ -26,43 +26,61 @@ class ApiController extends BaseController
      *  resource=false,
      *  section="Party",
      *  filters={
-     *      {"name"="show_active_parties", "description"="List active parties.", "pattern"="yes|no", "default"="yes"},
-     *      {"name"="show_defunct_parties", "description"="List defunct parties.", "pattern"="yes|no", "default"="no"},
-     *      {"name"="international_membership", "description"="List members of international organizations.",
-     *              "pattern"="ppi|ppeu|any|all", "default"="all"},
+     *      {"name"="show_active_parties", "description"="List active parties.", "pattern"="true|false", "dataType"="boolean", "default"=true},
+     *      {"name"="show_defunct_parties", "description"="List defunct parties.", "pattern"="true|false", "dataType"="boolean", "default"=true},
+     *      {"name"="international_membership", "description"="List only members of an international organization.",
+     *              "pattern"="ppi|ppeu|false", "default"=false},
      *      {"name"="sort_results_by", "description"="List results in a set order.", "pattern"="name|code|country", "default"="code"}
      *  },
      *  statusCodes={
-     *         200="Returned when successful."
+     *         200="Returned when successful.",
+     *         400="Returned upon bad request.",
+     *         404="Returned when not found."
      *     }
      * )
      */
     public function partiesAction()
     {
-/*      $countryFilter = $_GET['country'];      # currently obsolete, no countries with multiple parties
-        $regionFilter = $_GET['region'];        # currently obsolete, always null
-        $typeFilter = $_GET['party_type'];      # currently obsolete, always national
-        $parentFilter = $_GET['parent_party'];  # currently obsolete, always null
+/*      $countryFilter = $_GET['country'];      // currently obsolete, no countries with multiple parties
+        $regionFilter = $_GET['region'];        // currently obsolete, always null
+        $typeFilter = $_GET['party_type'];      // currently obsolete, always national
+        $parentFilter = $_GET['parent_party'];  // currently obsolete, always null
 */      $membershipFilter = $_GET['international_membership'];
         $orderBy = $_GET['sort_results_by'];
-        $activeTemp = $_GET['show_active_parties'];
-        $defunctTemp = $_GET['show_defunct_parties'];
-        switch ($defunctTemp) {
-            case ('yes'):
-                $includeDefunct = true;
-                if ($activeTemp === 'no') {
-                    $includeDefunct = 'only';
-                }
-                break;
-            default:
-                $includeDefunct = false;
+        $includeActive = $_GET['show_active_parties'];
+        $includeDefunct = $_GET['show_defunct_parties'];
+
+        if (!$includeDefunct && !$includeActive) {
+            return new JsonResponse(array("error"=>"Search returned no results."), 404);
         }
 
-        # run through BaseController
-        $allData = $this->getAllParties($includeDefunct, $membershipFilter, $orderBy); // , $countryFilter, $regionFilter, $typeFilter, $parentFilter);
+        switch ($membershipFilter) {
+            case (false):
+            case ('ppi'):
+            case ('ppeu'):
+                break;
+            default:
+                return new JsonResponse(array("error"=>"Bad request: '".$membershipFilter."' is not a valid parameter for the field 'international_membership'."), 400);
+        }
+
+        switch ($orderBy) {
+            case ('name'):
+            case ('code'):
+            case ('country'):
+                break;
+            default:
+                return new JsonResponse(array("error"=>"Bad request: '".$orderBy."' is not a valid parameter for the field 'sort_results_by'."), 400);
+        }
+
+        // run through BaseController
+        $allData = $this->getAllParties($includeActive, $includeDefunct, $membershipFilter, $orderBy); // , $countryFilter, $regionFilter, $typeFilter, $parentFilter);
 
         $serializer = $this->get('jms_serializer');
         $allData = $serializer->serialize($allData, 'json');
+
+        if ($allData === null) {
+            return new JsonResponse(array("error"=>"Search returned no results."), 404);
+        }
 
 	    return new Response($allData, 200);
     }

@@ -11,13 +11,14 @@ use AppBundle\Entity\Statistic as Stat;
 class BaseController extends Controller
 {
 	public function getAllParties(
-/*      $countryFilter,     # currently obsolete, redundant with getOneParty()
-        $regionFilter,      # currently obsolete, always null
-        $typeFilter,        # currently obsolete, always 'national'
-        $parentFilter,      # currently obsolete, always null
-*/      $includeDefunct = false,
-        $membershipFilter = 'all',
-        $orderBy = 'code',
+/*      $countryFilter,     // currently obsolete, redundant with getOneParty()
+        $regionFilter,      // currently obsolete, always null
+        $typeFilter,        // currently obsolete, always 'national'
+        $parentFilter,      // currently obsolete, always null
+*/      $includeActive = true,
+        $includeDefunct = false,
+        $membershipFilter = false,
+        $orderBy = 'code'
         ) {
 
 		$parties = $this->getDoctrine()
@@ -25,24 +26,20 @@ class BaseController extends Controller
         $query = $parties->createQueryBuilder('qb')
           ->select('p')->from('AppBundle:Party', 'p');
 
-        switch (true) {
-            case ($includeDefunct === false):
-                $query->where('p.defunct = false'); # show only non-defunct
-                break;
-            case ($includeDefunct === 'only'):
-                $query->where('p.defunct = true'); # show only defunct
+        switch ($includeDefunct) {
+            case (true):
+                if ($includeActive == false) {
+                    $query->where('p.defunct = true'); // show only defunct
+                } // else do nothing, i.e. show all
                 break;
             default:
-                # do nothing, i.e. exclude none, show all
+                $query->where('p.defunct = false'); // show only non-defunct
         }
 
         switch ($membershipFilter) {
-            case ('all'):
-                break; # show all parties, i.e. do nothing
-            case ('any'):
-                $query->join('p.intMemberships', 'm');
-                break;
-            default: # if filter = 'ppi', 'ppeu' etc.
+            case (false):
+                break; // no filter, i.e. do nothing, show all parties
+            default: // if filter = 'ppi', 'ppeu' etc.
                 $query
                   ->join('p.intMemberships', 'm')
                   ->innerJoin('m.intOrg', 'o')
@@ -57,7 +54,7 @@ class BaseController extends Controller
             case ('country'):
                 $query->orderBy('p.countryName', 'ASC');
                 break;
-            case ('code'):
+            default:
                 $query->orderBy('p.code', 'ASC');
         }
 
