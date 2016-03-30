@@ -26,10 +26,10 @@ class ApiController extends BaseController
      *  resource=false,
      *  section="Party",
      *  filters={
-     *      {"name"="show_active_parties", "description"="List active parties.", "pattern"="true|false", "dataType"="boolean", "default"=true},
-     *      {"name"="show_defunct_parties", "description"="List defunct parties.", "pattern"="true|false", "dataType"="boolean", "default"=true},
+     *      {"name"="show_active_parties", "description"="List active parties.", "pattern"="true|false", "dataType"="boolean", "default"="true"},
+     *      {"name"="show_defunct_parties", "description"="List defunct parties.", "pattern"="true|false", "dataType"="boolean", "default"="false"},
      *      {"name"="international_membership", "description"="List only members of an international organization.",
-     *              "pattern"="ppi|ppeu|false", "default"=false},
+     *              "pattern"="ppi|ppeu|false", "default"="false"},
      *      {"name"="sort_results_by", "description"="List results in a set order.", "pattern"="name|code|country", "default"="code"}
      *  },
      *  statusCodes={
@@ -45,16 +45,50 @@ class ApiController extends BaseController
         $regionFilter = $_GET['region'];        // currently obsolete, always null
         $typeFilter = $_GET['party_type'];      // currently obsolete, always national
         $parentFilter = $_GET['parent_party'];  // currently obsolete, always null
-*/      $membershipFilter = $_GET['international_membership'];
-        $orderBy = $_GET['sort_results_by'];
-        $includeActive = $_GET['show_active_parties'];
+*/        $includeActive = $_GET['show_active_parties'];
         $includeDefunct = $_GET['show_defunct_parties'];
+        $membershipFilter = $_GET['international_membership'];
+        $orderBy = $_GET['sort_results_by'];
 
-        if (!$includeDefunct && !$includeActive) {
+        if (!is_bool($includeActive)) {
+            switch ($includeActive) {
+                case ('true'):
+                case ('1'):
+                    $includeActive = (bool) true;
+                    break;
+                case ('false'):
+                case ('0'):
+                    $includeActive = (bool) false;
+                    break;
+                default:
+                    return new JsonResponse(array("error"=>"Bad request: invalid parameter for the field 'show_active_parties' (boolean expected)."), 400);
+            }
+        }
+
+        if (!is_bool($includeDefunct)) {
+            switch ($includeDefunct) {
+                case ('true'):
+                case ('1'):
+                    $includeDefunct = (bool) true;
+                    break;
+                case ('false'):
+                case ('0'):
+                    $includeDefunct = (bool) false;
+                    break;
+                default:
+                    return new JsonResponse(array("error"=>"Bad request: invalid parameter for the field 'show_defunct_parties' (boolean expected)."), 400);
+            }
+        }
+
+        if ($includeActive == false && $includeDefunct == false) {
             return new JsonResponse(array("error"=>"Search returned no results."), 404);
         }
 
         switch ($membershipFilter) {
+            case ('false'):
+            case ('0'):
+                $membershipFilter = (bool) false;
+                break;
             case (false):
             case ('ppi'):
             case ('ppeu'):
