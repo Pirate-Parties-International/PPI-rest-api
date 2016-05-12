@@ -47,7 +47,7 @@
 						<img src="{{ party.logo }}" itemprop="logo">
 					</div>
 					{% if party.defunct %}
-						<div class="defunct">
+						<div class="defunct hide-on-small-only">
 							DEFUNCT
 						</div>
 					{% endif %}
@@ -95,16 +95,15 @@
 							  {% endif %}
 							  <dt>Party Code</dt>
 							  <dd>{{ party.code | upper }}</dd>
-							  <dt>Status</dt>
-							  {% if not party.defunct %}
-							  	  <dd>Active</dd>
-							  {% else %}
-							  	  <dd>Defunct</dd>
-							  {% endif %}
 		  					</dl>
 		  					<div class="flag hide-on-small-only">
 								<img src="{{ party.countryFlag }}">
 							</div>
+							{% if party.defunct %}
+							  <div class="defunct hide-on-med-and-up">
+								DEFUNCT
+							  </div>
+							{% endif %}
 						</div>
 					</div>
 				</div>
