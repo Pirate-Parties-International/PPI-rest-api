@@ -15,9 +15,8 @@ class BaseController extends Controller
         $regionFilter,      // currently obsolete, always null
         $typeFilter,        // currently obsolete, always 'national'
         $parentFilter,      // currently obsolete, always null
-*/      $includeActive = true,
-        $includeDefunct = false,
-        $membershipFilter = false,
+*/      $showDefunct = false,
+        $membershipFilter = null,
         $orderBy = 'code'
         ) {
 
@@ -26,20 +25,22 @@ class BaseController extends Controller
         $query = $parties->createQueryBuilder('qb')
           ->select('p')->from('AppBundle:Party', 'p');
 
-        switch ($includeDefunct) {
-            case (true):
-                if ($includeActive == false) {
-                    $query->where('p.defunct = true'); // show only defunct
-                } // else do nothing, i.e. show all
+        switch ($showDefunct) {
+            case true:
+                $query->where('p.defunct = true'); // show only defunct
                 break;
-            default:
+            case null:
+                // do nothing, i.e. show all
+                break;
+            default: // case false
                 $query->where('p.defunct = false'); // show only non-defunct
         }
 
         switch ($membershipFilter) {
-            case (false):
-                break; // no filter, i.e. do nothing, show all parties
-            default: // if filter = 'ppi', 'ppeu' etc.
+            case null:
+                // do nothing, i.e. show all
+                break;
+            default: // case 'ppi', 'ppeu', etc.
                 $query
                   ->join('p.intMemberships', 'm')
                   ->innerJoin('m.intOrg', 'o')
@@ -48,13 +49,13 @@ class BaseController extends Controller
         }
 
         switch ($orderBy) {
-            case ('name'):
+            case 'name':
                 $query->orderBy('p.name', 'ASC');
                 break;
-            case ('country'):
+            case 'country':
                 $query->orderBy('p.countryName', 'ASC');
                 break;
-            default:
+            default: // case 'code' or null
                 $query->orderBy('p.code', 'ASC');
         }
 

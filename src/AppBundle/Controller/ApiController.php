@@ -26,11 +26,12 @@ class ApiController extends BaseController
      *  resource=false,
      *  section="Party",
      *  filters={
-     *      {"name"="show_active_parties", "description"="List active parties.", "pattern"="true|false", "dataType"="boolean", "default"="true"},
-     *      {"name"="show_defunct_parties", "description"="List defunct parties.", "pattern"="true|false", "dataType"="boolean", "default"="false"},
-     *      {"name"="international_membership", "description"="List only members of an international organization.",
-     *              "pattern"="ppi|ppeu|false", "default"="false"},
-     *      {"name"="sort_results_by", "description"="List results in a set order.", "pattern"="name|code|country", "default"="code"}
+     *      {"name"="show_defunct", "description"="List defunct parties.",
+     *          "dataType"="bool", "pattern"="0|1|null"},
+     *      {"name"="int_membership", "description"="List only members of an international organization.",
+     *          "dataType"="string", "pattern"="ppi|ppeu|null"},
+     *      {"name"="sort_results", "description"="List results in a set order.",
+     *          "dataType"="string", "pattern"="name|code|country|null"}
      *  },
      *  statusCodes={
      *         200="Returned when successful.",
@@ -41,73 +42,45 @@ class ApiController extends BaseController
      */
     public function partiesAction()
     {
+
 /*      $countryFilter = $_GET['country'];      // currently obsolete, no countries with multiple parties
         $regionFilter = $_GET['region'];        // currently obsolete, always null
         $typeFilter = $_GET['party_type'];      // currently obsolete, always national
         $parentFilter = $_GET['parent_party'];  // currently obsolete, always null
-*/        $includeActive = $_GET['show_active_parties'];
-        $includeDefunct = $_GET['show_defunct_parties'];
-        $membershipFilter = $_GET['international_membership'];
-        $orderBy = $_GET['sort_results_by'];
-
-        if (!is_bool($includeActive)) {
-            switch ($includeActive) {
-                case ('true'):
-                case ('1'):
-                    $includeActive = (bool) true;
-                    break;
-                case ('false'):
-                case ('0'):
-                    $includeActive = (bool) false;
-                    break;
-                default:
-                    return new JsonResponse(array("error"=>"Bad request: invalid parameter for the field 'show_active_parties' (boolean expected)."), 400);
-            }
+*/      
+        $showDefunct = (!isset($_GET['show_defunct'])) ? null : $_GET['show_defunct'];
+        switch($showDefunct) {
+            case null:
+            case true:
+            case false:
+                break;
+            default:
+                return new JsonResponse(array("error"=>"Bad request: invalid parameter for the field 'show_defunct' (boolean expected)."), 400);
         }
 
-        if (!is_bool($includeDefunct)) {
-            switch ($includeDefunct) {
-                case ('true'):
-                case ('1'):
-                    $includeDefunct = (bool) true;
-                    break;
-                case ('false'):
-                case ('0'):
-                    $includeDefunct = (bool) false;
-                    break;
-                default:
-                    return new JsonResponse(array("error"=>"Bad request: invalid parameter for the field 'show_defunct_parties' (boolean expected)."), 400);
-            }
-        }
-
-        if ($includeActive == false && $includeDefunct == false) {
-            return new JsonResponse(array("error"=>"Search returned no results."), 404);
-        }
-
+        $membershipFilter = (!isset($_GET['int_membership'])) ? null : $_GET['int_membership'];
         switch ($membershipFilter) {
-            case ('false'):
-            case ('0'):
-                $membershipFilter = (bool) false;
-                break;
-            case (false):
-            case ('ppi'):
-            case ('ppeu'):
+            case null:
+            case 'ppi':
+            case 'ppeu':
                 break;
             default:
-                return new JsonResponse(array("error"=>"Bad request: '".$membershipFilter."' is not a valid parameter for the field 'international_membership'."), 400);
+                return new JsonResponse(array("error"=>"Bad request: '".$membershipFilter."' is not a valid parameter for the field 'int_membership'."), 400);
         }
 
+        $orderBy = (!isset($_GET['sort_results'])) ? null : $_GET['sort_results'];
         switch ($orderBy) {
-            case ('name'):
-            case ('code'):
-            case ('country'):
+            case null:
+            case 'name':
+            case 'code':
+            case 'country':
                 break;
             default:
-                return new JsonResponse(array("error"=>"Bad request: '".$orderBy."' is not a valid parameter for the field 'sort_results_by'."), 400);
+                return new JsonResponse(array("error"=>"Bad request: '".$orderBy."' is not a valid parameter for the field 'sort_results'."), 400);
         }
 
         // run through BaseController
-        $allData = $this->getAllParties($includeActive, $includeDefunct, $membershipFilter, $orderBy); // , $countryFilter, $regionFilter, $typeFilter, $parentFilter);
+        $allData = $this->getAllParties($showDefunct, $membershipFilter, $orderBy); // , $countryFilter, $regionFilter, $typeFilter, $parentFilter);
 
         $serializer = $this->get('jms_serializer');
         $allData = $serializer->serialize($allData, 'json');
