@@ -2152,12 +2152,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Pirate-Parties-International/PPI-party-info.git",
-                "reference": "a17085b7ba7c7cfae6132d9ef995d7b39613de7c"
+                "reference": "a6c92d289f20d390eb83219d397401afa7475b3b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Pirate-Parties-International/PPI-party-info/zipball/a17085b7ba7c7cfae6132d9ef995d7b39613de7c",
-                "reference": "a17085b7ba7c7cfae6132d9ef995d7b39613de7c",
+                "url": "https://api.github.com/repos/Pirate-Parties-International/PPI-party-info/zipball/a6c92d289f20d390eb83219d397401afa7475b3b",
+                "reference": "a6c92d289f20d390eb83219d397401afa7475b3b",
                 "shasum": ""
             },
             "require": {
@@ -2182,7 +2182,7 @@
                 }
             ],
             "description": "Data repository for Pirate Parties around the world.",
-            "time": "2016-07-02 18:19:13"
+            "time": "2016-07-02 18:36:17"
         },
         {
             "name": "psr/log",
