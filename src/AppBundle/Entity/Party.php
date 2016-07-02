@@ -153,6 +153,12 @@ class Party
     public $socialReach;
 
     /**
+     * NON ORM property
+     * @var array
+     */
+    public $socialData;
+
+    /**
      * Constructor
      */
     public function __construct()
@@ -197,6 +203,10 @@ class Party
 
     public function getSocialReach() {
         return $this->socialReach;
+    }
+
+    public function getSocialData() {
+        return $this->socialData;
     }
 
     public function getNativeNames() {

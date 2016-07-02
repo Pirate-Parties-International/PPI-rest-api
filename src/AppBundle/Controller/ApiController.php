@@ -59,10 +59,17 @@ class ApiController extends BaseController
      */
     public function partyAction($id) {
     	
-        $data = $this->getOneParty($id);
+        $party = $this->getOneParty($id);
+
+        $social['twitter']  = $this->getTwitterFollowers($id);     
+        $social['facebook'] = $this->getFacebookLikes($id);     
+        $social['gplus']    = $this->getGooglePlusFollowers($id);
+        $social['youtube']   = $this->getYoutubeStatistics($id);
+
+        $party->socialData = $social;
 
         $serializer = $this->get('jms_serializer');
-        $data = $serializer->serialize($data, 'json');
+        $data = $serializer->serialize($party, 'json');
 
     	if ($data === null) {
     		return new JsonResponse(array("error"=>"Party with this ID does not exsist"), 404);
