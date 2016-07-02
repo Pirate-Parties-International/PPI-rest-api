@@ -41,6 +41,12 @@ class LoadIntOrgData implements FixtureInterface, ContainerAwareInterface
         $t->setWebsite('http://europeanpirateparty.eu/');
         $orgs[] = $t;
 
+        $t = new IntOrg();
+        $t->setCode('ype');
+        $t->setName('Young Pirates of Europe');
+        $t->setWebsite('https://young-pirates.eu/');
+        $orgs[] = $t;
+
         foreach ($orgs as $org) {
             $manager->persist($org);
         }

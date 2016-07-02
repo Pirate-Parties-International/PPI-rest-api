@@ -181,15 +181,16 @@ class LoadDataCommand extends ContainerAwareCommand
             } else {
                 $party->setCountryFlag($genericFlag);
             }
+            if (isset($partyData->membership)) {
+                foreach ($partyData->membership as $key => $value) {
+                    if ($value !== false && is_string($value)) {
+                        $intMem = new IntOrgMembership();
+                        $intMem->setType($value);
+                        $intMem->setParty($party);
+                        $intMem->setIntOrg($intOrg[$key]);
+                        $party->addIntMembership($intMem);
 
-            foreach ($partyData->membership as $key => $value) {
-                if ($value !== false && is_string($value)) {
-                    $intMem = new IntOrgMembership();
-                    $intMem->setType($value);
-                    $intMem->setParty($party);
-                    $intMem->setIntOrg($intOrg[$key]);
-                    $party->addIntMembership($intMem);
-
+                    }
                 }
             }
 
