@@ -10,20 +10,23 @@ use AppBundle\Entity\Statistic as Stat;
 
 class BaseController extends Controller
 {
-	public function getAllParties(
-/*      $countryFilter,     // currently obsolete, redundant with getOneParty()
-        $regionFilter,      // currently obsolete, always null
-        $typeFilter,        // currently obsolete, always 'national'
-        $parentFilter,      // currently obsolete, always null
-*/      $showDefunct = false,
-        $membershipFilter = null,
-        $orderBy = 'code'
-        ) {
+	public function getAllParties($showDefunct = false, $membershipFilter = null, $orderBy = 'code') {
 
 		$parties = $this->getDoctrine()
           ->getRepository('AppBundle:Party');
         $query = $parties->createQueryBuilder('qb')
           ->select('p')->from('AppBundle:Party', 'p');
+
+        switch ($membershipFilter) {
+            case null:
+                // do nothing, i.e. show all
+                break;
+            default: // case 'ppi', 'ppeu', etc.
+                $query
+                  ->join('p.intMemberships', 'm')
+                  ->innerJoin('m.intOrg', 'o')
+                  ->where(sprintf("o.code = '%s'", $membershipFilter));
+        }
 
         switch ($showDefunct) {
             case true:
@@ -36,18 +39,6 @@ class BaseController extends Controller
                 $query->where('p.defunct = false'); // show only non-defunct
         }
 
-        switch ($membershipFilter) {
-            case null:
-                // do nothing, i.e. show all
-                break;
-            default: // case 'ppi', 'ppeu', etc.
-                $query
-                  ->join('p.intMemberships', 'm')
-                  ->innerJoin('m.intOrg', 'o')
-                  ->where('o.code = :membership')
-                  ->setParameter('membership', $membershipFilter);
-        }
-
         switch ($orderBy) {
             case 'name':
                 $query->orderBy('p.name', 'ASC');
@@ -58,24 +49,6 @@ class BaseController extends Controller
             default: // case 'code' or null
                 $query->orderBy('p.code', 'ASC');
         }
-
-/*      if (!is-null($countryFilter)) {
-            $query->where('p.countryCode = :country')
-              ->setParameter('country', $countryFilter);
-        }
-        if (!is_null($regionFilter)) {
-            $query->where('p.region = :region')
-              ->setParameter('region', $regionFilter);
-        }
-        if (!is_null($typeFilter)) {
-            $query->where('p.type = :type')
-              ->setParameter('type', $typeFilter);
-        }
-        if (!is_null($parentFilter)) {
-            $query->where('p.parentParty = :parent')
-              ->setParameter('parent', $parentFilter);
-        }
-*/
 
         $parties = $query->getQuery()->getResult();
     	$allData = array();

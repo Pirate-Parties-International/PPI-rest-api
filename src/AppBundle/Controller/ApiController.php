@@ -26,12 +26,9 @@ class ApiController extends BaseController
      *  resource=false,
      *  section="Party",
      *  filters={
-     *      {"name"="show_defunct", "description"="List defunct parties.",
-     *          "dataType"="bool", "pattern"="0|1|null"},
-     *      {"name"="int_membership", "description"="List only members of an international organization.",
-     *          "dataType"="string", "pattern"="ppi|ppeu|null"},
-     *      {"name"="sort_results", "description"="List results in a set order.",
-     *          "dataType"="string", "pattern"="name|code|country|null"}
+     *      {"name"="show_defunct", "dataType"="bool", "required"="false", "description"="List defunct parties."},
+     *      {"name"="int_membership", "dataType"="string", "required"="false", "description"="List only members of an international organization. Use slug od the org (i.e. 'ppi', 'ppeu')"},
+     *      {"name"="sort_results", "dataType"="string", "pattern"="name|code|country", "required"="false", "description"="List results in a set order."}
      *  },
      *  statusCodes={
      *         200="Returned when successful.",
@@ -40,33 +37,23 @@ class ApiController extends BaseController
      *     }
      * )
      */
-    public function partiesAction()
-    {
+    public function partiesAction() {
 
-/*      $countryFilter = $_GET['country'];      // currently obsolete, no countries with multiple parties
-        $regionFilter = $_GET['region'];        // currently obsolete, always null
-        $typeFilter = $_GET['party_type'];      // currently obsolete, always national
-        $parentFilter = $_GET['parent_party'];  // currently obsolete, always null
-*/      
         $showDefunct = (!isset($_GET['show_defunct'])) ? null : $_GET['show_defunct'];
         switch($showDefunct) {
             case null:
-            case true:
-            case false:
+                break;
+            case "true":
+                $showDefunct = true;
+                break;
+            case "false":
+                $showDefunct = false;
                 break;
             default:
                 return new JsonResponse(array("error"=>"Bad request: invalid parameter for the field 'show_defunct' (boolean expected)."), 400);
         }
 
         $membershipFilter = (!isset($_GET['int_membership'])) ? null : $_GET['int_membership'];
-        switch ($membershipFilter) {
-            case null:
-            case 'ppi':
-            case 'ppeu':
-                break;
-            default:
-                return new JsonResponse(array("error"=>"Bad request: '".$membershipFilter."' is not a valid parameter for the field 'int_membership'."), 400);
-        }
 
         $orderBy = (!isset($_GET['sort_results'])) ? null : $_GET['sort_results'];
         switch ($orderBy) {
