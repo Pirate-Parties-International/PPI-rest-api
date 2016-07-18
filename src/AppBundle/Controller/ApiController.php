@@ -122,6 +122,7 @@ class ApiController extends BaseController
         foreach ($stats as $stat) {
             $date = $stat->getTimestamp()->format('Y-m-d');
             $payload[$date][$stat->getType() . "-" . $stat->getSubType()] = $stat->getValue();
+            $payload[$date]['date'] = $date;
         }
 
         switch ($format) {
