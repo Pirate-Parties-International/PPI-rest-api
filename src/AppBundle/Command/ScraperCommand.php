@@ -414,59 +414,62 @@ class ScraperCommand extends ContainerAwareCommand
         //
         // Second step for images
         // 
-        $imageId =  $graphNode->getField('cover')->getField('cover_id');
+        
+        $imageId =  $graphNode->getField('cover');
+        if ($imageId) {
+            $imageId = $imageId->getField('cover_id');
+        
+            $request = $fb->request(
+              'GET',
+              $imageId,
+              array(
+                'fields' => 'height,width,album,images'
+              )
+            );
 
-        $request = $fb->request(
-          'GET',
-          $imageId,
-          array(
-            'fields' => 'height,width,album,images'
-          )
-        );
 
-
-        try {
-          $response = $fb->getClient()->sendRequest($request);
-        } catch(Facebook\Exceptions\FacebookResponseException $e) {
-          // When Graph returns an error
-          echo 'Graph returned an error: ' . $e->getMessage();
-          exit;
-        } catch(Facebook\Exceptions\FacebookSDKException $e) {
-          // When validation fails or other local issues
-          echo 'Facebook SDK returned an error: ' . $e->getMessage();
-          exit;
-        } catch (\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage();
-            return false;
-        }
-
-        $graphNode = $response->getGraphNode();
-
-        $images = $graphNode->getField('images');
-
-        $tmpI = [];
-        $tmpA = [];
-        foreach ($images as $key => $img) {
-            if ($img->getField('width') == 851 && $img->getField('height') == 351) {
-                $out['cover'] = $img->getField('source');
-                return $out;
-            } else if ($img->getField('width') > 851 && $img->getField('height') > 351) {
-                $tmpI[$img->getField('width') + $img->getField('height')] = $img->getField('source');
-            } else {
-                $tmpA[$img->getField('width') + $img->getField('height')] = $img->getField('source');
+            try {
+              $response = $fb->getClient()->sendRequest($request);
+            } catch(Facebook\Exceptions\FacebookResponseException $e) {
+              // When Graph returns an error
+              echo 'Graph returned an error: ' . $e->getMessage();
+              exit;
+            } catch(Facebook\Exceptions\FacebookSDKException $e) {
+              // When validation fails or other local issues
+              echo 'Facebook SDK returned an error: ' . $e->getMessage();
+              exit;
+            } catch (\Exception $e) {
+                echo $fbPageId . " - Exception: " . $e->getMessage();
+                return false;
             }
-        }
 
-        if (!empty($tmpI)) {
-            $t = max(array_keys($tmpI));
-            $img = $tmpI[$t];
-        } else {
-            $t = max(array_keys($tmpA));
-            $img = $tmpA[$t];
-        }
+            $graphNode = $response->getGraphNode();
 
-        $out['cover'] = $img;
+            $images = $graphNode->getField('images');
 
+            $tmpI = [];
+            $tmpA = [];
+            foreach ($images as $key => $img) {
+                if ($img->getField('width') == 851 && $img->getField('height') == 351) {
+                    $out['cover'] = $img->getField('source');
+                    return $out;
+                } else if ($img->getField('width') > 851 && $img->getField('height') > 351) {
+                    $tmpI[$img->getField('width') + $img->getField('height')] = $img->getField('source');
+                } else {
+                    $tmpA[$img->getField('width') + $img->getField('height')] = $img->getField('source');
+                }
+            }
+
+            if (!empty($tmpI)) {
+                $t = max(array_keys($tmpI));
+                $img = $tmpI[$t];
+            } else {
+                $t = max(array_keys($tmpA));
+                $img = $tmpA[$t];
+            }
+
+            $out['cover'] = $img;
+        } // End of cover retrival
 
 
         return $out;
