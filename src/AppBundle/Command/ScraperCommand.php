@@ -72,7 +72,7 @@ class ScraperCommand extends ContainerAwareCommand
                 $output->writeln("     + Starting Facebook import");
                 $fd = $this->getFBData($sn['facebook']['username']); 
 
-                if ($fd == false || empty($fd['likes'])) {
+                if ($fd == false || empty($fd['fan_count'])) {
                     $output->writeln("     + ERROR while retrieving FB data");
                 } else {
                     $output->writeln("     + Facebook data retrived");
@@ -80,7 +80,7 @@ class ScraperCommand extends ContainerAwareCommand
                         $code, 
                         Statistic::TYPE_FACEBOOK, 
                         Statistic::SUBTYPE_LIKES, 
-                        $fd['likes']
+                        $fd['fan_count']
                     );
                     $output->writeln("     + Statistic added");
 
@@ -351,7 +351,7 @@ class ScraperCommand extends ContainerAwareCommand
         $fb = new Facebook([
           'app_id' => $this->container->getParameter('fb_app_id'),
           'app_secret' => $this->container->getParameter('fb_app_secret'),
-          'default_graph_version' => 'v2.5',
+          'default_graph_version' => 'v2.7',
         ]);
         $fb->setDefaultAccessToken($this->container->getParameter('fb_access_token'));
 
@@ -359,7 +359,7 @@ class ScraperCommand extends ContainerAwareCommand
           'GET',
           $fbPageId,
           array(
-            'fields' => 'likes,cover'
+            'fields' => 'about,general_info,description,founded,cover,engagement,fan_count,talking_about_count,emails,location,single_line_address'
           )
         );
 
@@ -379,8 +379,8 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         $graphNode = $response->getGraphNode();
-        
-        $out['likes'] = $graphNode->getField('likes');
+        var_dump($graphNode); die;
+        $out['likes'] = $graphNode->getField('fan_count');
 
         //
         // Second step for images
@@ -514,15 +514,25 @@ class ScraperCommand extends ContainerAwareCommand
             $out['videos'] = [];
 
             foreach ($videos as $key => $vid) {
-                if ($key > 4) break;
+//                if ($key > 4) break;
 
+                $vidId = $vid->snippet->resourceId->videoId;
+                $vidInfo = $youtube->getVideoInfo($vidId);
                 $out['videos'][] = [
                     'title' => $vid->snippet->title,
                     'tumb' => $vid->snippet->thumbnails->medium->url,
-                    'id' => $vid->snippet->resourceId->videoId
+                    'date' => $vid->snippet->publishedAt,
+                    'id' => $vidId,
+                    'views' => $vidInfo->statistics->viewCount
+//                    'likes' => $vidInfo->statistics->likeCount,
+//                    'favs' => $vidInfo->statistics->favoriteCount,
+//                    'comments' => $vidInfo->statistics->commentCount
                 ];
             }
         }
+
+
+
         return $out;
 
     }
