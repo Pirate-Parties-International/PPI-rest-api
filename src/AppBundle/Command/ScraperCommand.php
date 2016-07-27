@@ -75,7 +75,7 @@ class ScraperCommand extends ContainerAwareCommand
                 if ($fd == false || empty($fd['fan_count'])) {
                     $output->writeln("     + ERROR while retrieving FB data");
                 } else {
-                    $output->writeln("     + Facebook data retrived");
+                    $output->writeln("     + Facebook data retrieved");
                     $this->addStatistic(
                         $code, 
                         Statistic::TYPE_FACEBOOK, 
@@ -85,7 +85,7 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("     + Statistic added");
 
                     $cover = $this->getFacebookCover($code, $fd['cover']);
-                    $output->writeln("     + Cover retrived");
+                    $output->writeln("     + Cover retrieved");
 
                     $this->addMeta(
                         $code,
@@ -110,7 +110,7 @@ class ScraperCommand extends ContainerAwareCommand
                     ) {
                     $output->writeln("     + ERROR while retrieving TW data");
                 } else {
-                    $output->writeln("     + Twitter data retrived");
+                    $output->writeln("     + Twitter data retrieved");
                     $this->addStatistic(
                         $code, 
                         Statistic::TYPE_TWITTER, 
@@ -139,7 +139,7 @@ class ScraperCommand extends ContainerAwareCommand
                     ) {
                     $output->writeln("     + ERROR while retrieving G+ data");
                 } else {
-                    $output->writeln("     + Twitter data retrived");
+                    $output->writeln("     + Twitter data retrieved");
                     $this->addStatistic(
                         $code, 
                         Statistic::TYPE_GOOGLEPLUS, 
@@ -162,7 +162,7 @@ class ScraperCommand extends ContainerAwareCommand
                     ) {
                     $output->writeln("     + ERROR while retrieving G+ data");
                 } else {
-                    $output->writeln("     + Youtube data retrived");
+                    $output->writeln("     + Youtube data retrieved");
                     $this->addStatistic(
                         $code, 
                         Statistic::TYPE_YOUTUBE, 
@@ -379,8 +379,8 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         $graphNode = $response->getGraphNode();
-        var_dump($graphNode); die;
-        $out['likes'] = $graphNode->getField('fan_count');
+
+        $out['fan_count'] = $graphNode->getField('fan_count');
 
         //
         // Second step for images
