@@ -78,7 +78,7 @@ class LoadDataCommand extends ContainerAwareCommand
         $compile = new Compile;
         $data = $compile->getAllData();
 
-        $this->log("Data retrived.");
+        $this->log("Data retrieved.");
 
         //
         // Let's get logo files and build an array
