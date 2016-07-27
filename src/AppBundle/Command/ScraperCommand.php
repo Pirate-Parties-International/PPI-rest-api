@@ -89,14 +89,19 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("     + Statistic added");
 
                     $cover = $this->getFacebookCover($code, $fd['cover']);
-                    $output->writeln("     + Cover retrived");
+                    
+                    if ($cover !== false) {
+                        $output->writeln("     + Cover retrived");
 
-                    $this->addMeta(
-                        $code,
-                        Metadata::TYPE_FACEBOOK_COVER,
-                        $cover
-                    );
-                    $output->writeln("     + Meta added");
+                        $this->addMeta(
+                            $code,
+                            Metadata::TYPE_FACEBOOK_COVER,
+                            $cover
+                        );
+                        $output->writeln("     + Meta added");
+                    } else {
+                        $output->writeln("     + ERROR: Cover could not be retrived.");
+                    }
                 }
 
             }
@@ -292,7 +297,16 @@ class ScraperCommand extends ContainerAwareCommand
         preg_match('/.+\.(png|jpg)/i', $url, $matches);
         $fileEnding = $matches[1];
 
-        $img = file_get_contents($url);
+        $ctx = stream_context_create(array( 
+            'http' => array( 
+                'timeout' => 15 
+                ) 
+            ) 
+        ); 
+        $img = file_get_contents($url, false, $ctx);
+        if (empty($img)) {
+            return false;
+        }
         $filename = strtolower($code) . '.' . $fileEnding;
         $fullPath = $this->coverRoot . $filename;
         file_put_contents($fullPath, $img);
