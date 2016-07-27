@@ -70,7 +70,11 @@ class ScraperCommand extends ContainerAwareCommand
             // 
             if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
                 $output->writeln("     + Starting Facebook import");
-                $fd = $this->getFBData($sn['facebook']['username']); 
+                try {
+                    $fd = $this->getFBData($sn['facebook']['username']); 
+                } catch (\Exception $e) {
+                    $output->writeln("     + EXCEPTION COUGHT!! " . $e->getMessage());
+                }
 
                 if ($fd == false || empty($fd['likes'])) {
                     $output->writeln("     + ERROR while retrieving FB data");
@@ -102,7 +106,11 @@ class ScraperCommand extends ContainerAwareCommand
             // 
             if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
                 $output->writeln("     + Starting Twitter import");
-                $td = $this->getTwitterData($sn['twitter']['username']);
+                try {
+                    $td = $this->getTwitterData($sn['twitter']['username']);
+                } catch (\Exception $e) {
+                    $output->writeln("     + EXCEPTION COUGHT!! " . $e->getMessage());
+                }
 
                 if ($fd == false ||
                     empty($td['followers']) ||
@@ -132,7 +140,11 @@ class ScraperCommand extends ContainerAwareCommand
             // 
             if (!empty($sn['googlePlus'])) {
                 $output->writeln("     + Starting GooglePlus import");
-                $gd = $this->getGooglePlusData($sn['googlePlus']);
+                try {
+                    $gd = $this->getGooglePlusData($sn['googlePlus']);
+                } catch (\Exception $e) {
+                    $output->writeln("     + EXCEPTION COUGHT!! " . $e->getMessage());
+                }
 
                 if ($gd == false ||
                     empty($gd)
@@ -155,7 +167,11 @@ class ScraperCommand extends ContainerAwareCommand
             // 
             if (!empty($sn['youtube'])) {
                 $output->writeln("     + Starting Youtube import");
-                $yd = $this->getYoutubeData($sn['youtube']);
+                try {
+                    $yd = $this->getYoutubeData($sn['youtube']);
+                } catch (\Exception $e) {
+                    $output->writeln("     + EXCEPTION COUGHT!! " . $e->getMessage());
+                }
 
                 if ($yd == false ||
                     empty($yd)
@@ -199,9 +215,8 @@ class ScraperCommand extends ContainerAwareCommand
                 }
             }
 
-
-            
-        }
+            $this->em->flush();
+        } // End of party loop.
 
         $output->writeln("# Saving to DB");
         $this->em->flush();
