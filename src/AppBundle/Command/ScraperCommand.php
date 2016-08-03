@@ -359,7 +359,7 @@ class ScraperCommand extends ContainerAwareCommand
           'GET',
           $fbPageId,
           array(
-            'fields' => 'about,general_info,description,founded,cover,engagement,fan_count,talking_about_count,emails,location,single_line_address'
+            'fields' => 'cover,fan_count'
           )
         );
 
@@ -514,7 +514,7 @@ class ScraperCommand extends ContainerAwareCommand
             $out['videos'] = [];
 
             foreach ($videos as $key => $vid) {
-//                if ($key > 4) break;
+                if ($key > 4) break;
 
                 $vidId = $vid->snippet->resourceId->videoId;
                 $vidInfo = $youtube->getVideoInfo($vidId);
@@ -524,9 +524,6 @@ class ScraperCommand extends ContainerAwareCommand
                     'date' => $vid->snippet->publishedAt,
                     'id' => $vidId,
                     'views' => $vidInfo->statistics->viewCount
-//                    'likes' => $vidInfo->statistics->likeCount,
-//                    'favs' => $vidInfo->statistics->favoriteCount,
-//                    'comments' => $vidInfo->statistics->commentCount
                 ];
             }
         }
