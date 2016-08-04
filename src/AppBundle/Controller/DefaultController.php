@@ -61,8 +61,8 @@ class DefaultController extends BaseController
             "cover"               => $this->getCoverImage($party->getCode()),
             "facebook"            => $this->getFacebookData($party->getCode()),
             "twitter"             => $this->getTwitterData($party->getCode()),
-            "googlePlusFollowers" => $this->getGooglePlusFollowers($party->getCode()),
-            "youtube"             => $this->getYoutubeData($party->getCode())
+            "youtube"             => $this->getYoutubeData($party->getCode()),
+            "googlePlusFollowers" => $this->getGooglePlusFollowers($party->getCode())
         );
     }
 

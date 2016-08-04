@@ -235,11 +235,11 @@ class ScraperCommand extends ContainerAwareCommand
                     ) {
                     $output->writeln("     + ERROR while retrieving G+ data");
                 } else {
-                    $output->writeln("     + Twitter data retrieved");
+                    $output->writeln("     + GooglePlus data retrieved");
                     $this->addStatistic(
-                        $code, 
-                        Statistic::TYPE_GOOGLEPLUS, 
-                        Statistic::SUBTYPE_FOLLOWERS, 
+                        $code,
+                        Statistic::TYPE_GOOGLEPLUS,
+                        Statistic::SUBTYPE_FOLLOWERS,
                         $gd
                     );
                     $output->writeln("     + Statistic added");
@@ -258,31 +258,31 @@ class ScraperCommand extends ContainerAwareCommand
                 if ($yd == false ||
                     empty($yd)
                     ) {
-                    $output->writeln("     + ERROR while retrieving G+ data");
+                    $output->writeln("     + ERROR while retrieving Youtube data");
                 } else {
                     $output->writeln("     + Youtube data retrieved");
                     $this->addStatistic(
-                        $code, 
-                        Statistic::TYPE_YOUTUBE, 
-                        Statistic::SUBTYPE_SUBSCRIBERS, 
+                        $code,
+                        Statistic::TYPE_YOUTUBE,
+                        Statistic::SUBTYPE_SUBSCRIBERS,
                         $yd['stats']['subscriberCount']
                     );
 
                     $this->addStatistic(
-                        $code, 
-                        Statistic::TYPE_YOUTUBE, 
+                        $code,
+                        Statistic::TYPE_YOUTUBE,
                         Statistic::SUBTYPE_VIEWS,
                         $yd['stats']['viewCount']
                     );
 
                     $this->addStatistic(
-                        $code, 
-                        Statistic::TYPE_YOUTUBE, 
-                        Statistic::SUBTYPE_VIDEOS, 
+                        $code,
+                        Statistic::TYPE_YOUTUBE,
+                        Statistic::SUBTYPE_VIDEOS,
                         $yd['stats']['videoCount']
                     );
 
-                    $output->writeln("     + Statistic added");
+                    $output->writeln("     + Statistics added");
 
                     if (!empty($yd['videos'])) {
                         $this->addMeta(
@@ -293,7 +293,6 @@ class ScraperCommand extends ContainerAwareCommand
                     }
 
                     $output->writeln("     + Metadata added");
-                    
                 }
             }
           }
@@ -713,6 +712,10 @@ class ScraperCommand extends ContainerAwareCommand
         return $out;
     }
 
+    /**
+     * Queries Google+ for followers
+     * @return int
+     */
     public function getGooglePlusData($id) {
         $apikey = $this->container->getParameter('gplus_api_key');
         $google = $this->curl(
