@@ -54,6 +54,34 @@ class BaseController extends Controller
         return $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES);
     }
 
+    public function getFacebookData($code) {
+        $out = [
+            'likes'        => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES),
+            'talkingAbout' => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_TALKING),
+            'postCount'    => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_POSTS),
+            'imageCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_IMAGES),
+            'eventCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_EVENTS),
+        ];
+        $out['data'] = $this->getMeta($code, Metadata::TYPE_FACEBOOK_DATA);
+
+        $posts  = $this->getMeta($code, Metadata::TYPE_FACEBOOK_POSTS);
+        if (!empty($posts)) {
+            $out['posts'] = $posts;
+        }
+
+        $photos = $this->getMeta($code, Metadata::TYPE_FACEBOOK_PHOTOS);
+        if (!empty($photos)) {
+            $out['photos'] = $photos;
+        }
+
+        $events = $this->getMeta($code, Metadata::TYPE_FACEBOOK_EVENTS);
+        if (!empty($events)) {
+            $out['events'] = $events;
+        }
+
+        return $out;
+    }
+    
     public function getTwitterFollowers($code) {
         return $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWERS);
     }

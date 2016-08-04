@@ -12,12 +12,16 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Metadata
 {
-    const TYPE_FACEBOOK_COVER = 'fb_cover';
+    const TYPE_FACEBOOK_COVER  = 'fb_cover';
+    const TYPE_FACEBOOK_DATA   = 'fb_data';
+    const TYPE_FACEBOOK_POSTS  = 'fb_posts';
+    const TYPE_FACEBOOK_PHOTOS = 'fb_photos';
+    const TYPE_FACEBOOK_EVENTS = 'fb_events';
 
-    const TYPE_TWITTER_DATA   = 'tw_data';
-    const TYPE_TWITTER_POSTS  = 'tw_posts';
+    const TYPE_TWITTER_DATA    = 'tw_data';
+    const TYPE_TWITTER_POSTS   = 'tw_posts';
 
-    const TYPE_YOUTUBE_VIDEOS = 'yt_videos';
+    const TYPE_YOUTUBE_VIDEOS  = 'yt_videos';
     
     /**
      * @var int
@@ -129,8 +133,12 @@ class Metadata
      */
     public function getValue()
     {
-        if ($this->type == self::TYPE_TWITTER_POSTS ||
-            $this->type == self::TYPE_TWITTER_DATA ||
+        if ($this->type == self::TYPE_FACEBOOK_POSTS  ||
+            $this->type == self::TYPE_FACEBOOK_PHOTOS ||
+            $this->type == self::TYPE_FACEBOOK_EVENTS ||
+            $this->type == self::TYPE_FACEBOOK_DATA   ||
+            $this->type == self::TYPE_TWITTER_POSTS   || 
+            $this->type == self::TYPE_TWITTER_DATA    ||
             $this->type == self::TYPE_YOUTUBE_VIDEOS) {
                 return json_decode($this->value, true);
         }

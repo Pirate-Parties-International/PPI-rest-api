@@ -88,12 +88,36 @@ class ScraperCommand extends ContainerAwareCommand
                 } else {
                     $output->writeln("     + Facebook data retrieved");
                     $this->addStatistic(
-                        $code, 
+                        $code,
                         Statistic::TYPE_FACEBOOK, 
-                        Statistic::SUBTYPE_LIKES, 
+                        Statistic::SUBTYPE_LIKES,
                         $fd['likes']
                     );
-                    $output->writeln("     + Statistic added");
+                    $this->addStatistic(
+                        $code,
+                        Statistic::TYPE_FACEBOOK,
+                        Statistic::SUBTYPE_TALKING,
+                        $fd['talking']
+                    );
+                    $this->addStatistic(
+                        $code,
+                        Statistic::TYPE_FACEBOOK, 
+                        Statistic::SUBTYPE_POSTS,
+                        $fd['postCount']
+                    );
+                    $this->addStatistic(
+                        $code,
+                        Statistic::TYPE_FACEBOOK,
+                        Statistic::SUBTYPE_IMAGES,
+                        $fd['photoCount']
+                    );
+                    $this->addStatistic(
+                        $code,
+                        Statistic::TYPE_FACEBOOK,
+                        Statistic::SUBTYPE_EVENTS,
+                        $fd['eventCount']
+                    );
+                    $output->writeln("     + Statistics added");
 
                     $cover = $this->getFacebookCover($code, $fd['cover']);
                     $output->writeln("     + Cover retrieved");
@@ -103,10 +127,39 @@ class ScraperCommand extends ContainerAwareCommand
                         Metadata::TYPE_FACEBOOK_COVER,
                         $cover
                     );
-                    $output->writeln("     + Meta added");
-                }
 
+                    $this->addMeta(
+                        $code,
+                        Metadata::TYPE_FACEBOOK_DATA,
+                        json_encode($fd['data'])
+                    );
+
+                    if (!empty($fd['posts'])) {
+                        $this->addMeta(
+                            $code,
+                            Metadata::TYPE_FACEBOOK_POSTS,
+                            json_encode($fd['posts'])
+                        );
+                    }
+                    if (!empty($fd['photos'])) {
+                        $this->addMeta(
+                            $code,
+                            Metadata::TYPE_FACEBOOK_PHOTOS,
+                            json_encode($fd['photos'])
+                        );
+                    }
+                    if (!empty($fd['events'])) {
+                            $this->addMeta(
+                            $code,
+                            Metadata::TYPE_FACEBOOK_EVENTS,
+                            json_encode($fd['events'])
+                        );
+                    }
+
+                    $output->writeln("     + Metadata added");
+                }
             }
+
           }
 
           if ($what == null || $what == 'tw') {
@@ -416,7 +469,7 @@ class ScraperCommand extends ContainerAwareCommand
     }
 
     /**
-     * Queries FB for likes and cover picture
+     * Queries Facebook for stats, posts, images and events
      * @return array
      */
     public function getFBData($fbPageId) {
@@ -431,7 +484,7 @@ class ScraperCommand extends ContainerAwareCommand
           'GET',
           $fbPageId,
           array(
-            'fields' => 'cover,engagement'
+            'fields' => 'cover,engagement,talking_about_count,about,emails,single_line_address,posts,photos,events'
           )
         );
 
@@ -452,7 +505,90 @@ class ScraperCommand extends ContainerAwareCommand
 
         $graphNode = $response->getGraphNode();
 
-        $out['likes'] = $graphNode->getField('engagement')->getField('count');
+        $out = [
+            'likes'   => $graphNode->getField('engagement')->getField('count'),
+            'talking' => $graphNode->getField('talking_about_count'),
+        ];
+
+        $out['data'] = [
+            'about'   => $graphNode->getField('about'),
+            'address' => $graphNode->getField('single_line_address')
+        ];
+
+       $fdEmails = $graphNode->getField('emails');
+        if (!empty($fdEmails)) {
+            foreach ($fdEmails as $key => $email) {
+                $out['data']['email'] = $email;
+            }
+        }
+
+        $fdPosts = $graphNode->getField('posts');
+        if (!empty($fdPosts)) {
+            foreach ($fdPosts as $key => $post) {
+
+                $message = $post->getField('message');
+                if (!empty($message)) {
+                    $body = $message;
+                } else {
+                    $body = $post->getField('story');
+                }
+
+                $out['posts'][] = [
+                    'id' => $post->getField('id'),
+                    'time' => $post->getField('created_time'),
+                    'body' => $body
+                ];
+            }
+
+            $out['postCount'] = count($out['posts']);
+        }
+
+        $fdPhotos = $graphNode->getField('photos');
+        if (!empty($fdPhotos)) {
+            foreach ($fdPhotos as $key => $photo) {
+
+                $out['photos'][] = [
+                    'id' => $photo->getField('id'),
+                    'time' => $photo->getField('created_time')
+                ];
+            }
+
+            $out['photoCount'] = count($out['photos']);
+        }
+
+        $fdEvents = $graphNode->getField('events');
+        if (!empty($fdEvents)) {
+            foreach ($fdEvents as $key => $event) {
+
+                $place = $event->getField('place');
+                if (!empty($place)) {
+                    $placeName = $place->getField('name');
+                    $location = $place->getField('location');
+                } else $placeName = null;
+
+                if (!empty($location)) {
+                    $placeAddress = array(
+                        'street' => $location->getField('street'),
+                        'city' => $location->getField('city'),
+                        'zip' => $location->getField('zip'),
+                        'country' => $location->getField('country'),
+                        'longitude' => $location->getField('longitude'),
+                        'latitude' => $location->getField('latitude')
+                    );
+                } else $placeAddress = null;
+
+                $out['events'][] = [
+                    'id' => $event->getField('id'),
+                    'time' => $event->getField('start_time'),
+                    'name' => $event->getField('name'),
+                    'description' => $event->getField('description'),
+                    'place' => $placeName,
+                    'address' => $placeAddress
+                ];
+            }
+            
+            $out['eventCount'] = count($out['events']);
+        }
 
         //
         // Second step for images
