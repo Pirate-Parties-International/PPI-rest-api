@@ -58,6 +58,23 @@ class BaseController extends Controller
         return $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWERS);
     }
 
+    public function getTwitterData($code) {
+        $out = [
+            'likes'      => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_LIKES),
+            'followers'  => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWERS),
+            'following'  => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWING),
+            'tweetCount' => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_POSTS),
+        ];
+        $out['data']['about'] = $this->getMeta($code, Metadata::TYPE_TWITTER_DATA);
+
+        $tweets = $this->getMeta($code, Metadata::TYPE_TWITTER_POSTS);
+        if (!empty($tweets)) {
+            $out['tweets'] = $tweets;
+        }
+
+        return $out;
+    }
+
     public function getGooglePlusFollowers($code) {
         return $this->getStat($code, Stat::TYPE_GOOGLEPLUS, Stat::SUBTYPE_FOLLOWERS);
     }

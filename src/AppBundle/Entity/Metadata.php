@@ -14,6 +14,9 @@ class Metadata
 {
     const TYPE_FACEBOOK_COVER = 'fb_cover';
 
+    const TYPE_TWITTER_DATA   = 'tw_data';
+    const TYPE_TWITTER_POSTS  = 'tw_posts';
+
     const TYPE_YOUTUBE_VIDEOS = 'yt_videos';
     
     /**
@@ -126,8 +129,10 @@ class Metadata
      */
     public function getValue()
     {
-        if ($this->type == self::TYPE_YOUTUBE_VIDEOS) {
-            return json_decode($this->value, true);
+        if ($this->type == self::TYPE_TWITTER_POSTS ||
+            $this->type == self::TYPE_TWITTER_DATA ||
+            $this->type == self::TYPE_YOUTUBE_VIDEOS) {
+                return json_decode($this->value, true);
         }
 
         return $this->value;

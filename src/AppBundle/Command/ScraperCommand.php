@@ -125,18 +125,46 @@ class ScraperCommand extends ContainerAwareCommand
                 } else {
                     $output->writeln("     + Twitter data retrieved");
                     $this->addStatistic(
-                        $code, 
-                        Statistic::TYPE_TWITTER, 
-                        Statistic::SUBTYPE_FOLLOWERS, 
+                        $code,
+                        Statistic::TYPE_TWITTER,
+                        Statistic::SUBTYPE_LIKES,
+                        $td['likes']
+                    );
+                    $this->addStatistic(
+                        $code,
+                        Statistic::TYPE_TWITTER,
+                        Statistic::SUBTYPE_FOLLOWERS,
                         $td['followers']
                     );
                     $this->addStatistic(
-                        $code, 
-                        Statistic::TYPE_TWITTER, 
-                        Statistic::SUBTYPE_TWEETS, 
+                        $code,
+                        Statistic::TYPE_TWITTER,
+                        Statistic::SUBTYPE_FOLLOWING,
+                        $td['following']
+                    );
+                    $this->addStatistic(
+                        $code,
+                        Statistic::TYPE_TWITTER,
+                        Statistic::SUBTYPE_POSTS,
                         $td['tweets']
                     );
-                    $output->writeln("     + Statistic added");
+                    $output->writeln("     + Statistics added");
+
+                    $this->addMeta(
+                        $code,
+                        Metadata::TYPE_TWITTER_DATA,
+                        json_encode($td['description'])
+                    );
+
+                    if (!empty($td['posts'])) {
+                        $this->addMeta(
+                            $code,
+                            Metadata::TYPE_TWITTER_POSTS,
+                            json_encode($td['posts'])
+                        );
+                    }
+
+                    $output->writeln("     + Metadata added");
                 }
             }
           }
@@ -484,6 +512,10 @@ class ScraperCommand extends ContainerAwareCommand
         return $out;
     }
 
+    /**
+     * Queries Twitter for stats and tweets
+     * @return array
+     */
     public function getTwitterData($username) {
         $settings = array(
             'oauth_access_token' => $this->container->getParameter('tw_oauth_access_token'),
@@ -511,8 +543,36 @@ class ScraperCommand extends ContainerAwareCommand
             return false;
         }
 
-        $out['followers'] = $data->followers_count;
-        $out['tweets'] = $data->statuses_count;
+        $out = [
+            'description' => $data->description,
+            'tweets' => $data->statuses_count,
+            'likes' => $data->favourites_count,
+            'followers' => $data->followers_count,
+            'following' => $data->friends_count,
+        ];
+
+        $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+        $tweetData = $twitter->setGetField($getfield)
+                ->buildOauth($tweetUrl, $requestMethod)
+                ->performRequest();
+
+        if (empty($tweetData)) {
+            return false;
+        }
+
+        $tweetData = json_decode($tweetData);
+
+        if (!empty($tweetData)) {
+            foreach($tweetData as $item) {
+                $out['posts'][] = [
+                    'id' => $item->id,
+                    'time' => $item->created_at,
+                    'text' => $item->text,
+                    'likes' => $item->favorite_count,
+                    'retweets' => $item->retweet_count
+                ];
+            }
+        }
 
         return $out;
     }

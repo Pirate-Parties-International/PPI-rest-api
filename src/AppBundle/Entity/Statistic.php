@@ -19,11 +19,11 @@ class Statistic
 
     const SUBTYPE_LIKES       = 'L';
     const SUBTYPE_FOLLOWERS   = 'F';
-    const SUBTYPE_TWEETS      = 'T';
+    const SUBTYPE_FOLLOWING   = 'G';
+    const SUBTYPE_POSTS       = 'P';
     const SUBTYPE_VIEWS       = 'V';
     const SUBTYPE_VIDEOS      = 'M';
     const SUBTYPE_SUBSCRIBERS = 'S';
-    
 
     /**
      * @var int
