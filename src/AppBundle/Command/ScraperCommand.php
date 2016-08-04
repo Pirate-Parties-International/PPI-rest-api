@@ -34,12 +34,16 @@ class ScraperCommand extends ContainerAwareCommand
         $this
             ->setName('papi:scraper')
             ->setDescription('Scrapes FB, TW and G+ data. Should be run once per day.')
+            ->addOption('party', 'p', InputOption::VALUE_OPTIONAL, 'Choose a single party to scrape, by code (i.e. ppsi)') // if null, get all
+            ->addOption('data', 'd', InputOption::VALUE_OPTIONAL, 'Choose a single data point to scrape (fb, tw, g+ or yt)') // if null, get all
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        
+        $who = $input->getOption('party');
+        $what = $input->getOption('data');
+
         $this->container = $this->getContainer();
         $this->em = $this->container->get('doctrine')->getManager();
 
@@ -52,9 +56,15 @@ class ScraperCommand extends ContainerAwareCommand
 
         $output->writeln("##### Starting scraper #####");
 
-        $output->writeln("# Getting all parties.");
-        $parties = $this->getAllParties();
-        $output->writeln("Done");
+        if (empty($who)) {
+            $output->writeln("# Getting all parties");
+            $parties = $this->getAllParties();
+            $output->writeln("Done");
+        } else {
+            $output->writeln("# Getting one party (". $who .")");
+            $parties = $this->getOneParty($who);
+            $output->writeln("Done");
+        }
 
         foreach ($parties as $code => $party) {
             
@@ -65,6 +75,7 @@ class ScraperCommand extends ContainerAwareCommand
                 continue;
             }
 
+          if ($what == null || $what == 'fb') {
             //
             // FACEBOOK
             // 
@@ -96,7 +107,9 @@ class ScraperCommand extends ContainerAwareCommand
                 }
 
             }
+          }
 
+          if ($what == null || $what == 'tw') {
             //
             // TWITTER
             // 
@@ -104,7 +117,7 @@ class ScraperCommand extends ContainerAwareCommand
                 $output->writeln("     + Starting Twitter import");
                 $td = $this->getTwitterData($sn['twitter']['username']);
 
-                if ($fd == false ||
+                if ($td == false ||
                     empty($td['followers']) ||
                     empty($td['tweets'])
                     ) {
@@ -126,7 +139,9 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("     + Statistic added");
                 }
             }
+          }
 
+          if ($what == null || $what == 'g+') {
             //
             // Google+
             // 
@@ -149,7 +164,9 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("     + Statistic added");
                 }
             }
+          }
 
+          if ($what == null || $what == 'yt') {
             //
             // Youtube
             // 
@@ -198,8 +215,13 @@ class ScraperCommand extends ContainerAwareCommand
                     
                 }
             }
+          }
 
-
+          else if ($what != null && $what != 'yt' && $what != 'g+' && $what != 'tw' && $what != 'fb') {
+            $output->writeln("     + ERROR - Data point \"". $what ."\" not recognised");
+            $output->writeln("# Process halted");
+            die;
+          }
             
         }
 
@@ -341,6 +363,28 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         return $allData;
+    }
+
+    /**
+     * Queries DB for one party
+     * @return array
+     */
+    public function getOneParty($code) {
+
+        $party = $this->container->get('doctrine')
+            ->getRepository('AppBundle:Party')
+            ->findOneByCode($code);
+
+        if (empty($party)) {
+            echo ("     + ERROR - Party code \"". $code ."\" not recognised\n");
+            echo ("# Process halted\n");
+            die;
+        }
+
+        $data = array();
+        $data[strtolower($party->getCode())] = $party;
+
+        return $data;
     }
 
     /**
