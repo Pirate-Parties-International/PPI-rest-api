@@ -62,7 +62,7 @@ class BaseController extends Controller
         return $this->getStat($code, Stat::TYPE_GOOGLEPLUS, Stat::SUBTYPE_FOLLOWERS);
     }
 
-    public function getYoutubeStatistics($code) {
+    public function getYoutubeData($code) {
         $out = [
             'subscribers' => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_SUBSCRIBERS),
             'views'       => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_VIEWS),
@@ -70,7 +70,6 @@ class BaseController extends Controller
         ];
 
         $videos = $this->getMeta($code, Metadata::TYPE_YOUTUBE_VIDEOS);
-
         if (!empty($videos)) {
             $out['videos'] = $videos;
         }

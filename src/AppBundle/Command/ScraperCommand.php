@@ -531,6 +531,10 @@ class ScraperCommand extends ContainerAwareCommand
 
     }
 
+    /**
+     * Queries Youtube for stats and videos
+     * @return array
+     */
     public function getYoutubeData($id) {
         $apikey = $this->container->getParameter('gplus_api_key');
         $youtube = new Youtube(array('key' => $apikey));
@@ -555,12 +559,30 @@ class ScraperCommand extends ContainerAwareCommand
             $out['videos'] = [];
 
             foreach ($videos as $key => $vid) {
-                if ($key > 4) break;
+
+                $vidId = $vid->snippet->resourceId->videoId;
+                $vidInfo = $youtube->getVideoInfo($vidId);
+
+                if (!empty($vidInfo->statistics->likeCount)) {
+                    $vidLikes = $vidInfo->statistics->likeCount;
+                } else {
+                    $vidLikes = "0";
+                }
+
+                if (!empty($vidInfo->statistics->commentCount)) {
+                    $vidComments = $vidInfo->statistics->commentCount;
+                } else {
+                    $vidComments = "0";
+                }
 
                 $out['videos'][] = [
                     'title' => $vid->snippet->title,
                     'tumb' => $vid->snippet->thumbnails->medium->url,
-                    'id' => $vid->snippet->resourceId->videoId
+                    'date' => $vid->snippet->publishedAt,
+                    'id' => $vidId,
+                    'views' => $vidInfo->statistics->viewCount,
+                    'likes' => $vidLikes,
+                    'comments' => $vidComments
                 ];
             }
         }
@@ -568,6 +590,7 @@ class ScraperCommand extends ContainerAwareCommand
         return $out;
 
     }
+
 
     public function curl($url) {
         // Get cURL resource
