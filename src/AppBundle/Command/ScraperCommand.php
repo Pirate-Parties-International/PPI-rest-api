@@ -540,6 +540,8 @@ class ScraperCommand extends ContainerAwareCommand
             }
 
             $out['postCount'] = count($out['posts']);
+        } else {
+            $out['postCount'] = 0;
         }
 
         $fdPhotos = $graphNode->getField('photos');
@@ -553,6 +555,8 @@ class ScraperCommand extends ContainerAwareCommand
             }
 
             $out['photoCount'] = count($out['photos']);
+        } else {
+            $out['photoCount'] = 0;
         }
 
         $fdEvents = $graphNode->getField('events');
@@ -587,6 +591,8 @@ class ScraperCommand extends ContainerAwareCommand
             }
             
             $out['eventCount'] = count($out['events']);
+        } else {
+            $out['eventCount'] = 0;
         }
 
         //
