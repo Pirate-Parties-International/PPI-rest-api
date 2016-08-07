@@ -483,7 +483,12 @@ class ScraperCommand extends ContainerAwareCommand
           'GET',
           $fbPageId,
           array(
-            'fields' => 'cover,engagement,talking_about_count,about,emails,single_line_address,posts,photos,events'
+            'fields' => 'cover,engagement,talking_about_count,about,emails,single_line_address,
+                            posts{created_time,updated_time,message,story,link,name,caption,picture,likes.limit(0).summary(true),
+                                reactions.limit(0).summary(true),comments.limit(0).summary(true),shares},
+                            albums{photos{created_time,updated_time,picture,link,name,event,place,album,likes.limit(0).summary(true),
+                                reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}},
+                            events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
           )
         );
 
@@ -504,6 +509,9 @@ class ScraperCommand extends ContainerAwareCommand
 
         $graphNode = $response->getGraphNode();
 
+        //
+        // Basic page info
+        //
         $out = [
             'likes'   => $graphNode->getField('engagement')->getField('count'),
             'talking' => $graphNode->getField('talking_about_count'),
@@ -521,21 +529,36 @@ class ScraperCommand extends ContainerAwareCommand
             }
         }
 
+        //
+        // Info for posts
+        //
         $fdPosts = $graphNode->getField('posts');
         if (!empty($fdPosts)) {
             foreach ($fdPosts as $key => $post) {
 
-                $message = $post->getField('message');
-                if (!empty($message)) {
-                    $body = $message;
-                } else {
-                    $body = $post->getField('story');
-                }
+                $likeData     = $post->getField('likes')->getMetadata();
+                $reactionData = $post->getField('reactions')->getMetadata();
+                $commentData  = $post->getField('comments')->getMetadata();
+                $shareData    = json_decode($post->getField('shares'), true);
 
                 $out['posts'][] = [
-                    'id' => $post->getField('id'),
-                    'time' => $post->getField('created_time'),
-                    'body' => $body
+                    'id'          => $post->getField('id'),
+                    'time'        => [
+                      'posted'      => $post->getField('created_time'),
+                      'updated'     => $post->getField('updated_time')
+                    ],
+                    'message'     => $post->getField('message'),
+                    'story'       => $post->getField('story'),
+                    'link'        => [
+                      'url'         => $post->getField('link'),
+                      'name'        => $post->getField('name'),
+                      'caption'     => $post->getField('caption'),
+                      'thumb'       => $post->getField('picture')
+                    ],
+                    'likes'       => $likeData['summary']['total_count'],
+                    'reactions'   => $reactionData['summary']['total_count'],
+                    'comments'    => $commentData['summary']['total_count'],
+                    'shares'      => $shareData['count']
                 ];
             }
 
@@ -544,14 +567,44 @@ class ScraperCommand extends ContainerAwareCommand
             $out['postCount'] = 0;
         }
 
-        $fdPhotos = $graphNode->getField('photos');
-        if (!empty($fdPhotos)) {
-            foreach ($fdPhotos as $key => $photo) {
+        //
+        // Info for images
+        //
+        $fdAlbums = $graphNode->getField('albums');
+        if (!empty($fdAlbums)) {
+            foreach ($fdAlbums as $key => $album) {
 
-                $out['photos'][] = [
-                    'id' => $photo->getField('id'),
-                    'time' => $photo->getField('created_time')
-                ];
+                $fdPhotos = $album->getField('photos');
+                foreach ($fdPhotos as $key => $photo) {
+
+                    $likeData     = $photo->getField('likes')->getMetadata();
+                    $reactionData = $photo->getField('reactions')->getMetadata();
+                    $commentData  = $photo->getField('comments')->getMetadata();
+                    $shareData    = count(json_decode($photo->getField('sharedposts'), true));
+
+                    $out['photos'][]    = [
+                        'id'        => $photo->getField('id'),
+                        'time'      => [
+                          'posted'    => $photo->getField('created_time'),
+                          'updated'   => $photo->getField('updated_time')
+                        ],
+                        'picture'   => $photo->getField('picture'),
+                        'url'       => $photo->getField('link'),
+                        'details'   => [
+                          'name'      => $photo->getField('name'), // caption
+                          'album'     => [
+                            'id'        => $photo->getField('album')->getField('id'),
+                            'name'      => $photo->getField('album')->getField('name')
+                          ],
+                          'event'     => $photo->getField('event'),
+                          'place'     => $photo->getField('place')
+                        ],
+                        'likes'     => $likeData['summary']['total_count'],
+                        'reactions' => $reactionData['summary']['total_count'],
+                        'comments'  => $commentData['summary']['total_count'],
+                        'shares'    => $shareData
+                    ];
+                }
             }
 
             $out['photoCount'] = count($out['photos']);
@@ -559,6 +612,9 @@ class ScraperCommand extends ContainerAwareCommand
             $out['photoCount'] = 0;
         }
 
+        //
+        // Info for events
+        //
         $fdEvents = $graphNode->getField('events');
         if (!empty($fdEvents)) {
             foreach ($fdEvents as $key => $event) {
@@ -566,27 +622,40 @@ class ScraperCommand extends ContainerAwareCommand
                 $place = $event->getField('place');
                 if (!empty($place)) {
                     $placeName = $place->getField('name');
-                    $location = $place->getField('location');
+                    $location  = $place->getField('location');
                 } else $placeName = null;
 
                 if (!empty($location)) {
-                    $placeAddress = array(
-                        'street' => $location->getField('street'),
-                        'city' => $location->getField('city'),
-                        'zip' => $location->getField('zip'),
-                        'country' => $location->getField('country'),
+                    $placeAddress = [
+                        'street'    => $location->getField('street'),
+                        'city'      => $location->getField('city'),
+                        'zip'       => $location->getField('zip'),
+                        'country'   => $location->getField('country'),
                         'longitude' => $location->getField('longitude'),
-                        'latitude' => $location->getField('latitude')
-                    );
+                        'latitude'  => $location->getField('latitude')
+                    ];
                 } else $placeAddress = null;
 
+                $commentData  = $event->getField('comments')->getMetadata();
+                $coverData    = json_decode($event->getField('cover'), true);
+
                 $out['events'][] = [
-                    'id' => $event->getField('id'),
-                    'time' => $event->getField('start_time'),
-                    'name' => $event->getField('name'),
-                    'description' => $event->getField('description'),
-                    'place' => $placeName,
-                    'address' => $placeAddress
+                    'id'          => $event->getField('id'),
+                    'start_time'  => $event->getField('start_time'),
+                    'updated'     => $event->getField('updated_time'),
+                    'name'        => $event->getField('name'),
+                    'details'     => [
+                      'description' => $event->getField('description'),
+                      'place'       => $placeName,
+                      'address'     => $placeAddress,
+                      'cover'       => [
+                        'id'          => $coverData['id'],
+                        'source'      => $coverData['source']
+                      ]
+                    ],
+                    'attending'   => $event->getField('attending_count'),
+                    'interested'  => $event->getField('interested_count'),
+                    'comments'    => $commentData['summary']['total_count']
                 ];
             }
             
@@ -597,7 +666,7 @@ class ScraperCommand extends ContainerAwareCommand
 
         //
         // Second step for images
-        // 
+        //
         $imageId =  $graphNode->getField('cover')->getField('cover_id');
 
         $request = $fb->request(
@@ -659,10 +728,10 @@ class ScraperCommand extends ContainerAwareCommand
      */
     public function getTwitterData($username) {
         $settings = array(
-            'oauth_access_token' => $this->container->getParameter('tw_oauth_access_token'),
+            'oauth_access_token'        => $this->container->getParameter('tw_oauth_access_token'),
             'oauth_access_token_secret' => $this->container->getParameter('tw_oauth_access_token_secret'),
-            'consumer_key' => $this->container->getParameter('tw_consumer_key'),
-            'consumer_secret' => $this->container->getParameter('tw_consumer_secret')
+            'consumer_key'              => $this->container->getParameter('tw_consumer_key'),
+            'consumer_secret'           => $this->container->getParameter('tw_consumer_secret')
         );
 
         $url = 'https://api.twitter.com/1.1/users/show.json';
@@ -686,10 +755,10 @@ class ScraperCommand extends ContainerAwareCommand
 
         $out = [
             'description' => $data->description,
-            'tweets' => $data->statuses_count,
-            'likes' => $data->favourites_count,
-            'followers' => $data->followers_count,
-            'following' => $data->friends_count,
+            'tweets'      => $data->statuses_count,
+            'likes'       => $data->favourites_count,
+            'followers'   => $data->followers_count,
+            'following'   => $data->friends_count,
         ];
 
         $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
@@ -706,10 +775,10 @@ class ScraperCommand extends ContainerAwareCommand
         if (!empty($tweetData)) {
             foreach($tweetData as $item) {
                 $out['posts'][] = [
-                    'id' => $item->id,
-                    'time' => $item->created_at,
-                    'text' => $item->text,
-                    'likes' => $item->favorite_count,
+                    'id'       => $item->id,
+                    'time'     => $item->created_at,
+                    'text'     => $item->text,
+                    'likes'    => $item->favorite_count,
                     'retweets' => $item->retweet_count
                 ];
             }
@@ -752,9 +821,9 @@ class ScraperCommand extends ContainerAwareCommand
         if (empty($data->statistics) || empty($data->statistics->viewCount)) {
             return false;
         }
-        $out['stats']['viewCount'] = $data->statistics->viewCount;
+        $out['stats']['viewCount']       = $data->statistics->viewCount;
         $out['stats']['subscriberCount'] = $data->statistics->subscriberCount;
-        $out['stats']['videoCount'] = $data->statistics->videoCount;
+        $out['stats']['videoCount']      = $data->statistics->videoCount;
 
         $playlist = $data->contentDetails->relatedPlaylists->uploads;
 
@@ -765,7 +834,7 @@ class ScraperCommand extends ContainerAwareCommand
 
             foreach ($videos as $key => $vid) {
 
-                $vidId = $vid->snippet->resourceId->videoId;
+                $vidId   = $vid->snippet->resourceId->videoId;
                 $vidInfo = $youtube->getVideoInfo($vidId);
 
                 if (!empty($vidInfo->statistics->likeCount)) {
@@ -781,12 +850,12 @@ class ScraperCommand extends ContainerAwareCommand
                 }
 
                 $out['videos'][] = [
-                    'title' => $vid->snippet->title,
-                    'tumb' => $vid->snippet->thumbnails->medium->url,
-                    'date' => $vid->snippet->publishedAt,
-                    'id' => $vidId,
-                    'views' => $vidInfo->statistics->viewCount,
-                    'likes' => $vidLikes,
+                    'id'       => $vidId,
+                    'date'     => $vid->snippet->publishedAt,
+                    'title'    => $vid->snippet->title,
+                    'tumb'     => $vid->snippet->thumbnails->medium->url,
+                    'views'    => $vidInfo->statistics->viewCount,
+                    'likes'    => $vidLikes,
                     'comments' => $vidComments
                 ];
             }
