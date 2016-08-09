@@ -93,31 +93,36 @@ class ScraperCommand extends ContainerAwareCommand
                         Statistic::SUBTYPE_LIKES,
                         $fd['likes']
                     );
+                    $output->writeln("     + 'Like' count added");
                     $this->addStatistic(
                         $code,
                         Statistic::TYPE_FACEBOOK,
                         Statistic::SUBTYPE_TALKING,
                         $fd['talking']
                     );
+                    $output->writeln("     + 'Talking about' count added");
                     $this->addStatistic(
                         $code,
                         Statistic::TYPE_FACEBOOK, 
                         Statistic::SUBTYPE_POSTS,
                         $fd['postCount']
                     );
+                    $output->writeln("     + Post count added");
                     $this->addStatistic(
                         $code,
                         Statistic::TYPE_FACEBOOK,
                         Statistic::SUBTYPE_IMAGES,
                         $fd['photoCount']
                     );
+                    $output->writeln("     + Photo count added");
                     $this->addStatistic(
                         $code,
                         Statistic::TYPE_FACEBOOK,
                         Statistic::SUBTYPE_EVENTS,
                         $fd['eventCount']
                     );
-                    $output->writeln("     + Statistics added");
+                    $output->writeln("     + Event count added");
+                    $output->writeln("     + All statistics added");
 
                     $cover = $this->getFacebookCover($code, $fd['cover']);
                     $output->writeln("     + Cover retrieved");
@@ -127,12 +132,14 @@ class ScraperCommand extends ContainerAwareCommand
                         Metadata::TYPE_FACEBOOK_COVER,
                         $cover
                     );
+                    $output->writeln("     + Cover added");
 
                     $this->addMeta(
                         $code,
                         Metadata::TYPE_FACEBOOK_DATA,
                         json_encode($fd['data'])
                     );
+                    $output->writeln("     + General data added");
 
                     if (!empty($fd['posts'])) {
                         $this->addMeta(
@@ -141,6 +148,7 @@ class ScraperCommand extends ContainerAwareCommand
                             json_encode($fd['posts'])
                         );
                     }
+                    $output->writeln("     + Posts added");
                     if (!empty($fd['photos'])) {
                         $this->addMeta(
                             $code,
@@ -148,6 +156,7 @@ class ScraperCommand extends ContainerAwareCommand
                             json_encode($fd['photos'])
                         );
                     }
+                    $output->writeln("     + Photos added");
                     if (!empty($fd['events'])) {
                             $this->addMeta(
                             $code,
@@ -155,6 +164,7 @@ class ScraperCommand extends ContainerAwareCommand
                             json_encode($fd['events'])
                         );
                     }
+                    $output->writeln("     + Events added");
 
                     $output->writeln("     + Metadata added");
                 }
@@ -484,9 +494,9 @@ class ScraperCommand extends ContainerAwareCommand
           $fbPageId,
           array(
             'fields' => 'cover,engagement,talking_about_count,about,emails,single_line_address,
-                            posts{created_time,updated_time,message,story,link,name,caption,picture,likes.limit(0).summary(true),
+                            posts.limit(25).summary(true){created_time,updated_time,message,story,link,name,caption,picture,likes.limit(0).summary(true),
                                 reactions.limit(0).summary(true),comments.limit(0).summary(true),shares},
-                            albums{photos{created_time,updated_time,picture,link,name,event,place,album,likes.limit(0).summary(true),
+                            albums{count,photos{created_time,updated_time,picture,link,name,event,place,album,likes.limit(0).summary(true),
                                 reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}},
                             events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
           )
@@ -534,6 +544,7 @@ class ScraperCommand extends ContainerAwareCommand
         //
         $fdPosts = $graphNode->getField('posts');
         if (!empty($fdPosts)) {
+
             foreach ($fdPosts as $key => $post) {
 
                 $likeData     = $post->getField('likes')->getMetadata();
@@ -543,10 +554,8 @@ class ScraperCommand extends ContainerAwareCommand
 
                 $out['posts'][] = [
                     'id'          => $post->getField('id'),
-                    'time'        => [
-                      'posted'      => $post->getField('created_time'),
-                      'updated'     => $post->getField('updated_time')
-                    ],
+                    'posted'      => $post->getField('created_time')->format('c'),
+                    'updated'     => $post->getField('updated_time')->format('c'),
                     'message'     => $post->getField('message'),
                     'story'       => $post->getField('story'),
                     'link'        => [
@@ -574,7 +583,10 @@ class ScraperCommand extends ContainerAwareCommand
         if (!empty($fdAlbums)) {
             foreach ($fdAlbums as $key => $album) {
 
-                $fdPhotos = $album->getField('photos');
+              $photoCount[] = $album->getField('count');
+
+              $fdPhotos = $album->getField('photos');
+              if (!empty($fdPhotos)) {
                 foreach ($fdPhotos as $key => $photo) {
 
                     $likeData     = $photo->getField('likes')->getMetadata();
@@ -584,10 +596,8 @@ class ScraperCommand extends ContainerAwareCommand
 
                     $out['photos'][]    = [
                         'id'        => $photo->getField('id'),
-                        'time'      => [
-                          'posted'    => $photo->getField('created_time'),
-                          'updated'   => $photo->getField('updated_time')
-                        ],
+                        'posted'    => $photo->getField('created_time')->format('c'),
+                        'updated'   => $photo->getField('updated_time')->format('c'),
                         'picture'   => $photo->getField('picture'),
                         'url'       => $photo->getField('link'),
                         'details'   => [
@@ -605,9 +615,10 @@ class ScraperCommand extends ContainerAwareCommand
                         'shares'    => $shareData
                     ];
                 }
+              }
             }
 
-            $out['photoCount'] = count($out['photos']);
+            $out['photoCount'] = array_sum($photoCount);
         } else {
             $out['photoCount'] = 0;
         }
@@ -641,8 +652,8 @@ class ScraperCommand extends ContainerAwareCommand
 
                 $out['events'][] = [
                     'id'          => $event->getField('id'),
-                    'start_time'  => $event->getField('start_time'),
-                    'updated'     => $event->getField('updated_time'),
+                    'start_time'  => $event->getField('start_time')->format('c'),
+                    'updated'     => $event->getField('updated_time')->format('c'),
                     'name'        => $event->getField('name'),
                     'details'     => [
                       'description' => $event->getField('description'),
