@@ -20,7 +20,6 @@ use Facebook\Facebook;
 use Facebook\FacebookSDKException;
 use Facebook\FacebookResponseException;
 
-
 class ScraperCommand extends ContainerAwareCommand
 {
     
@@ -93,53 +92,53 @@ class ScraperCommand extends ContainerAwareCommand
                         Statistic::SUBTYPE_LIKES,
                         $fd['likes']
                     );
-                    $output->writeln("     + 'Like' count added");
+                    $output->writeln("         + 'Like' count added");
                     $this->addStatistic(
                         $code,
                         Statistic::TYPE_FACEBOOK,
                         Statistic::SUBTYPE_TALKING,
                         $fd['talking']
                     );
-                    $output->writeln("     + 'Talking about' count added");
+                    $output->writeln("         + 'Talking about' count added");
                     $this->addStatistic(
                         $code,
                         Statistic::TYPE_FACEBOOK, 
                         Statistic::SUBTYPE_POSTS,
                         $fd['postCount']
                     );
-                    $output->writeln("     + Post count added");
+                    $output->writeln("         + Post count added");
                     $this->addStatistic(
                         $code,
                         Statistic::TYPE_FACEBOOK,
                         Statistic::SUBTYPE_IMAGES,
                         $fd['photoCount']
                     );
-                    $output->writeln("     + Photo count added");
+                    $output->writeln("         + Photo count added");
                     $this->addStatistic(
                         $code,
                         Statistic::TYPE_FACEBOOK,
                         Statistic::SUBTYPE_EVENTS,
                         $fd['eventCount']
                     );
-                    $output->writeln("     + Event count added");
+                    $output->writeln("         + Event count added");
                     $output->writeln("     + All statistics added");
 
                     $cover = $this->getFacebookCover($code, $fd['cover']);
-                    $output->writeln("     + Cover retrieved");
+                    $output->writeln("         + Cover retrieved");
 
                     $this->addMeta(
                         $code,
                         Metadata::TYPE_FACEBOOK_COVER,
                         $cover
                     );
-                    $output->writeln("     + Cover added");
+                    $output->writeln("         + Cover added");
 
                     $this->addMeta(
                         $code,
                         Metadata::TYPE_FACEBOOK_DATA,
                         json_encode($fd['data'])
                     );
-                    $output->writeln("     + General data added");
+                    $output->writeln("         + General data added");
 
                     if (!empty($fd['posts'])) {
                         $this->addMeta(
@@ -148,7 +147,7 @@ class ScraperCommand extends ContainerAwareCommand
                             json_encode($fd['posts'])
                         );
                     }
-                    $output->writeln("     + Posts added");
+                    $output->writeln("         + Posts added");
                     if (!empty($fd['photos'])) {
                         $this->addMeta(
                             $code,
@@ -156,7 +155,7 @@ class ScraperCommand extends ContainerAwareCommand
                             json_encode($fd['photos'])
                         );
                     }
-                    $output->writeln("     + Photos added");
+                    $output->writeln("         + Photos added");
                     if (!empty($fd['events'])) {
                             $this->addMeta(
                             $code,
@@ -164,7 +163,7 @@ class ScraperCommand extends ContainerAwareCommand
                             json_encode($fd['events'])
                         );
                     }
-                    $output->writeln("     + Events added");
+                    $output->writeln("         + Events added");
 
                     $output->writeln("     + Metadata added");
                 }
@@ -489,17 +488,19 @@ class ScraperCommand extends ContainerAwareCommand
         ]);
         $fb->setDefaultAccessToken($this->container->getParameter('fb_access_token'));
 
+        $req = [
+            'basic'    => 'cover,engagement,talking_about_count,about,emails,single_line_address',
+            'posts'    => 'posts.limit(25){message,story,link,name,caption,picture,created_time,updated_time,shares,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true)}',
+            'photos'   => 'albums{count,photos{created_time,updated_time,picture,link,name,event,place,album,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}',
+            'events'   => 'events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
+        ];
+
         $request = $fb->request(
           'GET',
           $fbPageId,
           array(
-            'fields' => 'cover,engagement,talking_about_count,about,emails,single_line_address,
-                            posts.limit(25).summary(true){created_time,updated_time,message,story,link,name,caption,picture,likes.limit(0).summary(true),
-                                reactions.limit(0).summary(true),comments.limit(0).summary(true),shares},
-                            albums{count,photos{created_time,updated_time,picture,link,name,event,place,album,likes.limit(0).summary(true),
-                                reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}},
-                            events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
-          )
+            'fields' => $req['basic'].','.$req['posts'].','.$req['photos'].','.$req['events']
+            )
         );
 
         try {
@@ -526,6 +527,7 @@ class ScraperCommand extends ContainerAwareCommand
             'likes'   => $graphNode->getField('engagement')->getField('count'),
             'talking' => $graphNode->getField('talking_about_count'),
         ];
+        echo "        + stats... ok\n";
 
         $out['data'] = [
             'about'   => $graphNode->getField('about'),
@@ -538,19 +540,44 @@ class ScraperCommand extends ContainerAwareCommand
                 $out['data']['email'] = $email;
             }
         }
+        echo "        + general data... ok\n";
 
         //
         // Info for posts
         //
         $fdPosts = $graphNode->getField('posts');
-        if (!empty($fdPosts)) {
+          echo "        + posts... page ";
+          $pageCount = 0;
+          $timeLimit = strtotime("-1 year"); // max age of posts to scrape
 
+          do {
+            echo $pageCount .', ';
             foreach ($fdPosts as $key => $post) {
 
-                $likeData     = $post->getField('likes')->getMetadata();
-                $reactionData = $post->getField('reactions')->getMetadata();
-                $commentData  = $post->getField('comments')->getMetadata();
-                $shareData    = json_decode($post->getField('shares'), true);
+                $timeCheck = $post->getField('created_time')->getTimestamp();
+
+                $likes = $post->getField('likes');
+                if (!empty($likes)) {
+                    $likeData    = $likes->getMetadata();
+                    $likeCount   = $likeData['summary']['total_count'];
+                } else $likeData = null;
+
+                $reactions = $post->getField('reactions');
+                if (!empty($reactions)) {
+                    $reactionData     = $post->getField('reactions')->getMetadata();
+                    $reactionCount    = $reactionData['summary']['total_count'];
+                } else $reactionCount = null;
+
+                $comments = $post->getField('comments');
+                if (!empty($comments)) {
+                    $commentData     = $post->getField('comments')->getMetadata();
+                    $commentCount    = $commentData['summary']['total_count'];
+                } else $commentCount = null;
+
+                $shares = $post->getField('shares');
+                if (!empty($shares)) {
+                    $shareCount    = json_decode($post->getField('shares'), true);
+                } else $shareCount = null;
 
                 $out['posts'][] = [
                     'id'          => $post->getField('id'),
@@ -564,30 +591,36 @@ class ScraperCommand extends ContainerAwareCommand
                       'caption'     => $post->getField('caption'),
                       'thumb'       => $post->getField('picture')
                     ],
-                    'likes'       => $likeData['summary']['total_count'],
-                    'reactions'   => $reactionData['summary']['total_count'],
-                    'comments'    => $commentData['summary']['total_count'],
-                    'shares'      => $shareData['count']
+                    'likes'       => $likeCount,
+                    'reactions'   => $reactionCount,
+                    'comments'    => $commentCount,
+                    'shares'      => $shareCount
                 ];
             }
+            $pageCount++;
+          } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
 
             $out['postCount'] = count($out['posts']);
-        } else {
-            $out['postCount'] = 0;
-        }
+            echo "total ". $out['postCount'] ." recent posts found\n";
 
         //
         // Info for images
         //
         $fdAlbums = $graphNode->getField('albums');
         if (!empty($fdAlbums)) {
+            echo "        + photos";
+            $pageCount = 0;
+            echo "... page ";
+
             foreach ($fdAlbums as $key => $album) {
 
               $photoCount[] = $album->getField('count');
-
               $fdPhotos = $album->getField('photos');
               if (!empty($fdPhotos)) {
-                foreach ($fdPhotos as $key => $photo) {
+
+                do {
+                  echo $pageCount .', ';
+                  foreach ($fdPhotos as $key => $photo) {
 
                     $likeData     = $photo->getField('likes')->getMetadata();
                     $reactionData = $photo->getField('reactions')->getMetadata();
@@ -614,13 +647,17 @@ class ScraperCommand extends ContainerAwareCommand
                         'comments'  => $commentData['summary']['total_count'],
                         'shares'    => $shareData
                     ];
-                }
+                  }
+                  $pageCount++;
+                } while ($fdPhotos = $fb->next($fdPhotos));
               }
             }
 
             $out['photoCount'] = array_sum($photoCount);
+            echo "total ". $out['photoCount'] ." found, ". count($out['photos']) ." added\n";
         } else {
             $out['photoCount'] = 0;
+            echo " not found\n";
         }
 
         //
@@ -628,8 +665,10 @@ class ScraperCommand extends ContainerAwareCommand
         //
         $fdEvents = $graphNode->getField('events');
         if (!empty($fdEvents)) {
+            echo "        + events";
             foreach ($fdEvents as $key => $event) {
 
+                echo ".";
                 $place = $event->getField('place');
                 if (!empty($place)) {
                     $placeName = $place->getField('name');
@@ -671,8 +710,10 @@ class ScraperCommand extends ContainerAwareCommand
             }
             
             $out['eventCount'] = count($out['events']);
+            echo " ". $out['eventCount'] ." found\n";
         } else {
             $out['eventCount'] = 0;
+            echo " not found\n";
         }
 
         //
