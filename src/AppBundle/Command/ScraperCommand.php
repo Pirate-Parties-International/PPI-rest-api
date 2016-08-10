@@ -601,7 +601,7 @@ class ScraperCommand extends ContainerAwareCommand
           } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
 
             $out['postCount'] = count($out['posts']);
-            echo "total ". $out['postCount'] ." recent posts found\n";
+            echo "total ". $out['postCount'] ." most recent posts found and added\n";
 
         //
         // Info for images
@@ -666,6 +666,11 @@ class ScraperCommand extends ContainerAwareCommand
         $fdEvents = $graphNode->getField('events');
         if (!empty($fdEvents)) {
             echo "        + events";
+            $pageCount = 0;
+            echo "... page ";
+
+          do {
+            echo $pageCount .', ';
             foreach ($fdEvents as $key => $event) {
 
                 echo ".";
@@ -708,9 +713,11 @@ class ScraperCommand extends ContainerAwareCommand
                     'comments'    => $commentData['summary']['total_count']
                 ];
             }
+            $pageCount++;
+          } while ($fdEvents = $fb->next($fdEvents));
             
             $out['eventCount'] = count($out['events']);
-            echo " ". $out['eventCount'] ." found\n";
+            echo " ". $out['eventCount'] ." found and added\n";
         } else {
             $out['eventCount'] = 0;
             echo " not found\n";
@@ -812,6 +819,7 @@ class ScraperCommand extends ContainerAwareCommand
             'followers'   => $data->followers_count,
             'following'   => $data->friends_count,
         ];
+        echo "        + stats... ok\n";
 
         $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
         $tweetData = $twitter->setGetField($getfield)
@@ -825,6 +833,14 @@ class ScraperCommand extends ContainerAwareCommand
         $tweetData = json_decode($tweetData);
 
         if (!empty($tweetData)) {
+          $timeLimit = strtotime("-1 year"); // max age of posts to scrape
+
+          echo "        + tweets";
+          $pageCount = 0;
+          echo "... page ";
+
+          do {
+            echo $pageCount .', ';
             foreach($tweetData as $item) {
                 $out['posts'][] = [
                     'id'       => $item->id,
@@ -833,7 +849,17 @@ class ScraperCommand extends ContainerAwareCommand
                     'likes'    => $item->favorite_count,
                     'retweets' => $item->retweet_count
                 ];
+                $timeCheck = strtotime($item->created_at);
             }
+
+            $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id);
+            $tweetData = json_decode($twitter->setGetField($nextField)
+                ->buildOauth($tweetUrl, $requestMethod)
+                ->performRequest());
+            $pageCount++;
+          } while ($timeCheck > $timeLimit);
+
+          echo "total ". $out['tweets'] ." tweets found, ". count($out['posts']) ." most recent added\n";
         }
 
         return $out;
