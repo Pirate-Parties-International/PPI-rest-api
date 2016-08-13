@@ -22,9 +22,9 @@ use Facebook\FacebookResponseException;
 
 class ScraperCommand extends ContainerAwareCommand
 {
-    
+
     protected $stats = [];
-    protected $meta = [];
+    protected $meta  = [];
 
     public $coverRoot = "";
 
@@ -40,7 +40,7 @@ class ScraperCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $who = $input->getOption('party');
+        $who  = $input->getOption('party');
         $what = $input->getOption('data');
 
         $this->container = $this->getContainer();
@@ -48,7 +48,7 @@ class ScraperCommand extends ContainerAwareCommand
 
         $appRoot = $this->container->get('kernel')->getRootDir() . '/..';
         $this->coverRoot = $appRoot . '/web/img/fb-covers/';
-        
+
         $this->output = $output;
         $this->logger = $this->getContainer()->get('logger');
         $logger = $this->logger;
@@ -74,244 +74,268 @@ class ScraperCommand extends ContainerAwareCommand
                 continue;
             }
 
-          if ($what == null || $what == 'fb') {
             //
             // FACEBOOK
-            // 
-            if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
-                $output->writeln("     + Starting Facebook import");
-                $fd = $this->getFBData($sn['facebook']['username']); 
+            //
+            if ($what == null || $what == 'fb') {
+                if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
+                    $output->writeln("     + Starting Facebook import");
+                    $fd = $this->getFBData($sn['facebook']['username']); 
 
-                if ($fd == false || empty($fd['likes'])) {
-                    $output->writeln("     + ERROR while retrieving FB data");
-                } else {
-                    $output->writeln("     + Facebook data retrieved");
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK, 
-                        Statistic::SUBTYPE_LIKES,
-                        $fd['likes']
-                    );
-                    $output->writeln("         + 'Like' count added");
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_TALKING,
-                        $fd['talking']
-                    );
-                    $output->writeln("         + 'Talking about' count added");
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK, 
-                        Statistic::SUBTYPE_POSTS,
-                        $fd['postCount']
-                    );
-                    $output->writeln("         + Post count added");
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_IMAGES,
-                        $fd['photoCount']
-                    );
-                    $output->writeln("         + Photo count added");
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_EVENTS,
-                        $fd['eventCount']
-                    );
-                    $output->writeln("         + Event count added");
-                    $output->writeln("     + All statistics added");
+                    if ($fd == false || empty($fd['likes'])) {
+                        $output->writeln("     + ERROR while retrieving FB data");
+                    } else {
+                        $output->writeln("     + Facebook data retrieved");
 
-                    $cover = $this->getFacebookCover($code, $fd['cover']);
-                    $output->writeln("         + Cover retrieved");
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_FACEBOOK, 
+                            Statistic::SUBTYPE_LIKES,
+                            $fd['likes']
+                        );
+                        $output->writeln("         + 'Like' count added");
 
-                    $this->addMeta(
-                        $code,
-                        Metadata::TYPE_FACEBOOK_COVER,
-                        $cover
-                    );
-                    $output->writeln("         + Cover added");
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_FACEBOOK,
+                            Statistic::SUBTYPE_TALKING,
+                            $fd['talking']
+                        );
+                        $output->writeln("         + 'Talking about' count added");
 
-                    $this->addMeta(
-                        $code,
-                        Metadata::TYPE_FACEBOOK_DATA,
-                        json_encode($fd['data'])
-                    );
-                    $output->writeln("         + General data added");
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_FACEBOOK, 
+                            Statistic::SUBTYPE_POSTS,
+                            $fd['postCount']
+                        );
+                        $output->writeln("         + Post count added");
 
-                    if (!empty($fd['posts'])) {
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_FACEBOOK,
+                            Statistic::SUBTYPE_IMAGES,
+                            $fd['photoCount']
+                        );
+                        $output->writeln("         + Photo count added");
+
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_FACEBOOK,
+                            Statistic::SUBTYPE_EVENTS,
+                            $fd['eventCount']
+                        );
+                        $output->writeln("         + Event count added");
+
+                        $output->writeln("     + All statistics added");
+
+                        $cover = $this->getFacebookCover($code, $fd['cover']);
+                        $output->writeln("         + Cover retrieved");
+
                         $this->addMeta(
                             $code,
-                            Metadata::TYPE_FACEBOOK_POSTS,
-                            json_encode($fd['posts'])
+                            Metadata::TYPE_FACEBOOK_COVER,
+                            $cover
                         );
-                    }
-                    $output->writeln("         + Posts added");
-                    if (!empty($fd['photos'])) {
+                        $output->writeln("         + Cover added");
+
                         $this->addMeta(
                             $code,
-                            Metadata::TYPE_FACEBOOK_PHOTOS,
-                            json_encode($fd['photos'])
+                            Metadata::TYPE_FACEBOOK_DATA,
+                            json_encode($fd['data'])
                         );
-                    }
-                    $output->writeln("         + Photos added");
-                    if (!empty($fd['events'])) {
+                        $output->writeln("         + General data added");
+
+                        if (!empty($fd['posts'])) {
                             $this->addMeta(
-                            $code,
-                            Metadata::TYPE_FACEBOOK_EVENTS,
-                            json_encode($fd['events'])
-                        );
-                    }
-                    $output->writeln("         + Events added");
+                                $code,
+                                Metadata::TYPE_FACEBOOK_POSTS,
+                                json_encode($fd['posts'])
+                            );
+                            $output->writeln("         + Posts added");
+                        }
 
-                    $output->writeln("     + Metadata added");
+                        if (!empty($fd['photos'])) {
+                            $this->addMeta(
+                                $code,
+                                Metadata::TYPE_FACEBOOK_PHOTOS,
+                                json_encode($fd['photos'])
+                            );
+                            $output->writeln("         + Photos added");
+                        }
+
+                        if (!empty($fd['events'])) {
+                                $this->addMeta(
+                                $code,
+                                Metadata::TYPE_FACEBOOK_EVENTS,
+                                json_encode($fd['events'])
+                            );
+                            $output->writeln("         + Events added");
+                        }
+
+                        $output->writeln("     + Metadata added");
+                    }
                 }
+
             }
 
-          }
-
-          if ($what == null || $what == 'tw') {
             //
             // TWITTER
-            // 
-            if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
-                $output->writeln("     + Starting Twitter import");
-                $td = $this->getTwitterData($sn['twitter']['username']);
+            //
+            if ($what == null || $what == 'tw') {
+                if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
+                    $output->writeln("     + Starting Twitter import");
+                    $td = $this->getTwitterData($sn['twitter']['username']);
 
-                if ($td == false ||
-                    empty($td['followers']) ||
-                    empty($td['tweets'])
-                    ) {
-                    $output->writeln("     + ERROR while retrieving TW data");
-                } else {
-                    $output->writeln("     + Twitter data retrieved");
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_TWITTER,
-                        Statistic::SUBTYPE_LIKES,
-                        $td['likes']
-                    );
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_TWITTER,
-                        Statistic::SUBTYPE_FOLLOWERS,
-                        $td['followers']
-                    );
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_TWITTER,
-                        Statistic::SUBTYPE_FOLLOWING,
-                        $td['following']
-                    );
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_TWITTER,
-                        Statistic::SUBTYPE_POSTS,
-                        $td['tweets']
-                    );
-                    $output->writeln("     + Statistics added");
+                    if ($td == false ||
+                        empty($td['followers']) ||
+                        empty($td['tweets'])
+                        ) {
+                        $output->writeln("     + ERROR while retrieving TW data");
+                    } else {
+                        $output->writeln("     + Twitter data retrieved");
 
-                    $this->addMeta(
-                        $code,
-                        Metadata::TYPE_TWITTER_DATA,
-                        json_encode($td['description'])
-                    );
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_TWITTER,
+                            Statistic::SUBTYPE_LIKES,
+                            $td['likes']
+                        );
+                        $output->writeln("         + 'Like' count added");
 
-                    if (!empty($td['posts'])) {
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_TWITTER,
+                            Statistic::SUBTYPE_FOLLOWERS,
+                            $td['followers']
+                        );
+                        $output->writeln("         + Follower count added");
+                    
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_TWITTER,
+                            Statistic::SUBTYPE_FOLLOWING,
+                            $td['following']
+                        );
+                        $output->writeln("         + Following count added");
+                    
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_TWITTER,
+                            Statistic::SUBTYPE_POSTS,
+                            $td['tweets']
+                        );
+                        $output->writeln("         + Tweet count added");
+                    
+                        $output->writeln("     + All statistics added");
+
                         $this->addMeta(
                             $code,
-                            Metadata::TYPE_TWITTER_POSTS,
-                            json_encode($td['posts'])
+                            Metadata::TYPE_TWITTER_DATA,
+                            json_encode($td['description'])
                         );
-                    }
+                        $output->writeln("         + General data added");
 
-                    $output->writeln("     + Metadata added");
+                        if (!empty($td['posts'])) {
+                            $this->addMeta(
+                                $code,
+                                Metadata::TYPE_TWITTER_POSTS,
+                                json_encode($td['posts'])
+                            );
+                            $output->writeln("         + Tweets added");
+                        }
+
+                        $output->writeln("     + Metadata added");
+                    }
                 }
             }
-          }
 
-          if ($what == null || $what == 'g+') {
             //
             // Google+
-            // 
-            if (!empty($sn['googlePlus'])) {
-                $output->writeln("     + Starting GooglePlus import");
-                $gd = $this->getGooglePlusData($sn['googlePlus']);
+            //
+            if ($what == null || $what == 'g+') {
+                if (!empty($sn['googlePlus'])) {
+                    $output->writeln("     + Starting GooglePlus import");
+                    $gd = $this->getGooglePlusData($sn['googlePlus']);
 
-                if ($gd == false ||
-                    empty($gd)
-                    ) {
-                    $output->writeln("     + ERROR while retrieving G+ data");
-                } else {
-                    $output->writeln("     + GooglePlus data retrieved");
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_GOOGLEPLUS,
-                        Statistic::SUBTYPE_FOLLOWERS,
-                        $gd
-                    );
-                    $output->writeln("     + Statistic added");
+                    if ($gd == false ||
+                        empty($gd)
+                        ) {
+                        $output->writeln("     + ERROR while retrieving G+ data");
+                    } else {
+                        $output->writeln("     + GooglePlus data retrieved");
+                    
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_GOOGLEPLUS,
+                            Statistic::SUBTYPE_FOLLOWERS,
+                            $gd
+                        );
+                        $output->writeln("     + Statistic added");
+                    }
                 }
             }
-          }
 
-          if ($what == null || $what == 'yt') {
             //
             // Youtube
-            // 
-            if (!empty($sn['youtube'])) {
-                $output->writeln("     + Starting Youtube import");
-                $yd = $this->getYoutubeData($sn['youtube']);
+            //
+            if ($what == null || $what == 'yt') {
+                if (!empty($sn['youtube'])) {
+                    $output->writeln("     + Starting Youtube import");
+                    $yd = $this->getYoutubeData($sn['youtube']);
 
-                if ($yd == false ||
-                    empty($yd)
-                    ) {
-                    $output->writeln("     + ERROR while retrieving Youtube data");
-                } else {
-                    $output->writeln("     + Youtube data retrieved");
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_YOUTUBE,
-                        Statistic::SUBTYPE_SUBSCRIBERS,
-                        $yd['stats']['subscriberCount']
-                    );
-
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_YOUTUBE,
-                        Statistic::SUBTYPE_VIEWS,
-                        $yd['stats']['viewCount']
-                    );
-
-                    $this->addStatistic(
-                        $code,
-                        Statistic::TYPE_YOUTUBE,
-                        Statistic::SUBTYPE_VIDEOS,
-                        $yd['stats']['videoCount']
-                    );
-
-                    $output->writeln("     + Statistics added");
-
-                    if (!empty($yd['videos'])) {
-                        $this->addMeta(
+                    if ($yd == false ||
+                        empty($yd)
+                        ) {
+                        $output->writeln("     + ERROR while retrieving Youtube data");
+                    } else {
+                        $output->writeln("     + Youtube data retrieved");
+                        
+                        $this->addStatistic(
                             $code,
-                            Metadata::TYPE_YOUTUBE_VIDEOS,
-                            json_encode($yd['videos'])
+                            Statistic::TYPE_YOUTUBE,
+                            Statistic::SUBTYPE_SUBSCRIBERS,
+                            $yd['stats']['subscriberCount']
                         );
-                    }
+                        $output->writeln("         + Subscriber count added");
+    
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_YOUTUBE,
+                            Statistic::SUBTYPE_VIEWS,
+                            $yd['stats']['viewCount']
+                        );
+                        $output->writeln("         + View count added");
+                    
+                        $this->addStatistic(
+                            $code,
+                            Statistic::TYPE_YOUTUBE,
+                            Statistic::SUBTYPE_VIDEOS,
+                            $yd['stats']['videoCount']
+                        );
+                        $output->writeln("         + Video count added");
+                    
+                        $output->writeln("     + All statistics added");
 
-                    $output->writeln("     + Metadata added");
+                        if (!empty($yd['videos'])) {
+                            $this->addMeta(
+                                $code,
+                                Metadata::TYPE_YOUTUBE_VIDEOS,
+                                json_encode($yd['videos'])
+                            );
+                            $output->writeln("         + Videos added");
+                        }
+
+                        $output->writeln("     + Metadata added");
+                    }
                 }
             }
-          }
 
-          else if ($what != null && $what != 'yt' && $what != 'g+' && $what != 'tw' && $what != 'fb') {
-            $output->writeln("     + ERROR - Data point \"". $what ."\" not recognised");
-            $output->writeln("# Process halted");
-            die;
-          }
-            
+            else if ($what != null && $what != 'yt' && $what != 'g+' && $what != 'tw' && $what != 'fb') {
+                $output->writeln("     + ERROR - Data point \"". $what ."\" not recognised");
+                $output->writeln("# Process halted");
+                die;
+            }
         }
 
         $output->writeln("# Saving to DB");
@@ -320,6 +344,7 @@ class ScraperCommand extends ContainerAwareCommand
         $output->writeln("# Done");        
         
     }
+
 
     /**
      * Builds a Statistic object
@@ -343,6 +368,7 @@ class ScraperCommand extends ContainerAwareCommand
         return $s;
     }
 
+
     /**
      * Builds or updates a Metadata object
      * 
@@ -354,11 +380,11 @@ class ScraperCommand extends ContainerAwareCommand
      */
     public function addMeta($code, $type, $value) {
         $m = $this->container->get('doctrine')
-        ->getRepository('AppBundle:Metadata')
-        ->findOneBy([
-            'type' => $type,
-            'code' => $code
-            ]);
+            ->getRepository('AppBundle:Metadata')
+            ->findOneBy([
+                'type' => $type,
+                'code' => $code
+              ]);
 
         if (!$m) {
             $m = new Metadata();
@@ -373,6 +399,7 @@ class ScraperCommand extends ContainerAwareCommand
         $this->meta[] = $m;
         return $m;
     }
+
 
     /**
      * Retrives facebook covers and saves them to disk
@@ -398,19 +425,20 @@ class ScraperCommand extends ContainerAwareCommand
         return '/img/fb-covers/' . $filename; 
     }
 
+
     /**
      * Crops the image
      * @param  string $path 
      * @return null
      */
     public function cropImage($path) {
-        $crop_width = 851;
+        $crop_width  = 851;
         $crop_height = 315;
 
-        $image = new \Imagick($path);
+        $image    = new \Imagick($path);
         $geometry = $image->getImageGeometry();
 
-        $width = $geometry['width'];
+        $width  = $geometry['width'];
         $height = $geometry['height'];
 
         if ($width == $crop_width && $height == $crop_height) {
@@ -436,6 +464,7 @@ class ScraperCommand extends ContainerAwareCommand
         file_put_contents($path, $image);
     }
 
+
     /**
      * Queries DB for all parties
      * @return array
@@ -443,8 +472,8 @@ class ScraperCommand extends ContainerAwareCommand
     public function getAllParties() {
         
         $parties = $this->container->get('doctrine')
-        ->getRepository('AppBundle:Party')
-        ->findAll();
+            ->getRepository('AppBundle:Party')
+            ->findAll();
         
         $allData = array();
         foreach ($parties as $party) {
@@ -453,6 +482,7 @@ class ScraperCommand extends ContainerAwareCommand
 
         return $allData;
     }
+
 
     /**
      * Queries DB for one party
@@ -470,11 +500,12 @@ class ScraperCommand extends ContainerAwareCommand
             die;
         }
 
-        $data = array();
+        $data = array(); // scraper is set up to work with arrays
         $data[strtolower($party->getCode())] = $party;
 
         return $data;
     }
+
 
     /**
      * Queries Facebook for stats, posts, images and events
@@ -482,37 +513,37 @@ class ScraperCommand extends ContainerAwareCommand
      */
     public function getFBData($fbPageId) {
         $fb = new Facebook([
-          'app_id' => $this->container->getParameter('fb_app_id'),
-          'app_secret' => $this->container->getParameter('fb_app_secret'),
-          'default_graph_version' => 'v2.7',
+            'app_id' => $this->container->getParameter('fb_app_id'),
+            'app_secret' => $this->container->getParameter('fb_app_secret'),
+            'default_graph_version' => 'v2.7',
         ]);
         $fb->setDefaultAccessToken($this->container->getParameter('fb_access_token'));
 
         $req = [
-            'basic'    => 'cover,engagement,talking_about_count,about,emails,single_line_address',
-            'posts'    => 'posts.limit(25){message,story,link,name,caption,picture,created_time,updated_time,shares,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true)}',
-            'photos'   => 'albums{count,photos{created_time,updated_time,picture,link,name,event,place,album,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}',
-            'events'   => 'events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
+            'basic'  => 'cover,engagement,talking_about_count,about,emails,single_line_address',
+            'posts'  => 'posts.limit(25){message,story,link,name,caption,picture,created_time,updated_time,shares,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true)}',
+            'photos' => 'albums{count,photos{created_time,updated_time,picture,link,name,event,place,album,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}',
+            'events' => 'events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
         ];
 
         $request = $fb->request(
-          'GET',
-          $fbPageId,
-          array(
-            'fields' => $req['basic'].','.$req['posts'].','.$req['photos'].','.$req['events']
+            'GET',
+            $fbPageId,
+            array(
+              'fields' => $req['basic'].','.$req['posts'].','.$req['photos'].','.$req['events']
             )
         );
 
         try {
-          $response = $fb->getClient()->sendRequest($request);
+            $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
-          // When Graph returns an error
-          echo 'Graph returned an error: ' . $e->getMessage();
-          exit;
+            // When Graph returns an error
+            echo 'Graph returned an error: ' . $e->getMessage();
+            exit;
         } catch(Facebook\Exceptions\FacebookSDKException $e) {
-          // When validation fails or other local issues
-          echo 'Facebook SDK returned an error: ' . $e->getMessage();
-          exit;
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            exit;
         } catch (\Exception $e) {
             echo $fbPageId . " - Exception: " . $e->getMessage();
             return false;
@@ -546,180 +577,198 @@ class ScraperCommand extends ContainerAwareCommand
         // Info for posts
         //
         $fdPosts = $graphNode->getField('posts');
-          echo "        + posts... page ";
-          $pageCount = 0;
-          $timeLimit = strtotime("-1 year"); // max age of posts to scrape
+        echo "        + posts... ";
 
-          do {
-            echo $pageCount .', ';
-            foreach ($fdPosts as $key => $post) {
+        if (!empty($fdPosts)) {
+            echo "page ";
+            $pageCount = 0;
+            $timeLimit = strtotime("-1 year"); // set age limit of posts to scrape
 
-                $timeCheck = $post->getField('created_time')->getTimestamp();
+            do { // process current page of results
+                echo $pageCount .', ';
+                foreach ($fdPosts as $key => $post) {
 
-                $likes = $post->getField('likes');
-                if (!empty($likes)) {
-                    $likeData    = $likes->getMetadata();
-                    $likeCount   = $likeData['summary']['total_count'];
-                } else $likeData = null;
+                    $likes = $post->getField('likes');
+                    if (!empty($likes)) { // must be checked in advance, will break if null
+                        $likeData    = $likes->getMetadata();
+                        $likeCount   = $likeData['summary']['total_count'];
+                    } else $likeData = null;
 
-                $reactions = $post->getField('reactions');
-                if (!empty($reactions)) {
-                    $reactionData     = $post->getField('reactions')->getMetadata();
-                    $reactionCount    = $reactionData['summary']['total_count'];
-                } else $reactionCount = null;
+                    $reactions = $post->getField('reactions');
+                    if (!empty($reactions)) { // must be checked in advance, will break if null
+                        $reactionData     = $post->getField('reactions')->getMetadata();
+                        $reactionCount    = $reactionData['summary']['total_count'];
+                    } else $reactionCount = null;
 
-                $comments = $post->getField('comments');
-                if (!empty($comments)) {
-                    $commentData     = $post->getField('comments')->getMetadata();
-                    $commentCount    = $commentData['summary']['total_count'];
-                } else $commentCount = null;
+                    $comments = $post->getField('comments');
+                    if (!empty($comments)) { // must be checked in advance, will break if null
+                        $commentData     = $post->getField('comments')->getMetadata();
+                        $commentCount    = $commentData['summary']['total_count'];
+                    } else $commentCount = null;
 
-                $shares = $post->getField('shares');
-                if (!empty($shares)) {
-                    $shareCount    = json_decode($post->getField('shares'), true);
-                } else $shareCount = null;
+                    $shares = $post->getField('shares');
+                    if (!empty($shares)) { // must be checked in advance, will break if null
+                        $shareCount    = json_decode($post->getField('shares'), true);
+                    } else $shareCount = null;
 
-                $out['posts'][] = [
-                    'id'          => $post->getField('id'),
-                    'posted'      => $post->getField('created_time')->format('c'),
-                    'updated'     => $post->getField('updated_time')->format('c'),
-                    'message'     => $post->getField('message'),
-                    'story'       => $post->getField('story'),
-                    'link'        => [
-                      'url'         => $post->getField('link'),
-                      'name'        => $post->getField('name'),
-                      'caption'     => $post->getField('caption'),
-                      'thumb'       => $post->getField('picture')
-                    ],
-                    'likes'       => $likeCount,
-                    'reactions'   => $reactionCount,
-                    'comments'    => $commentCount,
-                    'shares'      => $shareCount
-                ];
-            }
-            $pageCount++;
-          } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
+                    $out['posts'][] = [
+                        'id'          => $post->getField('id'),
+                        'posted'      => $post->getField('created_time')->format('c'),
+                        'updated'     => $post->getField('updated_time')->format('c'),
+                        'message'     => $post->getField('message'), // main body of text
+                        'story'       => $post->getField('story'), // "[page] shared a link", etc. (if text is blank)
+                        'link'        => [
+                          'url'         => $post->getField('link'),
+                          'name'        => $post->getField('name'),
+                          'caption'     => $post->getField('caption'),
+                          'thumb'       => $post->getField('picture')
+                        ],
+                        'likes'       => $likeCount,
+                        'reactions'   => $reactionCount,
+                        'comments'    => $commentCount,
+                        'shares'      => $shareCount
+                    ];
+                }
+
+                $timeCheck = $post->getField('created_time')->getTimestamp(); // check time of last scraped post
+                $pageCount++;
+            } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
+            // while next page is not null && post times are more recent than the limit as set above
 
             $out['postCount'] = count($out['posts']);
-            echo "total ". $out['postCount'] ." most recent posts found and added\n";
+            echo "...". $out['postCount'] ." most recent posts added\n";
 
-        //
-        // Info for images
-        //
-        $fdAlbums = $graphNode->getField('albums');
-        if (!empty($fdAlbums)) {
-            echo "        + photos";
-            $pageCount = 0;
-            echo "... page ";
-
-            foreach ($fdAlbums as $key => $album) {
-
-              $photoCount[] = $album->getField('count');
-              $fdPhotos = $album->getField('photos');
-              if (!empty($fdPhotos)) {
-
-                do {
-                  echo $pageCount .', ';
-                  foreach ($fdPhotos as $key => $photo) {
-
-                    $likeData     = $photo->getField('likes')->getMetadata();
-                    $reactionData = $photo->getField('reactions')->getMetadata();
-                    $commentData  = $photo->getField('comments')->getMetadata();
-                    $shareData    = count(json_decode($photo->getField('sharedposts'), true));
-
-                    $out['photos'][]    = [
-                        'id'        => $photo->getField('id'),
-                        'posted'    => $photo->getField('created_time')->format('c'),
-                        'updated'   => $photo->getField('updated_time')->format('c'),
-                        'picture'   => $photo->getField('picture'),
-                        'url'       => $photo->getField('link'),
-                        'details'   => [
-                          'name'      => $photo->getField('name'), // caption
-                          'album'     => [
-                            'id'        => $photo->getField('album')->getField('id'),
-                            'name'      => $photo->getField('album')->getField('name')
-                          ],
-                          'event'     => $photo->getField('event'),
-                          'place'     => $photo->getField('place')
-                        ],
-                        'likes'     => $likeData['summary']['total_count'],
-                        'reactions' => $reactionData['summary']['total_count'],
-                        'comments'  => $commentData['summary']['total_count'],
-                        'shares'    => $shareData
-                    ];
-                  }
-                  $pageCount++;
-                } while ($fdPhotos = $fb->next($fdPhotos));
-              }
-            }
-
-            $out['photoCount'] = array_sum($photoCount);
-            echo "total ". $out['photoCount'] ." found, ". count($out['photos']) ." added\n";
         } else {
-            $out['photoCount'] = 0;
-            echo " not found\n";
+            $out['postCount'] = 0;
+            echo "not found\n";
         }
 
         //
         // Info for events
         //
         $fdEvents = $graphNode->getField('events');
+        echo "        + events... ";
+
         if (!empty($fdEvents)) {
-            echo "        + events";
             $pageCount = 0;
-            echo "... page ";
+            echo "page ";
 
-          do {
-            echo $pageCount .', ';
-            foreach ($fdEvents as $key => $event) {
+            do { // process current page of results
+                echo $pageCount .', ';
+                foreach ($fdEvents as $key => $event) {
 
-                echo ".";
-                $place = $event->getField('place');
-                if (!empty($place)) {
-                    $placeName = $place->getField('name');
-                    $location  = $place->getField('location');
-                } else $placeName = null;
+                    $place = $event->getField('place');
+                    if (!empty($place)) { // must be checked in advance, will break if null
+                        $placeName = $place->getField('name');
+                        $location  = $place->getField('location');
+                    } else $placeName = null;
 
-                if (!empty($location)) {
-                    $placeAddress = [
-                        'street'    => $location->getField('street'),
-                        'city'      => $location->getField('city'),
-                        'zip'       => $location->getField('zip'),
-                        'country'   => $location->getField('country'),
-                        'longitude' => $location->getField('longitude'),
-                        'latitude'  => $location->getField('latitude')
+                    if (!empty($location)) { // must be checked in advance, will break if null
+                        $placeAddress = [
+                            'street'    => $location->getField('street'),
+                            'city'      => $location->getField('city'),
+                            'zip'       => $location->getField('zip'),
+                            'country'   => $location->getField('country'),
+                            'longitude' => $location->getField('longitude'),
+                            'latitude'  => $location->getField('latitude')
+                        ];
+                    } else $placeAddress = null;
+
+                    $commentData  = $event->getField('comments')->getMetadata();
+                    $coverData    = json_decode($event->getField('cover'), true);
+
+                    $out['events'][] = [
+                        'id'          => $event->getField('id'),
+                        'start_time'  => $event->getField('start_time')->format('c'),
+                        'updated'     => $event->getField('updated_time')->format('c'),
+                        'name'        => $event->getField('name'),
+                        'details'     => [
+                            'description' => $event->getField('description'),
+                            'place'       => $placeName,
+                            'address'     => $placeAddress,
+                            'cover'       => [
+                                'id'          => $coverData['id'],
+                                'source'      => $coverData['source']
+                            ]
+                        ],
+                        'attending'   => $event->getField('attending_count'),
+                        'interested'  => $event->getField('interested_count'),
+                        'comments'    => $commentData['summary']['total_count']
                     ];
-                } else $placeAddress = null;
+                }
 
-                $commentData  = $event->getField('comments')->getMetadata();
-                $coverData    = json_decode($event->getField('cover'), true);
+                $pageCount++;
+            } while ($fdEvents = $fb->next($fdEvents));
+            // while next page is not null
 
-                $out['events'][] = [
-                    'id'          => $event->getField('id'),
-                    'start_time'  => $event->getField('start_time')->format('c'),
-                    'updated'     => $event->getField('updated_time')->format('c'),
-                    'name'        => $event->getField('name'),
-                    'details'     => [
-                      'description' => $event->getField('description'),
-                      'place'       => $placeName,
-                      'address'     => $placeAddress,
-                      'cover'       => [
-                        'id'          => $coverData['id'],
-                        'source'      => $coverData['source']
-                      ]
-                    ],
-                    'attending'   => $event->getField('attending_count'),
-                    'interested'  => $event->getField('interested_count'),
-                    'comments'    => $commentData['summary']['total_count']
-                ];
-            }
-            $pageCount++;
-          } while ($fdEvents = $fb->next($fdEvents));
-            
             $out['eventCount'] = count($out['events']);
-            echo " ". $out['eventCount'] ." found and added\n";
+            echo "...total ". $out['eventCount'] ." events found and added\n";
+
         } else {
             $out['eventCount'] = 0;
+            echo " not found\n";
+        }
+
+        //
+        // Info for images
+        //
+        $fdAlbums = $graphNode->getField('albums');
+        echo "        + photos... ";
+
+        if (!empty($fdAlbums)) {
+            echo "page ";
+            $pageCount = 0;
+
+            foreach ($fdAlbums as $key => $album) {
+                // have to search each album individually to get all images,
+                // otherwise it only returns profile pictures
+
+                $photoCount[] = $album->getField('count'); // number of images in current album
+                $fdPhotos = $album->getField('photos');
+                if (!empty($fdPhotos)) {
+
+                    do { // process current page of results
+                        echo $pageCount .', ';
+                        foreach ($fdPhotos as $key => $photo) {
+
+                            $likeData     = $photo->getField('likes')->getMetadata();
+                            $reactionData = $photo->getField('reactions')->getMetadata();
+                            $commentData  = $photo->getField('comments')->getMetadata();
+                            $shareData    = count(json_decode($photo->getField('sharedposts'), true));
+
+                            $out['photos'][]    = [
+                                'id'        => $photo->getField('id'),
+                                'posted'    => $photo->getField('created_time')->format('c'),
+                                'updated'   => $photo->getField('updated_time')->format('c'),
+                                'picture'   => $photo->getField('picture'),
+                                'url'       => $photo->getField('link'),
+                                'details'   => [
+                                    'caption'   => $photo->getField('name'),
+                                    'album'     => [
+                                        'id'        => $photo->getField('album')->getField('id'),
+                                        'name'      => $photo->getField('album')->getField('name')
+                                    ],
+                                    'event'     => $photo->getField('event'),
+                                    'place'     => $photo->getField('place')
+                                ],
+                                'likes'     => $likeData['summary']['total_count'],
+                                'reactions' => $reactionData['summary']['total_count'],
+                                'comments'  => $commentData['summary']['total_count'],
+                                'shares'    => $shareData
+                            ];
+                        }
+
+                        $pageCount++;
+                    } while ($fdPhotos = $fb->next($fdPhotos));
+                    // while next page is not null
+                }
+            }
+
+            $out['photoCount'] = array_sum($photoCount);
+            echo "...total ". $out['photoCount'] ." photos found, ". count($out['photos']) ." added\n";
+
+        } else {
+            $out['photoCount'] = 0;
             echo " not found\n";
         }
 
@@ -729,23 +778,23 @@ class ScraperCommand extends ContainerAwareCommand
         $imageId =  $graphNode->getField('cover')->getField('cover_id');
 
         $request = $fb->request(
-          'GET',
-          $imageId,
-          array(
-            'fields' => 'height,width,album,images'
-          )
+            'GET',
+            $imageId,
+            array(
+                'fields' => 'height,width,album,images'
+            )
         );
 
         try {
-          $response = $fb->getClient()->sendRequest($request);
+            $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
-          // When Graph returns an error
-          echo 'Graph returned an error: ' . $e->getMessage();
-          exit;
+            // When Graph returns an error
+            echo 'Graph returned an error: ' . $e->getMessage();
+            exit;
         } catch(Facebook\Exceptions\FacebookSDKException $e) {
-          // When validation fails or other local issues
-          echo 'Facebook SDK returned an error: ' . $e->getMessage();
-          exit;
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            exit;
         } catch (\Exception $e) {
             echo $fbPageId . " - Exception: " . $e->getMessage();
             return false;
@@ -781,6 +830,7 @@ class ScraperCommand extends ContainerAwareCommand
         return $out;
     }
 
+
     /**
      * Queries Twitter for stats and tweets
      * @return array
@@ -793,6 +843,7 @@ class ScraperCommand extends ContainerAwareCommand
             'consumer_secret'           => $this->container->getParameter('tw_consumer_secret')
         );
 
+        // request for basic info and stats
         $url = 'https://api.twitter.com/1.1/users/show.json';
         $getfield = '?screen_name='.str_replace("@", "", $username);
         $requestMethod = 'GET';
@@ -819,8 +870,9 @@ class ScraperCommand extends ContainerAwareCommand
             'followers'   => $data->followers_count,
             'following'   => $data->friends_count,
         ];
-        echo "        + stats... ok\n";
+        echo "        + basic info and stats... ok\n";
 
+        // update request for tweet details
         $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
         $tweetData = $twitter->setGetField($getfield)
                 ->buildOauth($tweetUrl, $requestMethod)
@@ -828,38 +880,38 @@ class ScraperCommand extends ContainerAwareCommand
 
         if (empty($tweetData)) {
             return false;
-        }
+        } else {
+            $tweetData = json_decode($tweetData);
 
-        $tweetData = json_decode($tweetData);
+            $timeLimit = strtotime("-1 year"); // set age limit of tweets to scrape
+            echo "        + tweets... ";
+            $pageCount = 0;
+            echo "page ";
 
-        if (!empty($tweetData)) {
-          $timeLimit = strtotime("-1 year"); // max age of posts to scrape
+            do { // process current page of results
+                echo $pageCount .', ';
+                foreach($tweetData as $item) {
+                    $out['posts'][] = [
+                        'id'       => $item->id,
+                        'time'     => $item->created_at,
+                        'text'     => $item->text,
+                        'likes'    => $item->favorite_count,
+                        'retweets' => $item->retweet_count
+                    ];
+                }
+                $timeCheck = strtotime($item->created_at); // check time of last tweet scraped
 
-          echo "        + tweets";
-          $pageCount = 0;
-          echo "... page ";
+                // update request for next page of results
+                $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id);
+                $tweetData = json_decode($twitter->setGetField($nextField)
+                    ->buildOauth($tweetUrl, $requestMethod)
+                    ->performRequest());
 
-          do {
-            echo $pageCount .', ';
-            foreach($tweetData as $item) {
-                $out['posts'][] = [
-                    'id'       => $item->id,
-                    'time'     => $item->created_at,
-                    'text'     => $item->text,
-                    'likes'    => $item->favorite_count,
-                    'retweets' => $item->retweet_count
-                ];
-                $timeCheck = strtotime($item->created_at);
-            }
+                $pageCount++;
+            } while ($timeCheck > $timeLimit);
+            // while tweet times are more recent than the limit as set above
 
-            $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id);
-            $tweetData = json_decode($twitter->setGetField($nextField)
-                ->buildOauth($tweetUrl, $requestMethod)
-                ->performRequest());
-            $pageCount++;
-          } while ($timeCheck > $timeLimit);
-
-          echo "total ". $out['tweets'] ." tweets found, ". count($out['posts']) ." most recent added\n";
+            echo "total ". $out['tweets'] ." tweets found, ". count($out['posts']) ." most recent added\n";
         }
 
         return $out;
@@ -960,4 +1012,5 @@ class ScraperCommand extends ContainerAwareCommand
 
         return $resp;
     }
+
 }
