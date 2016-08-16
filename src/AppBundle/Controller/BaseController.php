@@ -17,27 +17,19 @@ class BaseController extends Controller
         $query = $parties->createQueryBuilder('qb')
           ->select('p')->from('AppBundle:Party', 'p');
 
-        switch ($membershipFilter) {
-            case null:
-                // do nothing, i.e. show all
-                break;
-            default: // case 'ppi', 'ppeu', etc.
-                $query
-                  ->join('p.intMemberships', 'm')
-                  ->innerJoin('m.intOrg', 'o')
-                  ->where(sprintf("o.code = '%s'", $membershipFilter));
-        }
+        if (!is_null($membershipFilter)) {
+            $query->join('p.intMemberships', 'm')
+                ->innerJoin('m.intOrg', 'o')
+                ->where(sprintf("o.code = '%s'", $membershipFilter));
+        } // else do nothing, i.e. show all
 
-        switch ($showDefunct) {
-            case true:
-                $query->where('p.defunct = true'); // show only defunct
-                break;
-            case null:
-                // do nothing, i.e. show all
-                break;
-            default: // case false
-                $query->where('p.defunct = false'); // show only non-defunct
-        }
+        if (!is_null($showDefunct)) {
+            if ($showDefunct == true) {
+                $query->andwhere('p.defunct = true'); // show only defunct
+            } else {
+                $query->andwhere('p.defunct = false'); // show only non-defunct
+            }
+        } // else do nothing, i.e. show all
 
         switch ($orderBy) {
             case 'name':

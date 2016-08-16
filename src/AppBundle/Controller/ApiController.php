@@ -27,7 +27,7 @@ class ApiController extends BaseController
      *  section="Party",
      *  filters={
      *      {"name"="show_defunct", "dataType"="bool", "required"="false", "description"="List defunct parties."},
-     *      {"name"="int_membership", "dataType"="string", "required"="false", "description"="List only members of an international organization. Use slug od the org (i.e. 'ppi', 'ppeu')"},
+     *      {"name"="int_membership", "dataType"="string", "required"="false", "description"="List only members of an international organization. Use slug of the org (i.e. 'ppi', 'ppeu')"},
      *      {"name"="sort_results", "dataType"="string", "pattern"="name|code|country", "required"="false", "description"="List results in a set order."}
      *  },
      *  statusCodes={
@@ -67,7 +67,7 @@ class ApiController extends BaseController
         }
 
         // run through BaseController
-        $allData = $this->getAllParties($showDefunct, $membershipFilter, $orderBy); // , $countryFilter, $regionFilter, $typeFilter, $parentFilter);
+        $allData = $this->getAllParties($showDefunct, $membershipFilter, $orderBy);
 
         $serializer = $this->get('jms_serializer');
         $allData = $serializer->serialize($allData, 'json');
