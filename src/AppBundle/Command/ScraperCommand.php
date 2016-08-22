@@ -812,13 +812,13 @@ class ScraperCommand extends ContainerAwareCommand
                                 echo $pageCount .', ';
                                 foreach ($fdPhotos as $key => $photo) {
 
+                                    $imgSrc       = $photo->getField('picture');
                                     $likeData     = $photo->getField('likes')->getMetadata();
                                     $reactionData = $photo->getField('reactions')->getMetadata();
                                     $commentData  = $photo->getField('comments')->getMetadata();
                                     $shareData    = count(json_decode($photo->getField('sharedposts'), true));
 
-                                    $imgSrc = $photo->getField('picture');
-
+                                    // collate info
                                     $out['photos'][]    = [
                                         'id'        => $photo->getField('id'),
                                         'posted'    => $photo->getField('created_time')->format('c'),
@@ -840,13 +840,15 @@ class ScraperCommand extends ContainerAwareCommand
                                         'shares'    => $shareData
                                     ];
 
-                                    //save image to disk
+                                    // save image to disk
                                     preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
                                     $fileEnding = $matches[1];
-                                    $img = file_get_contents($imgSrc);
                                     $filename = $photo->getField('id').'.'.$fileEnding;
                                     $fullPath = $this->fbImgRoot.$code.'/'.$filename;
-                                    file_put_contents($fullPath, $img);
+                                    if (!file_exists($fullPath)) {
+                                        $img = file_get_contents($imgSrc);
+                                        file_put_contents($fullPath, $img);
+                                    }
                                 }
 
                                 $pageCount++;
