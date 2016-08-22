@@ -27,6 +27,8 @@ class ScraperCommand extends ContainerAwareCommand
     protected $meta  = [];
 
     public $coverRoot = "";
+    public $fbImgRoot = "";
+    public $twImgRoot = "";
 
     protected function configure()
     {
@@ -50,6 +52,8 @@ class ScraperCommand extends ContainerAwareCommand
 
         $appRoot = $this->container->get('kernel')->getRootDir() . '/..';
         $this->coverRoot = $appRoot . '/web/img/fb-covers/';
+        $this->fbImgRoot = $appRoot . '/web/img/fb-uploads/';
+        $this->twImgRoot = $appRoot . '/web/img/tw-uploads/';
 
         $this->output = $output;
         $this->logger = $this->getContainer()->get('logger');
@@ -88,7 +92,7 @@ class ScraperCommand extends ContainerAwareCommand
             if ($where == null || $where == 'fb') {
                 if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
                     $output->writeln("     + Starting Facebook import");
-                    $fd = $this->getFBData($sn['facebook']['username'], $what); 
+                    $fd = $this->getFBData($sn['facebook']['username'], $what, $code); 
 
                     if ($what == null || $what == 'info') {
                         if ($fd == false || empty($fd['likes'])) {
@@ -527,7 +531,7 @@ class ScraperCommand extends ContainerAwareCommand
      * Queries Facebook for stats, posts, images and events
      * @return array
      */
-    public function getFBData($fbPageId, $what) {
+    public function getFBData($fbPageId, $what, $code) {
         $fb = new Facebook([
             'app_id' => $this->container->getParameter('fb_app_id'),
             'app_secret' => $this->container->getParameter('fb_app_secret'),
@@ -790,6 +794,10 @@ class ScraperCommand extends ContainerAwareCommand
                 echo "page ";
                 $pageCount = 0;
 
+                if (!is_dir($this->fbImgRoot.$code.'/')) {
+                    mkdir($this->fbImgRoot.$code.'/', 0755, true);
+                }
+
                 foreach ($fdAlbums as $key => $album) {
                     // have to search each album individually to get all images,
                     // otherwise it only returns profile pictures
@@ -809,12 +817,14 @@ class ScraperCommand extends ContainerAwareCommand
                                     $commentData  = $photo->getField('comments')->getMetadata();
                                     $shareData    = count(json_decode($photo->getField('sharedposts'), true));
 
+                                    $imgSrc = $photo->getField('picture');
+
                                     $out['photos'][]    = [
                                         'id'        => $photo->getField('id'),
                                         'posted'    => $photo->getField('created_time')->format('c'),
                                         'updated'   => $photo->getField('updated_time')->format('c'),
-                                        'picture'   => $photo->getField('picture'),
-                                        'url'       => $photo->getField('link'),
+                                        'source'    => $imgSrc,
+                                        'fb_url'    => $photo->getField('link'),
                                         'details'   => [
                                             'caption'   => $photo->getField('name'),
                                             'album'     => [
@@ -829,6 +839,14 @@ class ScraperCommand extends ContainerAwareCommand
                                         'comments'  => $commentData['summary']['total_count'],
                                         'shares'    => $shareData
                                     ];
+
+                                    //save image to disk
+                                    preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
+                                    $fileEnding = $matches[1];
+                                    $img = file_get_contents($imgSrc);
+                                    $filename = $photo->getField('id').'.'.$fileEnding;
+                                    $fullPath = $this->fbImgRoot.$code.'/'.$filename;
+                                    file_put_contents($fullPath, $img);
                                 }
 
                                 $pageCount++;
@@ -852,7 +870,7 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         //
-        // Second step for images
+        // Second step for cover images
         //
         if ($what == null || $what == 'info') {
             $imageId =  $graphNode->getField('cover')->getField('cover_id');
