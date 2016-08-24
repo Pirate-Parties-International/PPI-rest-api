@@ -71,19 +71,24 @@ class ScraperCommand extends ContainerAwareCommand
             $output->writeln("Done");
         }
 
+        // Verify argument search terms
+        if ($where != null && $where != 'yt' && $where != 'g+' && $where != 'tw' && $where != 'fb') {
+            $output->writeln("     + ERROR - Search term \"". $where ."\" not recognised");
+            $output->writeln("# Process halted");
+            die;
+        }
+        if ($what != null && $where != 'fb') {
+            $output->writeln("     + ERROR - Search term \"". $what ."\" only valid when limited to Facebook");
+            $output->writeln("# Process halted");
+            die;
+        }
+
         foreach ($parties as $code => $party) {
-            
             $output->writeln(" - Processing " . $code);
             $sn = $party->getSocialNetworks();
 
             if (empty($sn)) {
                 continue;
-            }
-
-            if ($what != null && $where != 'fb') {
-                $output->writeln("     + ERROR - Data point \"". $what ."\" invalid unless limited to Facebook");
-                $output->writeln("# Process halted");
-                die;
             }
 
             //
@@ -196,7 +201,6 @@ class ScraperCommand extends ContainerAwareCommand
 
                 $output->writeln("     + Metadata added");
                 }
-
             }
 
             //
@@ -205,7 +209,7 @@ class ScraperCommand extends ContainerAwareCommand
             if ($where == null || $where == 'tw') {
                 if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
                     $output->writeln("     + Starting Twitter import");
-                    $td = $this->getTwitterData($sn['twitter']['username']);
+                    $td = $this->getTwitterData($sn['twitter']['username'], $code);
 
                     if ($td == false ||
                         empty($td['followers']) ||
@@ -230,7 +234,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $td['followers']
                         );
                         $output->writeln("         + Follower count added");
-                    
+
                         $this->addStatistic(
                             $code,
                             Statistic::TYPE_TWITTER,
@@ -238,7 +242,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $td['following']
                         );
                         $output->writeln("         + Following count added");
-                    
+
                         $this->addStatistic(
                             $code,
                             Statistic::TYPE_TWITTER,
@@ -246,7 +250,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $td['tweets']
                         );
                         $output->writeln("         + Tweet count added");
-                    
+
                         $output->writeln("     + All statistics added");
 
                         $this->addMeta(
@@ -349,12 +353,6 @@ class ScraperCommand extends ContainerAwareCommand
                         $output->writeln("     + Metadata added");
                     }
                 }
-            }
-
-            else if ($where != null && $where != 'yt' && $where != 'g+' && $where != 'tw' && $where != 'fb') {
-                $output->writeln("     + ERROR - Website \"". $where ."\" not recognised");
-                $output->writeln("# Process halted");
-                die;
             }
         }
 
@@ -542,7 +540,7 @@ class ScraperCommand extends ContainerAwareCommand
         $req = [
             'basic'  => 'cover,engagement,talking_about_count,about,emails,single_line_address',
             'posts'  => 'posts.limit(25){message,story,link,name,caption,picture,created_time,updated_time,shares,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true)}',
-            'photos' => 'albums{count,photos{created_time,updated_time,picture,link,name,event,place,album,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}',
+            'photos' => 'albums{count,photos{created_time,updated_time,picture,link,name,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}',
             'events' => 'events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
         ];
 
@@ -586,7 +584,7 @@ class ScraperCommand extends ContainerAwareCommand
         $graphNode = $response->getGraphNode();
 
         //
-        // Basic page info
+        // Basic page info and stats
         //
         if ($what == null || $what == 'info') {
             $out = [
@@ -610,7 +608,7 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         //
-        // Info for posts
+        // Post details
         //
         if ($what == null || $what == 'posts' || $what == 'info') {
             $fdPosts = $graphNode->getField('posts');
@@ -655,7 +653,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 'posted'      => $post->getField('created_time')->format('c'),
                                 'updated'     => $post->getField('updated_time')->format('c'),
                                 'message'     => $post->getField('message'), // main body of text
-                                'story'       => $post->getField('story'), // "[page] shared a link", etc. (if text is blank)
+                                'story'       => $post->getField('story'), // "[page] shared a link", etc.
                                 'link'        => [
                                   'url'         => $post->getField('link'),
                                   'name'        => $post->getField('name'),
@@ -699,7 +697,7 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         //
-        // Info for events
+        // Event details
         //
         if ($what == null || $what == 'events' || $what == 'info') {
             $fdEvents = $graphNode->getField('events');
@@ -763,7 +761,7 @@ class ScraperCommand extends ContainerAwareCommand
 
                     $pageCount++;
                 } while ($fdEvents = $fb->next($fdEvents));
-                // while next page is not null
+                // while next page is not null, no time limit
 
                 if ($what == 'info') {
                     $out['eventCount'] = count($temp['events']);
@@ -784,7 +782,7 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         //
-        // Info for images
+        // Image details
         //
         if ($what == null || $what == 'images' || $what == 'info') {
             $fdAlbums = $graphNode->getField('albums');
@@ -823,17 +821,9 @@ class ScraperCommand extends ContainerAwareCommand
                                         'id'        => $photo->getField('id'),
                                         'posted'    => $photo->getField('created_time')->format('c'),
                                         'updated'   => $photo->getField('updated_time')->format('c'),
+                                        'caption'   => $photo->getField('name'),
                                         'source'    => $imgSrc,
                                         'fb_url'    => $photo->getField('link'),
-                                        'details'   => [
-                                            'caption'   => $photo->getField('name'),
-                                            'album'     => [
-                                                'id'        => $photo->getField('album')->getField('id'),
-                                                'name'      => $photo->getField('album')->getField('name')
-                                            ],
-                                            'event'     => $photo->getField('event'),
-                                            'place'     => $photo->getField('place')
-                                        ],
                                         'likes'     => $likeData['summary']['total_count'],
                                         'reactions' => $reactionData['summary']['total_count'],
                                         'comments'  => $commentData['summary']['total_count'],
@@ -853,7 +843,7 @@ class ScraperCommand extends ContainerAwareCommand
 
                                 $pageCount++;
                             } while ($fdPhotos = $fb->next($fdPhotos));
-                            // while next page is not null
+                            // while next page is not null, no time limit
                         }
                     }
                 }
@@ -872,7 +862,7 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         //
-        // Second step for cover images
+        // Second step for cover images (crop and/or resize)
         //
         if ($what == null || $what == 'info') {
             $imageId =  $graphNode->getField('cover')->getField('cover_id');
@@ -936,7 +926,7 @@ class ScraperCommand extends ContainerAwareCommand
      * Queries Twitter for stats and tweets
      * @return array
      */
-    public function getTwitterData($username) {
+    public function getTwitterData($username, $code) {
         $settings = array(
             'oauth_access_token'        => $this->container->getParameter('tw_oauth_access_token'),
             'oauth_access_token_secret' => $this->container->getParameter('tw_oauth_access_token_secret'),
@@ -944,7 +934,9 @@ class ScraperCommand extends ContainerAwareCommand
             'consumer_secret'           => $this->container->getParameter('tw_consumer_secret')
         );
 
-        // request for basic info and stats
+        //
+        // Basic info and stats
+        //
         $url = 'https://api.twitter.com/1.1/users/show.json';
         $getfield = '?screen_name='.str_replace("@", "", $username);
         $requestMethod = 'GET';
@@ -973,7 +965,9 @@ class ScraperCommand extends ContainerAwareCommand
         ];
         echo "        + basic info and stats... ok\n";
 
-        // update request for tweet details
+        //
+        // Tweet details
+        //
         $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
         $tweetData = $twitter->setGetField($getfield)
                 ->buildOauth($tweetUrl, $requestMethod)
@@ -989,20 +983,50 @@ class ScraperCommand extends ContainerAwareCommand
             $pageCount = 0;
             echo "page ";
 
+            if (!is_dir($this->twImgRoot.$code.'/')) {
+                mkdir($this->twImgRoot.$code.'/', 0755, true);
+            }
+
             do { // process current page of results
                 echo $pageCount .', ';
                 foreach($tweetData as $item) {
+
+                    $image = null;
+                    if (!empty($item->entities->media)) {
+                        $media = $item->entities->media;
+                        foreach ($media as $photo) {
+                            if ($photo->type = 'photo') { // collate details
+                                $image[] = [
+                                    'id'     => $photo->id,
+                                    'source' => $photo->media_url,
+                                    'tw_url' => $photo->display_url
+                                ];
+
+                                // save image to disk
+                                preg_match('/.+\.(png|jpg)/i', $photo->media_url, $matches);
+                                $fileEnding = $matches[1];
+                                $filename = $photo->id.'.'.$fileEnding;
+                                $fullPath = $this->twImgRoot.$code.'/'.$filename;
+                                if (!file_exists($fullPath)) {
+                                    $img = file_get_contents($photo->media_url);
+                                    file_put_contents($fullPath, $img);
+                                }
+                            }
+                        }
+                    }
+
                     $out['posts'][] = [
                         'id'       => $item->id,
                         'time'     => $item->created_at,
                         'text'     => $item->text,
+                        'image'    => $image,
                         'likes'    => $item->favorite_count,
                         'retweets' => $item->retweet_count
                     ];
                 }
                 $timeCheck = strtotime($item->created_at); // check time of last tweet scraped
 
-                // update request for next page of results
+                // make new request to get next page of results
                 $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id);
                 $tweetData = json_decode($twitter->setGetField($nextField)
                     ->buildOauth($tweetUrl, $requestMethod)
