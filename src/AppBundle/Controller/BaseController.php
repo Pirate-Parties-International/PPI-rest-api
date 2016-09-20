@@ -10,23 +10,39 @@ use AppBundle\Entity\Statistic as Stat;
 
 class BaseController extends Controller
 {
+	public function getAllParties($showDefunct = false, $membershipFilter = null, $orderBy = 'code') {
 
-	public function getAllParties($includeDefunct = false) {
-		
 		$parties = $this->getDoctrine()
-        ->getRepository('AppBundle:Party');
+            ->getRepository('AppBundle:Party');
+        $query = $parties->createQueryBuilder('qb')
+            ->select('p')->from('AppBundle:Party', 'p');
 
-        if (!$includeDefunct) {
-            $parties = $parties->findBy([
-                'defunct' => $includeDefunct
-                ]);
-        } else {
-            $parties = $parties->findAll();
+        if (!is_null($membershipFilter)) {
+            $query->join('p.intMemberships', 'm')
+                ->innerJoin('m.intOrg', 'o')
+                ->where(sprintf("o.code = '%s'", $membershipFilter)); // show only 'ppi', 'ppeu' etc.
+        } // else do nothing, i.e. show all
+
+        if (!is_null($showDefunct)) {
+            $query->andwhere(sprintf("p.defunct = '%s'", $showDefunct)); // true = show only defunct, false = only non-defunct
+        } // else do nothing, i.e. show all
+
+        switch ($orderBy) {
+            case 'name':
+                $query->orderBy('p.name', 'ASC');
+                break;
+            case 'country':
+                $query->orderBy('p.countryName', 'ASC');
+                break;
+            default: // case 'code' or null
+                $query->orderBy('p.code', 'ASC');
         }
-    	
+
+        $parties = $query->getQuery()->getResult();
     	$allData = array();
+
     	foreach ($parties as $party) {
-    		$allData[strtolower($party->getCode())] = $party;
+            $allData[strtolower($party->getCode())] = $party;
     	}
 
     	return $allData;
@@ -34,8 +50,8 @@ class BaseController extends Controller
 
 	public function getOneParty($code) {
 		$party = $this->getDoctrine()
-        ->getRepository('AppBundle:Party')
-        ->findOneByCode($code);
+            ->getRepository('AppBundle:Party')
+            ->findOneByCode($code);
 
         return $party;
 	}
@@ -87,8 +103,8 @@ class BaseController extends Controller
      */
     public function getStat($code, $type, $subType) {
         $stat = $this->getDoctrine()
-        ->getRepository('AppBundle:Statistic')
-        ->findOneBy([
+            ->getRepository('AppBundle:Statistic')
+            ->findOneBy([
                 'code'    => strtolower($code),
                 'type'    => $type,
                 'subType' => $subType
@@ -113,10 +129,10 @@ class BaseController extends Controller
      */
     public function getMeta($code, $type) {
         $meta = $this->getDoctrine()
-        ->getRepository('AppBundle:Metadata')
-        ->findOneBy([
-            'code' => strtolower($code),
-            'type' => $type
+            ->getRepository('AppBundle:Metadata')
+            ->findOneBy([
+                'code' => strtolower($code),
+                'type' => $type
         ]);
 
         if(!$meta) {
