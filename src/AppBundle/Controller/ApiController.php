@@ -72,7 +72,7 @@ class ApiController extends BaseController
         $serializer = $this->get('jms_serializer');
         $allData = $serializer->serialize($allData, 'json');
 
-        if ($allData === null) {
+        if (empty($allData)) {
             return new JsonResponse(array("error"=>"Search returned no results."), 404);
         }
 
