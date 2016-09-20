@@ -88,7 +88,10 @@ class ScraperCommand extends ContainerAwareCommand
                     );
                     $output->writeln("     + Statistic added");
 
-                    $cover = $this->getFacebookCover($code, $fd['cover']);
+                    $cover = false;
+                    if (!empty($fd['cover'])) {
+                        $cover = $this->getFacebookCover($code, $fd['cover']);
+                    }
                     
                     if ($cover !== false) {
                         $output->writeln("     + Cover retrived");
@@ -410,7 +413,6 @@ class ScraperCommand extends ContainerAwareCommand
         $graphNode = $response->getGraphNode();
         
         $out['likes'] = $graphNode->getField('likes');
-
         //
         // Second step for images
         // 
