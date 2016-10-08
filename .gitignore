@@ -9,6 +9,9 @@
 /vendor/
 /bin/
 /composer.phar
+/web/img/fb-uploads/
+/web/img/tw-uploads/
+/web/img/yt-uploads/
 *~
 
 *.sublime*

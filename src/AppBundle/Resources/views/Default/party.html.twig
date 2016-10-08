@@ -227,7 +227,7 @@
             	 #}
 
             {% if party.socialNetworks %}
-
+				<a href ="{{ path('papi_social_show', {'id': party.code}) | lower }}"><h3>Social Media</h3></a>
             	{% if party.socialNetworks.facebook is defined and party.socialNetworks.facebook %}
 				<div class="col s12 m6 l4">
 					<div class="card social facebook">
@@ -260,7 +260,7 @@
 						<a href="https://plus.google.com/{{party.socialNetworks.googlePlus}}">
 							<div class="card-content clearfix red white-text valign-wrapper">
 								<div class="red darken-1 icon-wrapper"><i class="icon-gplus small darken-1"></i></div>
-								<span class="social-text valign"> {{ googlePlusFollowers | number_format }} <small>followers</small></span>
+								<span class="social-text valign"> {{ googlePlus.followers | number_format }} <small>followers</small></span>
 							</div>
 						</a>
 					</div>
@@ -271,7 +271,7 @@
 
 			<div class="row">
             {% if party.socialNetworks %}
-            	{% if party.socialNetworks.youtube is defined and  party.socialNetworks.youtube %}
+            	{% if party.socialNetworks.youtube is defined and party.socialNetworks.youtube %}
 				<div class="col s12 m12 l12">
 					<div class="card social youtube">
 						<a href="https://www.youtube.com/user/{{party.socialNetworks.youtube}}">
@@ -300,16 +300,16 @@
 			<div class="row youtube-videos">
 				<h3>Latest videos</h3>
 				{% for vid in youtube.videos | slice(0,3) %}
-					<a href="https://www.youtube.com/watch?v={{vid.id}}">
+					<a href="https://www.youtube.com/watch?v={{vid.postId}}">
 						<div class="col s12 m6 l4">
 							<div class="card">
 								<div class="card-image">
 									<div class="pickgradient">
-										<img src="{{ vid.tumb }}">
+										<img src="/img/yt-uploads/{{ party.code | lower }}/{{ vid.postImage }}">
 									</div>
 									
 									<span class="card-title truncate" itemprop="name">
-										{{ vid.title }}
+										{{ vid.postText }}
 									</span>
 								</div>
 							</div>

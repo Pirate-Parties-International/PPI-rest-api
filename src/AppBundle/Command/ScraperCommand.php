@@ -11,28 +11,41 @@ use Pirates\PapiInfo\Compile;
 
 use AppBundle\Entity\Metadata;
 use AppBundle\Entity\Statistic;
+use AppBundle\Entity\SocialMedia;
 use AppBundle\Extensions\ScraperServices;
 
 
 class ScraperCommand extends ContainerAwareCommand
 {
-
     protected function configure()
     {
         $this
             ->setName('papi:scraper')
             ->setDescription('Scrapes FB, TW and G+ data. Should be run once per day.')
-            ->addOption('party', 'p', InputOption::VALUE_OPTIONAL, 'Choose a single party to scrape, by code (i.e. ppsi)')
-            ->addOption('site', 'w', InputOption::VALUE_OPTIONAL, 'Choose a single website to scrape (fb, tw, g+ or yt)')
-            ->addOption('data', 'd', InputOption::VALUE_OPTIONAL, 'Choose a single data type to scrape, fb only (info, posts, images, events)')
+            ->addOption('party', 'p', InputOption::VALUE_OPTIONAL, 'Choose a single party to scrape, by code (i.e. ppse, ppsi)')
+            ->addOption('site',  'w', InputOption::VALUE_OPTIONAL, 'Choose a single website to scrape (fb, tw, g+ or yt)')
+            ->addOption('data',  'd', InputOption::VALUE_OPTIONAL, 'Choose a single data type to scrape, fb only (info, posts, images, events)')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $who   = $input->getOption('party'); // if null, get all
-        $where = $input->getOption('site'); // if null, get all
-        $what  = $input->getOption('data'); // if null, get all
+        $where = $input->getOption('site');  // if null, get all
+        $what  = $input->getOption('data');  // if null, get all
+        switch ($what) {
+            case 'photos':
+            case 'pictures':
+                $what = 'images';
+                break;
+            case 'text':
+                $what = 'posts';
+                break;
+            case 'data':
+            case 'basic':
+                $what = 'info';
+                break;
+        }
 
         $this->container = $this->getContainer();
         $this->em = $this->container->get('doctrine')->getManager();
@@ -86,8 +99,16 @@ class ScraperCommand extends ContainerAwareCommand
                     if ($what == null || $what == 'info') {
                         if ($fd == false || empty($fd['likes'])) {
                             $output->writeln("     + ERROR while retrieving FB data");
+                            $sn['errors'][] = [$code => 'fb'];
                         } else {
                             $output->writeln("     + Facebook data retrieved");
+
+                            $service->addMeta(
+                                $code,
+                                Metadata::TYPE_FACEBOOK_INFO,
+                                json_encode($fd['info'])
+                            );
+                            $output->writeln("         + General info added");
 
                             $service->addStatistic(
                                 $code,
@@ -128,7 +149,6 @@ class ScraperCommand extends ContainerAwareCommand
                                 $fd['eventCount']
                             );
                             $output->writeln("         + Event count added");
-
                             $output->writeln("     + All statistics added");
 
                             $cover = $service->getFacebookCover($code, $fd['cover']);
@@ -140,50 +160,75 @@ class ScraperCommand extends ContainerAwareCommand
                                 $cover
                             );
                             $output->writeln("         + Cover added");
-
-                            $service->addMeta(
-                                $code,
-                                Metadata::TYPE_FACEBOOK_DATA,
-                                json_encode($fd['data'])
-                            );
-                            $output->writeln("         + General data added");
                         }
                     }
 
                     if ($what == null || $what == 'posts') {
-                        if (!empty($fd['posts'])) {
-                            $service->addMeta(
-                                $code,
-                                Metadata::TYPE_FACEBOOK_POSTS,
-                                json_encode($fd['posts'])
-                            );
-                            $output->writeln("         + Posts added");
+                        if (empty($fd['posts'])) {
+                            $output->writeln("         + Text post data not found");
+                            $sn['errors'][] = [$code => 'fb posts'];
+                        } else {
+                            foreach ($fd['posts'] as $key => $post) {
+                                $service->addSocial(
+                                    $code,
+                                    SocialMedia::TYPE_FACEBOOK,
+                                    SocialMedia::SUBTYPE_TEXT,
+                                    $post['postId'],
+                                    $post['postTime'],
+                                    $post['postText'],
+                                    $post['postImage'],
+                                    $post['postLikes'],
+                                    json_encode($post['postData'])
+                                );
+                            }
+                            $output->writeln("         + Text posts added");
                         }
                     }
                     
                     if ($what == null || $what == 'images') {
-                        if (!empty($fd['photos'])) {
-                            $service->addMeta(
-                                $code,
-                                Metadata::TYPE_FACEBOOK_PHOTOS,
-                                json_encode($fd['photos'])
-                            );
+                        if (empty($fd['photos'])) {
+                            $output->writeln("         + Photo data not found");
+                            $sn['errors'][] = [$code => 'fb photos'];
+                        } else {
+                            foreach ($fd['photos'] as $key => $image) {
+                                $service->addSocial(
+                                    $code,
+                                    SocialMedia::TYPE_FACEBOOK,
+                                    SocialMedia::SUBTYPE_IMAGE,
+                                    $image['postId'],
+                                    $image['postTime'],
+                                    $image['postText'],
+                                    $image['postImage'],
+                                    $image['postLikes'],
+                                    json_encode($image['postData'])
+                                );
+                            }
                             $output->writeln("         + Photos added");
                         }
                     }
 
                     if ($what == null || $what == 'events') {
-                        if (!empty($fd['events'])) {
-                                $service->addMeta(
-                                $code,
-                                Metadata::TYPE_FACEBOOK_EVENTS,
-                                json_encode($fd['events'])
-                            );
+                        if (empty($fd['events'])) {
+                            $output->writeln("         + Event data not found");
+                            $sn['errors'][] = [$code => 'fb events'];
+                        } else {
+                            foreach ($fd['events'] as $key => $event) {
+                                $service->addSocial(
+                                    $code,
+                                    SocialMedia::TYPE_FACEBOOK,
+                                    SocialMedia::SUBTYPE_EVENT,
+                                    $event['postId'],
+                                    $event['postTime'],
+                                    $event['postText'],
+                                    $event['postImage'],
+                                    $event['postLikes'],
+                                    json_encode($event['postData'])
+                                );
+                            }
                             $output->writeln("         + Events added");
                         }
                     }
-
-                $output->writeln("     + Metadata added");
+                $output->writeln("     + All social media added");
                 }
             }
 
@@ -195,13 +240,18 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("     + Starting Twitter import");
                     $td = $service->getTwitterData($sn['twitter']['username'], $code);
 
-                    if ($td == false ||
-                        empty($td['followers']) ||
-                        empty($td['tweets'])
-                        ) {
+                    if ($td == false || empty($td['followers']) || empty($td['tweets'])) {
                         $output->writeln("     + ERROR while retrieving TW data");
+                        $sn['errors'][] = [$code => 'tw'];
                     } else {
                         $output->writeln("     + Twitter data retrieved");
+
+                        $service->addMeta(
+                            $code,
+                            Metadata::TYPE_TWITTER_INFO,
+                            json_encode($td['description'])
+                        );
+                        $output->writeln("         + General info added");
 
                         $service->addStatistic(
                             $code,
@@ -234,26 +284,48 @@ class ScraperCommand extends ContainerAwareCommand
                             $td['tweets']
                         );
                         $output->writeln("         + Tweet count added");
-
                         $output->writeln("     + All statistics added");
 
-                        $service->addMeta(
-                            $code,
-                            Metadata::TYPE_TWITTER_DATA,
-                            json_encode($td['description'])
-                        );
-                        $output->writeln("         + General data added");
-
-                        if (!empty($td['posts'])) {
-                            $service->addMeta(
-                                $code,
-                                Metadata::TYPE_TWITTER_POSTS,
-                                json_encode($td['posts'])
-                            );
+                        if (empty($td['posts'])) {
+                            $output->writeln("         + Tweet data not found");
+                            $sn['errors'][] = [$code => 'tw posts'];
+                        } else {
+                            foreach ($td['posts'] as $key => $post) {
+                                $service->addSocial(
+                                    $code,
+                                    SocialMedia::TYPE_TWITTER,
+                                    SocialMedia::SUBTYPE_TEXT,
+                                    $post['postId'],
+                                    $post['postTime'],
+                                    $post['postText'],
+                                    $post['postImage'],
+                                    $post['postLikes'],
+                                    json_encode($post['postData'])
+                                );
+                            }
                             $output->writeln("         + Tweets added");
                         }
 
-                        $output->writeln("     + Metadata added");
+                        if (empty($td['images'])) {
+                            $output->writeln("         + Image data not found");
+                            $sn['errors'][] = [$code => 'tw images'];
+                        } else {
+                            foreach ($td['images'] as $key => $image) {
+                                $service->addSocial(
+                                    $code,
+                                    SocialMedia::TYPE_TWITTER,
+                                    SocialMedia::SUBTYPE_IMAGE,
+                                    $image['postId'],
+                                    $image['postTime'],
+                                    $image['postText'],
+                                    $image['postImage'],
+                                    $image['postLikes'],
+                                    json_encode($image['postData'])
+                                );
+                            }
+                            $output->writeln("         + Images added");
+                        }
+                        $output->writeln("     + All social media added");
                     }
                 }
             }
@@ -266,10 +338,9 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("     + Starting GooglePlus import");
                     $gd = $service->getGooglePlusData($sn['googlePlus']);
 
-                    if ($gd == false ||
-                        empty($gd)
-                        ) {
+                    if ($gd == false || empty($gd)) {
                         $output->writeln("     + ERROR while retrieving G+ data");
+                        $sn['errors'][] = [$code => 'g+'];
                     } else {
                         $output->writeln("     + GooglePlus data retrieved");
                     
@@ -279,7 +350,7 @@ class ScraperCommand extends ContainerAwareCommand
                             Statistic::SUBTYPE_FOLLOWERS,
                             $gd
                         );
-                        $output->writeln("     + Statistic added");
+                        $output->writeln("     + Follower count added");
                     }
                 }
             }
@@ -290,12 +361,11 @@ class ScraperCommand extends ContainerAwareCommand
             if ($where == null || $where == 'yt') {
                 if (!empty($sn['youtube'])) {
                     $output->writeln("     + Starting Youtube import");
-                    $yd = $service->getYoutubeData($sn['youtube']);
+                    $yd = $service->getYoutubeData($sn['youtube'], $code);
 
-                    if ($yd == false ||
-                        empty($yd)
-                        ) {
+                    if ($yd == false || empty($yd)) {
                         $output->writeln("     + ERROR while retrieving Youtube data");
+                        $sn['errors'][] = [$code => 'yt'];
                     } else {
                         $output->writeln("     + Youtube data retrieved");
                         
@@ -322,28 +392,43 @@ class ScraperCommand extends ContainerAwareCommand
                             $yd['stats']['videoCount']
                         );
                         $output->writeln("         + Video count added");
-                    
                         $output->writeln("     + All statistics added");
 
-                        if (!empty($yd['videos'])) {
-                            $service->addMeta(
-                                $code,
-                                Metadata::TYPE_YOUTUBE_VIDEOS,
-                                json_encode($yd['videos'])
-                            );
+                        if (empty($yd['videos'])) {
+                            $output->writeln("         + Video data not found");
+                            $sn['errors'][] = [$code => 'yt'];
+                        } else {
+                            foreach ($yd['videos'] as $key => $video) {
+                                $service->addSocial(
+                                    $code,
+                                    SocialMedia::TYPE_YOUTUBE,
+                                    SocialMedia::SUBTYPE_VIDEO,
+                                    $video['postId'],
+                                    $video['postTime'],
+                                    $video['postText'],
+                                    $video['postImage'],
+                                    $video['postLikes'],
+                                    json_encode($video['postData'])
+                                );
+                            }
                             $output->writeln("         + Videos added");
                         }
-
-                        $output->writeln("     + Metadata added");
+                        $output->writeln("     + All social media added");
                     }
                 }
             }
+
+            $output->writeln("# Saving to DB");
+            $this->em->flush();
+
         }
 
-        $output->writeln("# Saving to DB");
-        $this->em->flush();
+        $output->writeln("# Done");
 
-        $output->writeln("# Done");        
+        if (!empty($sn['errors'])) {
+            $output->writeln("# Errors:");
+            var_dump($sn['errors']);
+        }
         
     }
 

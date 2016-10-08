@@ -3,9 +3,13 @@
 namespace AppBundle\Controller;
 
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 class DefaultController extends BaseController
 {
@@ -56,13 +60,15 @@ class DefaultController extends BaseController
         }
 
         return array(
-            "party"               => $party,
-            "parentOrg"           => $parentOrg,
-            "cover"               => $this->getCoverImage($party->getCode()),
-            "facebook"            => $this->getFacebookData($party->getCode()),
-            "twitter"             => $this->getTwitterData($party->getCode()),
-            "youtube"             => $this->getYoutubeData($party->getCode()),
-            "googlePlusFollowers" => $this->getGooglePlusFollowers($party->getCode())
+            "party"      => $party,
+            "parentOrg"  => $parentOrg,
+            "cover"      => $this->getCoverImage($party->getCode()),
+            "facebook"   => $this->getFacebookData($party->getCode()),
+            "twitter"    => $this->getTwitterData($party->getCode()),
+            "youtube"    => $this->getYoutubeData($party->getCode()),
+            "googlePlus" => [
+                'followers' => $this->getGooglePlusFollowers($party->getCode())
+            ]
         );
     }
 
@@ -83,6 +89,100 @@ class DefaultController extends BaseController
         }
 
         return ['page' => $data];
-    } 
+    }
+
+    /**
+     * @Route("party/{id}/social", name="papi_social_show")
+     * @Template()
+     */
+    public function socialAction($id, Request $request)
+    {
+        $social_media = $this->getOneSocial($id);
+
+        $form = $this->createFormBuilder($social_media)
+            ->add('display', ChoiceType::class, [
+                'choices' => [
+                    'All data'       => 'all',
+                    'All text posts' => 'txt',
+                    'All images'     => 'img',
+                    'Facebook' => [
+                        'All FB posts'       => 'fba',
+                        'FB text posts only' => 'fbt',
+                        'FB images only'     => 'fbi',
+                        'FB events only'     => 'fbe',
+                        ],
+                    'Twitter' => [
+                        'All tweets'        => 'twa',
+                        'Text tweets only'  => 'twt',
+                        'Image tweets only' => 'twi'
+                        ],
+                    'Youtube' => [
+                        'Videos only' => 'ytv',
+                        ],
+                    ],
+                'choices_as_values' => true,
+                ]
+            )
+            ->add('submit', SubmitType::class, array('label' => 'Submit'))
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            $data['value'] = $form['display']->getData();
+
+            $party = $this->getDoctrine()
+                ->getRepository('AppBundle:SocialMedia');
+
+            switch ($data['value']) {
+                case 'all': // all data
+                    $social_media = $this->getOneSocial($id);
+                    break;
+                case 'txt': // all text
+                    $social_media = $party->findBy(['code' => $id, 'subType' => 'T']);
+                    break;
+                case 'img': // all images
+                    $social_media = $party->findBy(['code' => $id, 'subType' => 'I']);
+                    break;
+                case 'fba': // FB all
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb']);
+                    break;
+                case 'fbt': // FB text
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'T']);
+                    break;
+                case 'fbi': // FB images
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'I']);
+                    break;
+                case 'fbe': // FB events
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'E']);
+                    break;
+                case 'twa': // TW all
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'tw']);
+                    break;
+                case 'twt': // TW text
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'tw', 'subType' => 'T']);
+                    break;
+                case 'twi': // TW images
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'tw', 'subType' => 'I']);
+                    break;
+                case 'ytv': // YT videos
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'yt']);
+                    break;
+            }
+        }
+
+        if (empty($social_media)) {
+            $empty = true;
+        } else $empty = false;
+
+        return $this->render(
+            'AppBundle:Default:social.html.twig',
+            array(
+                'social_media' => $social_media,
+                'empty' => $empty,
+                'form' => $form->createView()
+            )
+        );
+    }
 
 }

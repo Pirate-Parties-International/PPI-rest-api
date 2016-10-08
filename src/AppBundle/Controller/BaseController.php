@@ -7,19 +7,18 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 
 use AppBundle\Entity\Metadata;
 use AppBundle\Entity\Statistic as Stat;
+use AppBundle\Entity\SocialMedia as Sm;
 
 class BaseController extends Controller
 {
-
 	public function getAllParties($includeDefunct = false) {
-		
 		$parties = $this->getDoctrine()
-        ->getRepository('AppBundle:Party');
+            ->getRepository('AppBundle:Party');
 
         if (!$includeDefunct) {
             $parties = $parties->findBy([
                 'defunct' => $includeDefunct
-                ]);
+            ]);
         } else {
             $parties = $parties->findAll();
         }
@@ -34,11 +33,26 @@ class BaseController extends Controller
 
 	public function getOneParty($code) {
 		$party = $this->getDoctrine()
-        ->getRepository('AppBundle:Party')
-        ->findOneByCode($code);
+            ->getRepository('AppBundle:Party')
+            ->findOneByCode($code);
 
         return $party;
 	}
+
+
+    public function getOneSocial($code = null) {
+        $party = $this->getDoctrine()
+            ->getRepository('AppBundle:SocialMedia');
+
+        if ($code) {
+            $party = $party->findByCode($code);
+        } else {
+            $party = $party->findAll();
+        }
+
+        return $party;
+    }
+
 
     public function getCoverImage($code) {
         $meta = $this->getMeta($code, Metadata::TYPE_FACEBOOK_COVER);
@@ -49,6 +63,7 @@ class BaseController extends Controller
 
         return $meta;
     }
+
 
     public function getFacebookLikes($code) {
         return $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES);
@@ -62,26 +77,25 @@ class BaseController extends Controller
             'imageCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_IMAGES),
             'eventCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_EVENTS),
         ];
-        $out['data'] = $this->getMeta($code, Metadata::TYPE_FACEBOOK_DATA);
+        $out['pageInfo'] = $this->getMeta($code, Metadata::TYPE_FACEBOOK_INFO);
 
-        $posts  = $this->getMeta($code, Metadata::TYPE_FACEBOOK_POSTS);
+        $posts  = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_TEXT);
         if (!empty($posts)) {
             $out['posts'] = $posts;
         }
-
-        $photos = $this->getMeta($code, Metadata::TYPE_FACEBOOK_PHOTOS);
+        $photos = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_IMAGE);
         if (!empty($photos)) {
             $out['photos'] = $photos;
         }
-
-        $events = $this->getMeta($code, Metadata::TYPE_FACEBOOK_EVENTS);
+        $events = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_EVENT);
         if (!empty($events)) {
             $out['events'] = $events;
         }
 
         return $out;
     }
-    
+
+
     public function getTwitterFollowers($code) {
         return $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWERS);
     }
@@ -93,15 +107,20 @@ class BaseController extends Controller
             'following'  => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWING),
             'tweetCount' => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_POSTS),
         ];
-        $out['data']['about'] = $this->getMeta($code, Metadata::TYPE_TWITTER_DATA);
+        $out['pageInfo']['about'] = $this->getMeta($code, Metadata::TYPE_TWITTER_INFO);
 
-        $tweets = $this->getMeta($code, Metadata::TYPE_TWITTER_POSTS);
+        $tweets = $this->getSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_TEXT);
         if (!empty($tweets)) {
             $out['tweets'] = $tweets;
+        }
+        $images = $this->getSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_IMAGE);
+        if (!empty($tweets)) {
+            $out['images'] = $images;
         }
 
         return $out;
     }
+
 
     public function getGooglePlusFollowers($code) {
         return $this->getStat($code, Stat::TYPE_GOOGLEPLUS, Stat::SUBTYPE_FOLLOWERS);
@@ -114,7 +133,7 @@ class BaseController extends Controller
             'videoCount'  => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_VIDEOS),
         ];
 
-        $videos = $this->getMeta($code, Metadata::TYPE_YOUTUBE_VIDEOS);
+        $videos = $this->getSocial($code, Sm::TYPE_YOUTUBE, Sm::SUBTYPE_VIDEO);
         if (!empty($videos)) {
             $out['videos'] = $videos;
         }
@@ -122,17 +141,18 @@ class BaseController extends Controller
         return $out;
     }
 
+
     /**
      * Queries for a single statistic
-     * @param  string  $code    Party Code
-     * @param  string  $type    
-     * @param  string $subType  <optional>
+     * @param  string $code    Party Code
+     * @param  string $type
+     * @param  string $subType <optional>
      * @return Statistic
      */
     public function getStat($code, $type, $subType) {
         $stat = $this->getDoctrine()
-        ->getRepository('AppBundle:Statistic')
-        ->findOneBy([
+            ->getRepository('AppBundle:Statistic')
+            ->findOneBy([
                 'code'    => strtolower($code),
                 'type'    => $type,
                 'subType' => $subType
@@ -149,6 +169,7 @@ class BaseController extends Controller
         return $stat->getValue();
     }
 
+
     /**
      * Queries for a single meta value
      * @param  string $code
@@ -157,11 +178,11 @@ class BaseController extends Controller
      */
     public function getMeta($code, $type) {
         $meta = $this->getDoctrine()
-        ->getRepository('AppBundle:Metadata')
-        ->findOneBy([
-            'code' => strtolower($code),
-            'type' => $type
-        ]);
+            ->getRepository('AppBundle:Metadata')
+            ->findOneBy([
+                'code' => strtolower($code),
+                'type' => $type
+            ]);
 
         if(!$meta) {
             return false;
@@ -170,5 +191,29 @@ class BaseController extends Controller
         return $meta->getValue();
     }
 
+
+    /**
+    * Queries for a party's social media posts
+    * @param  string $code
+    * @param  string $type
+    * @param  string $subType
+    * @return SocialMedia
+    */
+    public function getSocial($code, $type, $subType) {
+
+        $party = $this->getDoctrine()
+            ->getRepository('AppBundle:SocialMedia')
+            ->findBy([
+                'code' => $code,
+                'type' => $type,
+                'subType' => $subType
+            ]);
+
+        if (!$party) {
+            return false;
+        }
+
+        return $party;
+    }
 
 }
