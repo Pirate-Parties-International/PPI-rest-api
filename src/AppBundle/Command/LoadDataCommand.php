@@ -70,9 +70,12 @@ class LoadDataCommand extends ContainerAwareCommand
         ->getRepository('AppBundle:InternationalOrg')
         ->findOneByCode('ppi');
 
-        if (!$intOrg['ppeu'] || !$intOrg['ppi']) {
-            $this->log("Int orgs are missing - run fixtures first!");
-            return;
+        $intOrg['ype'] = $this->container->get('doctrine')
+        ->getRepository('AppBundle:InternationalOrg')
+        ->findOneByCode('ype');
+
+        if (!$intOrg['ppeu'] || !$intOrg['ppi'] || !$intOrg['ype']) {
+            $this->log("Int orgs are missing!");
         }
         
         $compile = new Compile;
