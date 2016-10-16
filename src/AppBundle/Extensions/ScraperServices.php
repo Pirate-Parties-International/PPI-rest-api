@@ -32,9 +32,18 @@ class ScraperServices
     protected $em;
     private   $container;
 
+
+    public function exception_handler($ex) {
+        echo "Exception: ".$ex->getMessage()."\n";
+        $out['errors'][] = ["Exception" => $ex->getMessage()];
+        return $out;
+    }
+
+
     public function __construct(EntityManager $entityManager, Container $container) {
         $this->em = $entityManager;
         $this->container = $container;
+        @set_exception_handler(array($this, 'exception_handler'));
     }
 
 
@@ -67,7 +76,7 @@ class ScraperServices
             ->findOneByCode($code);
 
         if (empty($party)) {
-            echo ("     + ERROR - Party code \"". $code ."\" not recognised\n");
+            echo ("   + ERROR - Party code \"". $code ."\" not recognised\n");
             echo ("# Process halted\n");
             die;
         }
@@ -196,7 +205,7 @@ class ScraperServices
                 ->where(sprintf("p.code = '%s'", $code))
                 ->andwhere(sprintf("p.type = '%s'", $type))
                 ->andwhere(sprintf("p.subType = '%s'", $subType))
-                ->orderBy('p.postTime', 'DESC')
+                ->orderBy('p.timestamp', 'DESC')
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getOneOrNullResult();
@@ -207,10 +216,10 @@ class ScraperServices
                 } else {
                     $time = $unlimited; // no limit for fb images/events and yt videos, get all
                 }
-                echo "\n                 + DB empty, getting all... ";
+                echo " empty, getting all... ";
 
             } else { // if there are entries already in the db, only get updates since the latest one
-                echo "\n                 + DB !empty, updating... ";
+                echo " !empty, updating... ";
                 $time = $p->getPostTime()->getTimestamp();
             }
         }
@@ -423,10 +432,10 @@ class ScraperServices
                 }
             }
 
-            $coverId = $graphNode->getField('cover')->getField('cover_id');
+            $coverId = $graphNode->getField('cover')->getField('cover_id'); // set-up for later (line ~900)
             $out['likes']   = $graphNode->getField('engagement')->getField('count');
             $out['talking'] = $graphNode->getField('talking_about_count');
-            echo "         + Info and stats... ok\n";
+            echo "     + Info and stats... ok\n";
         }
 
 
@@ -434,7 +443,7 @@ class ScraperServices
         // Posts
         //
         if ($what == null || $what == 'posts' || $what == 'info') {
-            echo "         + Text posts... \n";
+            echo "     + Text posts... \n";
         }
 
         if ($what == null || $what == 'info') { // count only
@@ -460,7 +469,7 @@ class ScraperServices
             $fdPcount  = $graphNode->getField('posts');
 
             if (!empty($fdPcount)) {
-                echo "             + Counting... page ";
+                echo "       + Counting... page ";
                 $pageCount = 0;
 
                 do {
@@ -513,7 +522,7 @@ class ScraperServices
 
             if (!empty($fdPosts)) {
 
-                echo "             + Details... ";
+                echo "       + Details... ";
                 $timeLimit = $this->getTimeLimit('fb', 'T', $code, $what);
                 echo "page ";
                 $pageCount = 0;
@@ -567,7 +576,7 @@ class ScraperServices
                 } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
                 // while next page is not null and within our time limit
 
-                echo "...".count($out['posts'])." since ".date('d/m/Y', $timeLimit)." processed";
+                echo "...".count($out['posts'])." most recent since ".date('d/m/Y', $timeCheck)." processed";
 
             } else {
                 echo "not found";
@@ -600,7 +609,7 @@ class ScraperServices
 
             $graphNode = $response->getGraphNode();
             $fdAlbums  = $graphNode->getField('albums');
-            echo "         + Photos... ";
+            echo "     + Photos... ";
 
             if (!empty($fdAlbums)) {
                 echo "counting... page ";
@@ -647,10 +656,9 @@ class ScraperServices
 
             $graphNode = $response->getGraphNode();
             $fdAlbums  = $graphNode->getField('albums');
-            echo "         + Photos... \n";
+            echo "     + Photos... ";
 
             if (!empty($fdAlbums)) {
-                echo "             + Details... ";
                 $timeLimit = $this->getTimeLimit('fb', 'I', $code, $what);
                 echo "page ";
                 $pageCount = 0;
@@ -742,7 +750,7 @@ class ScraperServices
 
             $graphNode = $response->getGraphNode();
             $fdEvents  = $graphNode->getField('events');
-            echo "         + Events... counting... ";
+            echo "     + Events... counting... ";
 
             if (!empty($fdEvents)) {
                 echo "page ";
@@ -791,7 +799,7 @@ class ScraperServices
 
             $graphNode = $response->getGraphNode();
             $fdEvents  = $graphNode->getField('events');
-            echo "         + Events... ";
+            echo "     + Events... ";
 
             if (!empty($fdEvents)) {
 
@@ -888,7 +896,7 @@ class ScraperServices
 
             $request = $fb->request(
                 'GET',
-                $coverId,
+                $coverId, // retrieved earlier (line ~435)
                 array(
                     'fields' => 'height,width,album,images'
                 )
@@ -983,7 +991,7 @@ class ScraperServices
             'followers'   => $data->followers_count,
             'following'   => $data->friends_count,
         ];
-        echo "         + Info and stats... ok\n";
+        echo "     + Info and stats... ok\n";
 
 
         //
@@ -994,7 +1002,7 @@ class ScraperServices
                 ->buildOauth($tweetUrl, $requestMethod)
                 ->performRequest();
 
-        echo "         + Tweets... ";
+        echo "     + Tweets... ";
         if (empty($tweetData)) {
             echo "not found\n";
             return false;
@@ -1068,7 +1076,7 @@ class ScraperServices
                 $limitCheck = $limitData['resources']['application']['/application/rate_limit_status'];
 
                 if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
-                    echo " ...Rate limit reached! Resuming at ".date('H:i:s', $limitCheck['reset'])."... ";
+                    echo "...Rate limit reached! Resuming at ".date('H:i:s', $limitCheck['reset'])."... ";
                     time_sleep_until($limitCheck['reset']);
                 }
 
@@ -1080,10 +1088,10 @@ class ScraperServices
 
                 $pageCount++;
 
-            } while ($timeCheck > $timeLimit);
-            // while tweet times are more recent than the limit as set above
+            } while ($timeCheck > $timeLimit && $pageCount < 100);
+            // while tweet times are more recent than the limit as set above, up to 5000
 
-            echo "...total ".$out['tweets']." tweets found, ".count($out['posts'])." since ".date('d/m/Y', $timeLimit)." processed\n";
+            echo "...total ".$out['tweets']." tweets found, ".count($out['posts'])." most recent since ".date('d/m/Y', $timeCheck)." processed\n";
         }
 
         return $out;
@@ -1115,7 +1123,7 @@ class ScraperServices
         $playlist = $data->contentDetails->relatedPlaylists->uploads;
         $videos   = $youtube->getPlaylistItemsByPlaylistId($playlist);
 
-        echo "         + Videos... ";
+        echo "     + Videos... ";
 
         if (!empty($videos)) {
             $out['videos'] = [];
@@ -1200,11 +1208,24 @@ class ScraperServices
         // Set some options - we are passing in a useragent too here
         curl_setopt_array($curl, array(
             CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_TIMEOUT => 15,
             CURLOPT_URL => $url,
             CURLOPT_USERAGENT => 'PAPI'
         ));
-        // Send the request & save response to $resp
-        $resp = curl_exec($curl);
+
+        $tryCount = 0;
+        do {
+            try {
+                // Send the request & save response to $resp
+                $resp = curl_exec($curl);
+                $tryCount++;
+            } catch (\Exception $e) {
+                echo $e->getMessage();
+                $out['errors'][] = [$code => $e->getMessage()];
+                return $out;
+            }
+        } while ($tryCount < 5);
+
         // Close request to clear up some resources
         curl_close($curl);
 

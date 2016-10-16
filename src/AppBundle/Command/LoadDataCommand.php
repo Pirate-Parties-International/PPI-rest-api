@@ -81,13 +81,13 @@ class LoadDataCommand extends ContainerAwareCommand
         $compile = new Compile;
         $data = $compile->getAllData();
 
-        $this->log("Data retrived.");
+        $this->log("Data retrieved.");
 
         //
         // Let's get logo files and build an array
         //
 
-        $this->log("## Prepairing logos");
+        $this->log("## Preparing logos");
 
         $logoDir = $appRoot . '/web/img/pp-logo/';
         if (!is_dir($logoDir)) {

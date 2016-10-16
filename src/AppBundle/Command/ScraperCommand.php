@@ -57,6 +57,7 @@ class ScraperCommand extends ContainerAwareCommand
         $service = $this->container->get('ScraperServices');
 
         $output->writeln("##### Starting scraper #####");
+        $startTime = new \DateTime('now');
 
         if (empty($who)) {
             $output->writeln("# Getting all parties");
@@ -70,12 +71,12 @@ class ScraperCommand extends ContainerAwareCommand
 
         // Verify argument search terms
         if ($where != null && $where != 'yt' && $where != 'g+' && $where != 'tw' && $where != 'fb') {
-            $output->writeln("     + ERROR - Search term \"". $where ."\" not recognised");
+            $output->writeln("   + ERROR - Search term \"". $where ."\" not recognised");
             $output->writeln("# Process halted");
             die;
         }
         if ($what != null && $where != 'fb') {
-            $output->writeln("     + ERROR - Search term \"". $what ."\" only valid when limited to Facebook");
+            $output->writeln("   + ERROR - Search term \"". $what ."\" only valid when limited to Facebook");
             $output->writeln("# Process halted");
             die;
         }
@@ -83,6 +84,7 @@ class ScraperCommand extends ContainerAwareCommand
         foreach ($parties as $code => $party) {
             $output->writeln(" - Processing " . $code);
             $sn = $party->getSocialNetworks();
+            $midTime = new \DateTime('now');
 
             if (empty($sn)) {
                 continue;
@@ -93,7 +95,7 @@ class ScraperCommand extends ContainerAwareCommand
             //
             if ($where == null || $where == 'fb') {
                 if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
-                    $output->writeln("     + Starting Facebook import");
+                    $output->writeln("   + Starting Facebook import");
                     $fd = $service->getFBData($sn['facebook']['username'], $what, $code); 
 
                     if ($what == null || $what == 'info') {
@@ -101,14 +103,14 @@ class ScraperCommand extends ContainerAwareCommand
                             $output->writeln("     + ERROR while retrieving FB data");
                             $sn['errors'][] = [$code => 'fb'];
                         } else {
-                            $output->writeln("     + Facebook data retrieved");
+                            $output->writeln("   + Facebook data retrieved");
 
                             $service->addMeta(
                                 $code,
                                 Metadata::TYPE_FACEBOOK_INFO,
                                 json_encode($fd['info'])
                             );
-                            $output->writeln("         + General info added");
+                            $output->writeln("     + General info added");
 
                             $service->addStatistic(
                                 $code,
@@ -116,7 +118,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 Statistic::SUBTYPE_LIKES,
                                 $fd['likes']
                             );
-                            $output->writeln("         + 'Like' count added");
+                            $output->writeln("     + 'Like' count added");
 
                             $service->addStatistic(
                                 $code,
@@ -124,7 +126,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 Statistic::SUBTYPE_TALKING,
                                 $fd['talking']
                             );
-                            $output->writeln("         + 'Talking about' count added");
+                            $output->writeln("     + 'Talking about' count added");
 
                             $service->addStatistic(
                                 $code,
@@ -132,7 +134,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 Statistic::SUBTYPE_POSTS,
                                 $fd['postCount']
                             );
-                            $output->writeln("         + Post count added");
+                            $output->writeln("     + Post count added");
 
                             $service->addStatistic(
                                 $code,
@@ -140,7 +142,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 Statistic::SUBTYPE_IMAGES,
                                 $fd['photoCount']
                             );
-                            $output->writeln("         + Photo count added");
+                            $output->writeln("     + Photo count added");
 
                             $service->addStatistic(
                                 $code,
@@ -148,24 +150,24 @@ class ScraperCommand extends ContainerAwareCommand
                                 Statistic::SUBTYPE_EVENTS,
                                 $fd['eventCount']
                             );
-                            $output->writeln("         + Event count added");
-                            $output->writeln("     + All statistics added");
+                            $output->writeln("     + Event count added");
+                            $output->writeln("   + All statistics added");
 
                             $cover = $service->getFacebookCover($code, $fd['cover']);
-                            $output->writeln("         + Cover retrieved");
+                            $output->writeln("     + Cover retrieved");
 
                             $service->addMeta(
                                 $code,
                                 Metadata::TYPE_FACEBOOK_COVER,
                                 $cover
                             );
-                            $output->writeln("         + Cover added");
+                            $output->writeln("     + Cover added");
                         }
                     }
 
                     if ($what == null || $what == 'posts') {
                         if (empty($fd['posts'])) {
-                            $output->writeln("         + Text post data not found");
+                            $output->writeln("     + Text post data not found");
                             $sn['errors'][] = [$code => 'fb posts'];
                         } else {
                             foreach ($fd['posts'] as $key => $post) {
@@ -181,13 +183,13 @@ class ScraperCommand extends ContainerAwareCommand
                                     json_encode($post['postData'])
                                 );
                             }
-                            $output->writeln("         + Text posts added");
+                            $output->writeln("     + Text posts added");
                         }
                     }
                     
                     if ($what == null || $what == 'images') {
                         if (empty($fd['photos'])) {
-                            $output->writeln("         + Photo data not found");
+                            $output->writeln("     + Photo data not found");
                             $sn['errors'][] = [$code => 'fb photos'];
                         } else {
                             foreach ($fd['photos'] as $key => $image) {
@@ -203,13 +205,13 @@ class ScraperCommand extends ContainerAwareCommand
                                     json_encode($image['postData'])
                                 );
                             }
-                            $output->writeln("         + Photos added");
+                            $output->writeln("     + Photos added");
                         }
                     }
 
                     if ($what == null || $what == 'events') {
                         if (empty($fd['events'])) {
-                            $output->writeln("         + Event data not found");
+                            $output->writeln("     + Event data not found");
                             $sn['errors'][] = [$code => 'fb events'];
                         } else {
                             foreach ($fd['events'] as $key => $event) {
@@ -225,10 +227,10 @@ class ScraperCommand extends ContainerAwareCommand
                                     json_encode($event['postData'])
                                 );
                             }
-                            $output->writeln("         + Events added");
+                            $output->writeln("     + Events added");
                         }
                     }
-                $output->writeln("     + All social media added");
+                $output->writeln("   + All social media added");
                 }
             }
 
@@ -237,21 +239,21 @@ class ScraperCommand extends ContainerAwareCommand
             //
             if ($where == null || $where == 'tw') {
                 if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
-                    $output->writeln("     + Starting Twitter import");
+                    $output->writeln("   + Starting Twitter import");
                     $td = $service->getTwitterData($sn['twitter']['username'], $code);
 
                     if ($td == false || empty($td['followers']) || empty($td['tweets'])) {
                         $output->writeln("     + ERROR while retrieving TW data");
                         $sn['errors'][] = [$code => 'tw'];
                     } else {
-                        $output->writeln("     + Twitter data retrieved");
+                        $output->writeln("   + Twitter data retrieved");
 
                         $service->addMeta(
                             $code,
                             Metadata::TYPE_TWITTER_INFO,
                             json_encode($td['description'])
                         );
-                        $output->writeln("         + General info added");
+                        $output->writeln("     + General info added");
 
                         $service->addStatistic(
                             $code,
@@ -259,7 +261,7 @@ class ScraperCommand extends ContainerAwareCommand
                             Statistic::SUBTYPE_LIKES,
                             $td['likes']
                         );
-                        $output->writeln("         + 'Like' count added");
+                        $output->writeln("     + 'Like' count added");
 
                         $service->addStatistic(
                             $code,
@@ -267,7 +269,7 @@ class ScraperCommand extends ContainerAwareCommand
                             Statistic::SUBTYPE_FOLLOWERS,
                             $td['followers']
                         );
-                        $output->writeln("         + Follower count added");
+                        $output->writeln("     + Follower count added");
 
                         $service->addStatistic(
                             $code,
@@ -275,7 +277,7 @@ class ScraperCommand extends ContainerAwareCommand
                             Statistic::SUBTYPE_FOLLOWING,
                             $td['following']
                         );
-                        $output->writeln("         + Following count added");
+                        $output->writeln("     + Following count added");
 
                         $service->addStatistic(
                             $code,
@@ -283,11 +285,11 @@ class ScraperCommand extends ContainerAwareCommand
                             Statistic::SUBTYPE_POSTS,
                             $td['tweets']
                         );
-                        $output->writeln("         + Tweet count added");
-                        $output->writeln("     + All statistics added");
+                        $output->writeln("     + Tweet count added");
+                        $output->writeln("   + All statistics added");
 
                         if (empty($td['posts'])) {
-                            $output->writeln("         + Tweet data not found");
+                            $output->writeln("     + Tweet data not found");
                             $sn['errors'][] = [$code => 'tw posts'];
                         } else {
                             foreach ($td['posts'] as $key => $post) {
@@ -303,11 +305,11 @@ class ScraperCommand extends ContainerAwareCommand
                                     json_encode($post['postData'])
                                 );
                             }
-                            $output->writeln("         + Tweets added");
+                            $output->writeln("     + Tweets added");
                         }
 
                         if (empty($td['images'])) {
-                            $output->writeln("         + Image data not found");
+                            $output->writeln("     + Image data not found");
                             $sn['errors'][] = [$code => 'tw images'];
                         } else {
                             foreach ($td['images'] as $key => $image) {
@@ -323,9 +325,9 @@ class ScraperCommand extends ContainerAwareCommand
                                     json_encode($image['postData'])
                                 );
                             }
-                            $output->writeln("         + Images added");
+                            $output->writeln("     + Images added");
                         }
-                        $output->writeln("     + All social media added");
+                        $output->writeln("   + All social media added");
                     }
                 }
             }
@@ -335,14 +337,14 @@ class ScraperCommand extends ContainerAwareCommand
             //
             if ($where == null || $where == 'g+') {
                 if (!empty($sn['googlePlus'])) {
-                    $output->writeln("     + Starting GooglePlus import");
+                    $output->writeln("   + Starting GooglePlus import");
                     $gd = $service->getGooglePlusData($sn['googlePlus']);
 
                     if ($gd == false || empty($gd)) {
                         $output->writeln("     + ERROR while retrieving G+ data");
                         $sn['errors'][] = [$code => 'g+'];
                     } else {
-                        $output->writeln("     + GooglePlus data retrieved");
+                        $output->writeln("   + GooglePlus data retrieved");
                     
                         $service->addStatistic(
                             $code,
@@ -350,7 +352,7 @@ class ScraperCommand extends ContainerAwareCommand
                             Statistic::SUBTYPE_FOLLOWERS,
                             $gd
                         );
-                        $output->writeln("     + Follower count added");
+                        $output->writeln("   + Follower count added");
                     }
                 }
             }
@@ -360,14 +362,14 @@ class ScraperCommand extends ContainerAwareCommand
             //
             if ($where == null || $where == 'yt') {
                 if (!empty($sn['youtube'])) {
-                    $output->writeln("     + Starting Youtube import");
+                    $output->writeln("   + Starting Youtube import");
                     $yd = $service->getYoutubeData($sn['youtube'], $code);
 
                     if ($yd == false || empty($yd)) {
                         $output->writeln("     + ERROR while retrieving Youtube data");
                         $sn['errors'][] = [$code => 'yt'];
                     } else {
-                        $output->writeln("     + Youtube data retrieved");
+                        $output->writeln("   + Youtube data retrieved");
                         
                         $service->addStatistic(
                             $code,
@@ -375,7 +377,7 @@ class ScraperCommand extends ContainerAwareCommand
                             Statistic::SUBTYPE_SUBSCRIBERS,
                             $yd['stats']['subscriberCount']
                         );
-                        $output->writeln("         + Subscriber count added");
+                        $output->writeln("     + Subscriber count added");
     
                         $service->addStatistic(
                             $code,
@@ -383,7 +385,7 @@ class ScraperCommand extends ContainerAwareCommand
                             Statistic::SUBTYPE_VIEWS,
                             $yd['stats']['viewCount']
                         );
-                        $output->writeln("         + View count added");
+                        $output->writeln("     + View count added");
                     
                         $service->addStatistic(
                             $code,
@@ -391,11 +393,11 @@ class ScraperCommand extends ContainerAwareCommand
                             Statistic::SUBTYPE_VIDEOS,
                             $yd['stats']['videoCount']
                         );
-                        $output->writeln("         + Video count added");
-                        $output->writeln("     + All statistics added");
+                        $output->writeln("     + Video count added");
+                        $output->writeln("   + All statistics added");
 
                         if (empty($yd['videos'])) {
-                            $output->writeln("         + Video data not found");
+                            $output->writeln("     + Video data not found");
                             $sn['errors'][] = [$code => 'yt'];
                         } else {
                             foreach ($yd['videos'] as $key => $video) {
@@ -411,9 +413,9 @@ class ScraperCommand extends ContainerAwareCommand
                                     json_encode($video['postData'])
                                 );
                             }
-                            $output->writeln("         + Videos added");
+                            $output->writeln("     + Videos added");
                         }
-                        $output->writeln("     + All social media added");
+                        $output->writeln("   + All social media added");
                     }
                 }
             }
@@ -421,9 +423,14 @@ class ScraperCommand extends ContainerAwareCommand
             $output->writeln("# Saving to DB");
             $this->em->flush();
 
+            $endTime = new \DateTime('now');
+            $midDiff = $midTime->diff($endTime);
+            $output->writeln("   + Done in ".$midDiff->format('%H:%I:%S'));
+
         }
 
-        $output->writeln("# Done");
+        $fullDiff = $startTime->diff($endTime);
+        $output->writeln("# Completed in ".$fullDiff->format('%H:%I:%S'));
 
         if (!empty($sn['errors'])) {
             $output->writeln("# Errors:");
