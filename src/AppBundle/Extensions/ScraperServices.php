@@ -211,10 +211,10 @@ class ScraperServices
                 ->getOneOrNullResult();
 
             if (empty($p)) { // if there are no entries in the database, populate fully
-                if ($subType == 'T' || $type == 'tw') {
-                    $time = $limited; // age limit for fb text posts and tweets
+                if ($subType == 'T' || $subType == 'I') {
+                    $time = $limited; // age limit for text posts and images
                 } else {
-                    $time = $unlimited; // no limit for fb images/events and yt videos, get all
+                    $time = $unlimited; // no limit for fb events and yt videos, get all
                 }
                 echo " empty, getting all... ";
 
@@ -276,14 +276,24 @@ class ScraperServices
 
         if (!file_exists($imgPath)) { // check if file exists on disk before saving
             try {
-                $imgData = file_get_contents($imgSrc, false, $ctx);
-                if (!empty($imgData)) {
-                    file_put_contents($imgPath, $imgData);
-                }
+                $imgData = file_get_contents($imgSrc, false, $ctx); // try to save full source
             } catch (\Exception $e) {
-                echo $e->getMessage();
-                $out['errors'][] = [$code => $imgPath];
+                if (!empty($imgBkp)) {
+                    try {
+                        $imgData = file_get_contents($imgBkp, false, $ctx); // try to save thumbnail instead
+                    } catch (\Exception $e) {
+                        echo $e->getMessage();
+                        $out['errors'][] = [$code => $imgPath];
+                    }
+                } else {
+                    echo $e->getMessage();
+                    $out['errors'][] = [$code => $imgPath];
+                }
             }
+        }
+
+        if (!empty($imgData)) {
+            file_put_contents($imgPath, $imgData);
         }
 
         return $imgName;
@@ -576,7 +586,7 @@ class ScraperServices
                 } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
                 // while next page is not null and within our time limit
 
-                echo "...".count($out['posts'])." most recent since ".date('d/m/Y', $timeCheck)." processed";
+                echo "...".count($out['posts'])." since ".date('d/m/Y', $timeCheck)." processed";
 
             } else {
                 echo "not found";
@@ -675,6 +685,7 @@ class ScraperServices
 
                                 $imgId  = $photo->getField('id');
                                 $imgSrc = $photo->getField('source');
+                                $imgBkp = $photo->getField('picture');
                                 // 'picture'=130x130 thumbnail, 'source'=original file
 
                                 // save image to disk
@@ -716,7 +727,7 @@ class ScraperServices
                 }
 
                 $out['photoCount'] = array_sum($photoCount);
-                echo "...".$out['photoCount']." found, ".count($out['photos'])." processed";
+                echo "...".$out['photoCount']." found, ".count($out['photos'])." since ".date('d/m/Y', $timeCheck)." processed";
 
             } else {
                 $out['photoCount'] = 0;
@@ -1091,7 +1102,7 @@ class ScraperServices
             } while ($timeCheck > $timeLimit && $pageCount < 100);
             // while tweet times are more recent than the limit as set above, up to 5000
 
-            echo "...total ".$out['tweets']." tweets found, ".count($out['posts'])." most recent since ".date('d/m/Y', $timeCheck)." processed\n";
+            echo "...total ".$out['tweets']." tweets found, ".count($out['posts'])." since ".date('d/m/Y', $timeCheck)." processed\n";
         }
 
         return $out;
@@ -1168,8 +1179,8 @@ class ScraperServices
                         'views'    => $vidInfo->statistics->viewCount,
                         'likes'    => $vidLikes,
                         'comments' => $vidComments
-                    ]
-                ];
+                        ]
+                    ];
             }
             echo "processed\n";
 

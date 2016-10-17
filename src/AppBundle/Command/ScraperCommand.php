@@ -427,7 +427,7 @@ class ScraperCommand extends ContainerAwareCommand
                     }
                 }
 
-                $output->writeln("# Saving to DB");
+                $output->writeln(" # Saving to DB");
                 $this->em->flush();
 
                 $endTime = new \DateTime('now');
