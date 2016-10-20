@@ -13,6 +13,7 @@ use AppBundle\Entity\Metadata;
 use AppBundle\Entity\Statistic;
 use AppBundle\Entity\SocialMedia;
 use AppBundle\Extensions\ScraperServices;
+use AppBundle\Extensions\FacebookService;
 
 
 class ScraperCommand extends ContainerAwareCommand
@@ -56,18 +57,21 @@ class ScraperCommand extends ContainerAwareCommand
         $this->logger = $this->getContainer()->get('logger');
         $logger = $this->logger;
 
-        $service = $this->container->get('ScraperServices');
+        $scraperService  = $this->container->get('ScraperServices');
+        $facebookService = $this->container->get('FacebookService');
+        $twitterService  = $this->container->get('TwitterService');
+        $googleService   = $this->container->get('GoogleService');
 
         $output->writeln("##### Starting scraper #####");
         $startTime = new \DateTime('now');
 
         if (empty($who)) {
             $output->writeln("# Getting all parties");
-            $parties = $service->getAllParties();
+            $parties = $scraperService->getAllParties();
             $output->writeln("Done");
         } else {
             $output->writeln("# Getting one party (". $who .")");
-            $parties = $service->getOneParty($who);
+            $parties = $scraperService->getOneParty($who);
             $output->writeln("Done");
         }
 
@@ -103,7 +107,7 @@ class ScraperCommand extends ContainerAwareCommand
                 if ($where == null || $where == 'fb') {
                     if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
                         $output->writeln("   + Starting Facebook import");
-                        $fd = $service->getFBData($sn['facebook']['username'], $what, $code);
+                        $fd = $facebookService->getFBData($sn['facebook']['username'], $what, $code);
 
                         if ($what == null || $what == 'info') {
                             if ($fd == false || empty($fd['likes'])) {
@@ -112,14 +116,14 @@ class ScraperCommand extends ContainerAwareCommand
                             } else {
                                 $output->writeln("   + Facebook data retrieved");
 
-                                $service->addMeta(
+                                $scraperService->addMeta(
                                     $code,
                                     Metadata::TYPE_FACEBOOK_INFO,
                                     json_encode($fd['info'])
                                 );
                                 $output->writeln("     + General info added");
 
-                                $service->addStatistic(
+                                $scraperService->addStatistic(
                                     $code,
                                     Statistic::TYPE_FACEBOOK,
                                     Statistic::SUBTYPE_LIKES,
@@ -127,7 +131,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 );
                                 $output->writeln("     + 'Like' count added");
 
-                                $service->addStatistic(
+                                $scraperService->addStatistic(
                                     $code,
                                     Statistic::TYPE_FACEBOOK,
                                     Statistic::SUBTYPE_TALKING,
@@ -135,7 +139,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 );
                                 $output->writeln("     + 'Talking about' count added");
 
-                                $service->addStatistic(
+                                $scraperService->addStatistic(
                                     $code,
                                     Statistic::TYPE_FACEBOOK,
                                     Statistic::SUBTYPE_POSTS,
@@ -143,7 +147,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 );
                                 $output->writeln("     + Post count added");
 
-                                $service->addStatistic(
+                                $scraperService->addStatistic(
                                     $code,
                                     Statistic::TYPE_FACEBOOK,
                                     Statistic::SUBTYPE_IMAGES,
@@ -151,7 +155,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 );
                                 $output->writeln("     + Photo count added");
 
-                                $service->addStatistic(
+                                $scraperService->addStatistic(
                                     $code,
                                     Statistic::TYPE_FACEBOOK,
                                     Statistic::SUBTYPE_EVENTS,
@@ -160,10 +164,10 @@ class ScraperCommand extends ContainerAwareCommand
                                 $output->writeln("     + Event count added");
                                 $output->writeln("   + All statistics added");
 
-                                $cover = $service->getFacebookCover($code, $fd['cover']);
+                                $cover = $facebookService->getFacebookCover($code, $fd['cover']);
                                 $output->writeln("     + Cover retrieved");
 
-                                $service->addMeta(
+                                $scraperService->addMeta(
                                     $code,
                                     Metadata::TYPE_FACEBOOK_COVER,
                                     $cover
@@ -175,10 +179,10 @@ class ScraperCommand extends ContainerAwareCommand
                         if ($what == null || $what == 'posts') {
                             if (empty($fd['posts'])) {
                                 $output->writeln("     + Text post data not found");
-                                $sn['errors'][] = [$code => 'fb posts'];
+                                $sn['errors'][] = [$code => 'fb posts not found'];
                             } else {
                                 foreach ($fd['posts'] as $key => $post) {
-                                    $service->addSocial(
+                                    $scraperService->addSocial(
                                         $code,
                                         SocialMedia::TYPE_FACEBOOK,
                                         SocialMedia::SUBTYPE_TEXT,
@@ -197,10 +201,10 @@ class ScraperCommand extends ContainerAwareCommand
                         if ($what == null || $what == 'images') {
                             if (empty($fd['photos'])) {
                                 $output->writeln("     + Photo data not found");
-                                $sn['errors'][] = [$code => 'fb photos'];
+                                $sn['errors'][] = [$code => 'fb photos not found'];
                             } else {
                                 foreach ($fd['photos'] as $key => $image) {
-                                    $service->addSocial(
+                                    $scraperService->addSocial(
                                         $code,
                                         SocialMedia::TYPE_FACEBOOK,
                                         SocialMedia::SUBTYPE_IMAGE,
@@ -219,10 +223,10 @@ class ScraperCommand extends ContainerAwareCommand
                         if ($what == null || $what == 'events') {
                             if (empty($fd['events'])) {
                                 $output->writeln("     + Event data not found");
-                                $sn['errors'][] = [$code => 'fb events'];
+                                $sn['errors'][] = [$code => 'fb events not found'];
                             } else {
                                 foreach ($fd['events'] as $key => $event) {
-                                    $service->addSocial(
+                                    $scraperService->addSocial(
                                         $code,
                                         SocialMedia::TYPE_FACEBOOK,
                                         SocialMedia::SUBTYPE_EVENT,
@@ -247,7 +251,7 @@ class ScraperCommand extends ContainerAwareCommand
                 if ($where == null || $where == 'tw') {
                     if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
                         $output->writeln("   + Starting Twitter import");
-                        $td = $service->getTwitterData($sn['twitter']['username'], $code);
+                        $td = $twitterService->getTwitterData($sn['twitter']['username'], $code);
 
                         if ($td == false || empty($td['followers']) || empty($td['tweets'])) {
                             $output->writeln("     + ERROR while retrieving TW data");
@@ -255,14 +259,14 @@ class ScraperCommand extends ContainerAwareCommand
                         } else {
                             $output->writeln("   + Twitter data retrieved");
 
-                            $service->addMeta(
+                            $scraperService->addMeta(
                                 $code,
                                 Metadata::TYPE_TWITTER_INFO,
                                 json_encode($td['description'])
                             );
                             $output->writeln("     + General info added");
 
-                            $service->addStatistic(
+                            $scraperService->addStatistic(
                                 $code,
                                 Statistic::TYPE_TWITTER,
                                 Statistic::SUBTYPE_LIKES,
@@ -270,7 +274,7 @@ class ScraperCommand extends ContainerAwareCommand
                             );
                             $output->writeln("     + 'Like' count added");
 
-                            $service->addStatistic(
+                            $scraperService->addStatistic(
                                 $code,
                                 Statistic::TYPE_TWITTER,
                                 Statistic::SUBTYPE_FOLLOWERS,
@@ -278,7 +282,7 @@ class ScraperCommand extends ContainerAwareCommand
                             );
                             $output->writeln("     + Follower count added");
 
-                            $service->addStatistic(
+                            $scraperService->addStatistic(
                                 $code,
                                 Statistic::TYPE_TWITTER,
                                 Statistic::SUBTYPE_FOLLOWING,
@@ -286,7 +290,7 @@ class ScraperCommand extends ContainerAwareCommand
                             );
                             $output->writeln("     + Following count added");
 
-                            $service->addStatistic(
+                            $scraperService->addStatistic(
                                 $code,
                                 Statistic::TYPE_TWITTER,
                                 Statistic::SUBTYPE_POSTS,
@@ -300,7 +304,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 $sn['errors'][] = [$code => 'tw posts'];
                             } else {
                                 foreach ($td['posts'] as $key => $post) {
-                                    $service->addSocial(
+                                    $scraperService->addSocial(
                                         $code,
                                         SocialMedia::TYPE_TWITTER,
                                         SocialMedia::SUBTYPE_TEXT,
@@ -320,7 +324,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 $sn['errors'][] = [$code => 'tw images'];
                             } else {
                                 foreach ($td['images'] as $key => $image) {
-                                    $service->addSocial(
+                                    $scraperService->addSocial(
                                         $code,
                                         SocialMedia::TYPE_TWITTER,
                                         SocialMedia::SUBTYPE_IMAGE,
@@ -345,7 +349,7 @@ class ScraperCommand extends ContainerAwareCommand
                 if ($where == null || $where == 'g+') {
                     if (!empty($sn['googlePlus'])) {
                         $output->writeln("   + Starting GooglePlus import");
-                        $gd = $service->getGooglePlusData($sn['googlePlus']);
+                        $gd = $googleService->getGooglePlusData($sn['googlePlus']);
 
                         if ($gd == false || empty($gd)) {
                             $output->writeln("     + ERROR while retrieving G+ data");
@@ -353,7 +357,7 @@ class ScraperCommand extends ContainerAwareCommand
                         } else {
                             $output->writeln("   + GooglePlus data retrieved");
 
-                            $service->addStatistic(
+                            $scraperService->addStatistic(
                                 $code,
                                 Statistic::TYPE_GOOGLEPLUS,
                                 Statistic::SUBTYPE_FOLLOWERS,
@@ -370,7 +374,7 @@ class ScraperCommand extends ContainerAwareCommand
                 if ($where == null || $where == 'yt') {
                     if (!empty($sn['youtube'])) {
                         $output->writeln("   + Starting Youtube import");
-                        $yd = $service->getYoutubeData($sn['youtube'], $code);
+                        $yd = $googleService->getYoutubeData($sn['youtube'], $code);
 
                         if ($yd == false || empty($yd)) {
                             $output->writeln("     + ERROR while retrieving Youtube data");
@@ -378,7 +382,7 @@ class ScraperCommand extends ContainerAwareCommand
                         } else {
                             $output->writeln("   + Youtube data retrieved");
 
-                            $service->addStatistic(
+                            $scraperService->addStatistic(
                                 $code,
                                 Statistic::TYPE_YOUTUBE,
                                 Statistic::SUBTYPE_SUBSCRIBERS,
@@ -386,7 +390,7 @@ class ScraperCommand extends ContainerAwareCommand
                             );
                             $output->writeln("     + Subscriber count added");
 
-                            $service->addStatistic(
+                            $scraperService->addStatistic(
                                 $code,
                                 Statistic::TYPE_YOUTUBE,
                                 Statistic::SUBTYPE_VIEWS,
@@ -394,7 +398,7 @@ class ScraperCommand extends ContainerAwareCommand
                             );
                             $output->writeln("     + View count added");
 
-                            $service->addStatistic(
+                            $scraperService->addStatistic(
                                 $code,
                                 Statistic::TYPE_YOUTUBE,
                                 Statistic::SUBTYPE_VIDEOS,
@@ -408,7 +412,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 $sn['errors'][] = [$code => 'yt'];
                             } else {
                                 foreach ($yd['videos'] as $key => $video) {
-                                    $service->addSocial(
+                                    $scraperService->addSocial(
                                         $code,
                                         SocialMedia::TYPE_YOUTUBE,
                                         SocialMedia::SUBTYPE_VIDEO,
