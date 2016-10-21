@@ -5,87 +5,88 @@
 {% block content %}
     <div class="section no-pad-bot" id="index-banner">
         <div class="container">
-        	<br><br>
+            <br><br>
             <h1 class="header center orange-text">Social Media</h1>
             <div class="section valign-wrapper">
-            	<div class="pplist" style="text-align:center;">
-					{{ form_start(form) }}
-					{{ form_errors(form) }}
-					<table>
-	    				<tr>
-	    					<td><b>Display:</b></td>
-	    					<td>{{ form_widget(form.display, { 'attr': {'class': 'browser-default'} }) }}</td>
-							<td>{{ form_widget(form.submit) }}</td>
-						</tr>
-					</table>
-					{{ form_end(form) }}
-					{% if empty %}
-						There doesn't seem to be anything here...<br>Try something else.
-					{% endif %}
-				</div>
-			</div>
-		</div>
+                <div class="pplist" style="text-align:center;">
+                    {{ form_start(form) }}
+                    {{ form_errors(form) }}
+                    <table>
+                        <tr>
+                            <td><b>Display:</b></td>
+                            <td>{{ form_widget(form.display, { 'attr': {'class': 'browser-default'} }) }}</td>
+                            <td>{{ form_widget(form.submit) }}</td>
+                        </tr>
+                    </table>
+                    {{ form_end(form) }}
+                    {% if empty %}
+                        There doesn't seem to be anything here...<br>Try something else.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="container">
         <div class="section valign-wrapper">
             <div class="row pplist valign" id="pplist">
-            	<table class="highlight">
-            		<thead>
-			            <tr style="border:1px solid #ddd;">
-			                <th style="text-align:center">
-			                	<a href="#" data-sort="postTime" class="sort">Posted</a>
-			                </th>
-			                <th style="text-align:center;white-space:nowrap;">
-			              	    <a href="#" data-sort="postLikes" class="sort">Reaction</a>
-			                </th>
-			                <th colspan="2" style="text-align:center">Message</th>
-			            </tr>
-			        </thead>
-			        <tbody class="list">
-					    {% for sm in social_media %}
-					        <tr style="border-bottom:1px solid #ddd;">
-					        	<td style="text-align:center;white-space:nowrap;border-left:1px solid #ddd;" class="postTime">
-					        		{{ sm.postTime | date('Y-m-d') }}</br>
-					        		{{ sm.postTime | date('H:i:s') }}</br>
-					        		by <a href="{{ path('papi_party_show', {'id': sm.code}) | lower }}">{{ sm.code | upper }}</a>
-					        	</td>
-					    		<td style="text-align:center;white-space:nowrap;" class="postLikes">
-					    			{{ sm.postLikes }}
-					    			{% if sm.subType != 'E' %}
-					    				<i class="material-icons tiny">thumb_up</i>
-					    			{% else %}
-					    				</br>interested
-					    			{% endif %}
-					    		</td>
-					        	{% if sm.postImage != null %}
-						            <td style="text-align:center;">
-						            	<a href="/img/{{ sm.type }}-uploads/{{ sm.code }}/{{ sm.postImage }}" target="_blank">
-						            		<img src="/img/{{ sm.type }}-uploads/{{ sm.code }}/{{ sm.postImage }}" style="max-height:75px;max-width:100px">
-						            	</a>
-						            </td>
-						            <td style="border-right:1px solid #ddd;">
-						        {% else %}
-						        	<td colspan="2" style="border-right:1px solid #ddd;white-space:wrap;">
-						        {% endif %}
-						        		<a href="{{ sm.postData.url }}" target="_blank">
-							   	        	{% if sm.type == 'fb' %}
-							    				<i class="icon-facebook tiny darken-1"></i>
-							    			{% elseif sm.type == 'tw' %}
-							    				<i class="icon-twitter tiny darken-1"></i>
-							    			{% else %}
-						    					<i class="icon-youtube tiny darken-1"></i>
-					    					{% endif %}
-					    				{{ sm.postText }}
-					    				{% if sm.subType == 'E' %}
-					    					</br>{{ sm.postData.details.description }}
-					    				{% endif %}
-					    				</a>
-					    			</td>
-					        </tr>
-    					{% endfor %}
-            		</tbody>
-      			</table>
+                <table class="highlight">
+                    <thead>
+                        <tr style="border:1px solid #ddd;">
+                            <th style="text-align:center">
+                                <a href="#" data-sort="postTime" class="sort">Posted</a>
+                            </th>
+                            <th style="text-align:center;white-space:nowrap;">
+                                <a href="#" data-sort="postLikes" class="sort">Reaction</a>
+                            </th>
+                            <th colspan="2" style="text-align:center">Message</th>
+                        </tr>
+                    </thead>
+                    <tbody class="list">
+                        {% for sm in social_media %}
+                            <tr style="border-bottom:1px solid #ddd;">
+                                <td style="text-align:center;white-space:nowrap;border-left:1px solid #ddd;" class="postTime">
+                                    {{ sm.postTime | date('Y-m-d') }}</br>
+                                    {{ sm.postTime | date('H:i:s') }}</br>
+                                    by <a href="{{ path('papi_party_show', {'id': sm.code}) | lower }}">{{ sm.code | upper }}</a>
+                                </td>
+                                <td style="text-align:center;white-space:nowrap;" class="postLikes">
+                                    {{ sm.postLikes }}
+                                    {% if sm.subType != 'E' %}
+                                        <i class="material-icons tiny">thumb_up</i>
+                                    {% else %}
+                                        </br>interested
+                                    {% endif %}
+                                </td>
+                                {% if sm.postImage != null %}
+                                    <td style="text-align:center;">
+                                        <a href="/img/{{ sm.type }}-uploads/{{ sm.code }}/{{ sm.postImage }}" target="_blank">
+                                            <img src="/img/{{ sm.type }}-uploads/{{ sm.code }}/{{ sm.postImage }}" style="max-height:75px;max-width:100px">
+                                        </a>
+                                    </td>
+                                    <td style="border-right:1px solid #ddd;">
+                                {% else %}
+                                    <td colspan="2" style="border-right:1px solid #ddd;white-space:wrap;">
+                                {% endif %}
+                                        <a href="{{ sm.postData.url }}" target="_blank">
+                                            {% if sm.type == 'fb' %}
+                                                <i class="icon-facebook tiny darken-1"></i>
+                                            {% elseif sm.type == 'tw' %}
+                                                <i class="icon-twitter tiny darken-1"></i>
+                                            {% else %}
+                                                <i class="icon-youtube tiny darken-1"></i>
+                                            {% endif %}
+                                        {{ sm.postText }}
+                                        {% if sm.subType == 'E' %}
+                                            </br>{{ sm.postData.details.description }}
+                                        {% endif %}
+                                        <i class="material-icons tiny">open_in_new</i>
+                                        </a>
+                                    </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 
             </div>
         </div>
@@ -96,14 +97,14 @@
 {% endblock content%}
 
 {% block javascripts_extra %}
-		<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.1.1/list.min.js"></script>
-		<script type="text/javascript">
-			var options = {
-			  valueNames: [ 'postTime', 'postLikes' ]
-			};
+        <script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.1.1/list.min.js"></script>
+        <script type="text/javascript">
+            var options = {
+              valueNames: [ 'postTime', 'postLikes' ]
+            };
 
-			var ppList = new List('pplist', options);
+            var ppList = new List('pplist', options);
 
-			ppList.sort('postTime', { order: "desc" });
-		</script>
+            ppList.sort('postLikes', { order: "desc" });
+        </script>
 {% endblock javascripts_extra %}
