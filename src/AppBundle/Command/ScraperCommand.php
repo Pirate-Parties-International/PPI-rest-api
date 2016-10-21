@@ -155,29 +155,43 @@ class ScraperCommand extends ContainerAwareCommand
                                 $scraperService->addStatistic(
                                     $code,
                                     Statistic::TYPE_FACEBOOK,
+                                    Statistic::SUBTYPE_VIDEOS,
+                                    $fd['videoCount']
+                                );
+                                $output->writeln("     + Video count added");
+
+                                $scraperService->addStatistic(
+                                    $code,
+                                    Statistic::TYPE_FACEBOOK,
                                     Statistic::SUBTYPE_EVENTS,
                                     $fd['eventCount']
                                 );
                                 $output->writeln("     + Event count added");
                                 $output->writeln("   + All statistics added");
 
-                                $cover = $facebookService->getFacebookCover($code, $fd['cover']);
-                                $output->writeln("     + Cover retrieved");
+                                if (is_null($fd['cover'])) {
+                                    $output->writeln("     + No cover found");
+                                    $sn['errors'][] = [$code => 'fb cover not found'];
+                                } else {
+                                    $cover = $facebookService->getFacebookCover($code, $fd['cover']);
+                                    $output->writeln("     + Cover retrieved");
 
-                                $scraperService->addMeta(
-                                    $code,
-                                    Metadata::TYPE_FACEBOOK_COVER,
-                                    $cover
-                                );
-                                $output->writeln("     + Cover added");
+                                    $scraperService->addMeta(
+                                        $code,
+                                        Metadata::TYPE_FACEBOOK_COVER,
+                                        $cover
+                                    );
+                                    $output->writeln("       + Cover added");
+                                }
                             }
                         }
 
                         if ($what == null || $what == 'posts') {
                             if (empty($fd['posts'])) {
-                                $output->writeln("     + Text post data not found");
+                                $output->writeln("     + No posts found");
                                 $sn['errors'][] = [$code => 'fb posts not found'];
                             } else {
+                                $output->writeln("     + Adding text posts");
                                 foreach ($fd['posts'] as $key => $post) {
                                     $scraperService->addSocial(
                                         $code,
@@ -191,15 +205,14 @@ class ScraperCommand extends ContainerAwareCommand
                                         json_encode($post['postData'])
                                     );
                                 }
-                                $output->writeln("     + Text posts added");
+                                $output->writeln("       + Text posts added");
                             }
-                        }
 
-                        if ($what == null || $what == 'images') {
                             if (empty($fd['photos'])) {
-                                $output->writeln("     + Photo data not found");
+                                $output->writeln("     + No photos found");
                                 $sn['errors'][] = [$code => 'fb photos not found'];
                             } else {
+                                $output->writeln("     + Adding photos");
                                 foreach ($fd['photos'] as $key => $image) {
                                     $scraperService->addSocial(
                                         $code,
@@ -213,7 +226,27 @@ class ScraperCommand extends ContainerAwareCommand
                                         json_encode($image['postData'])
                                     );
                                 }
-                                $output->writeln("     + Photos added");
+                                $output->writeln("       + Photos added");
+                            }
+
+                            if (empty($fd['videos'])) {
+                                $output->writeln("     + No videos found");
+                            } else {
+                                $output->writeln("     + Adding videos");
+                                foreach ($fd['videos'] as $key => $image) {
+                                    $scraperService->addSocial(
+                                        $code,
+                                        SocialMedia::TYPE_FACEBOOK,
+                                        SocialMedia::SUBTYPE_VIDEO,
+                                        $image['postId'],
+                                        $image['postTime'],
+                                        $image['postText'],
+                                        $image['postImage'],
+                                        $image['postLikes'],
+                                        json_encode($image['postData'])
+                                    );
+                                }
+                                $output->writeln("       + Videos added");
                             }
                         }
 
@@ -238,7 +271,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 $output->writeln("     + Events added");
                             }
                         }
-                    $output->writeln("   + All social media added");
+                    $output->writeln("   + All Facebook data added");
                     }
                 }
 
@@ -352,7 +385,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 $output->writeln("     + Images and videos added");
                             }
 
-                            $output->writeln("   + All social media added");
+                            $output->writeln("   + All Twitter data added");
                         }
                     }
                 }
@@ -440,7 +473,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 }
                                 $output->writeln("     + Videos added");
                             }
-                            $output->writeln("   + All social media added");
+                            $output->writeln("   + All Google data added");
                         }
                     }
                 }

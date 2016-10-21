@@ -25,10 +25,9 @@ class ScraperServices
     private   $container;
 
 
-    public function exception_handler($ex) {
-        echo "Exception: ".$ex->getMessage()."\n";
-        $out['errors'][] = ["Exception" => $ex->getMessage()];
-        return $out;
+    public function exception_handler($e) {
+        echo $e->getMessage();
+        $out['errors'][] = ["Exception" => $e->getMessage()];
     }
 
 
@@ -179,7 +178,7 @@ class ScraperServices
      * @param  string $what
      * @return int
      */
-    public function getTimeLimit($type, $subType, $code, $what) {
+    public function getTimeLimit($type, $code, $what) {
 
         $limited   = strtotime("-1 year"); // set age limit for fb text posts and tweets
         $unlimited = strtotime("-20 years"); // practically no limit, get all
@@ -196,17 +195,16 @@ class ScraperServices
                 ->select('p')->from('AppBundle:SocialMedia', 'p')
                 ->where(sprintf("p.code = '%s'", $code))
                 ->andwhere(sprintf("p.type = '%s'", $type))
-                ->andwhere(sprintf("p.subType = '%s'", $subType))
                 ->orderBy('p.timestamp', 'DESC')
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getOneOrNullResult();
 
             if (empty($p)) { // if there are no entries in the database, populate fully
-                if ($subType == 'T' || $subType == 'I') {
-                    $time = $limited; // age limit for text posts and images
+                if ($type == 'fb' || $type == 'tw') {
+                    $time = $limited; // age limit for tweets and fb posts
                 } else {
-                    $time = $unlimited; // no limit for fb events and yt videos, get all
+                    $time = $unlimited; // no limit for yt videos, get all
                 }
                 echo " empty, getting all... ";
 
@@ -233,7 +231,7 @@ class ScraperServices
         $appRoot = $this->container->get('kernel')->getRootDir().'/..';
         $imgRoot = $appRoot.'/web/img/'.$site.'-uploads/';
 
-        preg_match('/.+\.(png|jpg|gif)/i', $imgSrc, $matches);
+        preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
         $imgFmt  = $matches[1];
         $imgName = $imgId.'.'.$imgFmt;
         $imgPath = $imgRoot.$code.'/'.$imgName;
@@ -253,21 +251,21 @@ class ScraperServices
             try {
                 $imgData = file_get_contents($imgSrc, false, $ctx); // try to save full source
             } catch (\Exception $e) {
-                if (!empty($imgBkp)) {
-                    try {
-                        $imgData = file_get_contents($imgBkp, false, $ctx); // try to save thumbnail instead
-                    } catch (\Exception $e) {
-                        echo $e->getMessage();
-                        $out['errors'][] = [$code => $imgPath];
-                    }
-                } else {
+                echo $e->getMessage();
+                $out['errors'][] = [$code => $imgPath];
+            }
+        }
+
+        if (empty($imgData)) {
+            if (!empty($imgBkp)) {
+                try {
+                    $imgData = file_get_contents($imgBkp, false, $ctx); // try to save thumbnail instead
+                } catch (\Exception $e) {
                     echo $e->getMessage();
                     $out['errors'][] = [$code => $imgPath];
                 }
             }
-        }
-
-        if (!empty($imgData)) {
+        } else {
             file_put_contents($imgPath, $imgData);
         }
 

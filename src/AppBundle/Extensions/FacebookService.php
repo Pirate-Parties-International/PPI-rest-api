@@ -35,7 +35,7 @@ class FacebookService extends ScraperServices
     public function fbCount($data) {
         if (!empty($data)) {
             $meta  = $data->getMetadata();
-            $count = (isset($meta['summary']['total_count']) ? $meta['summary']['total_count'] : 0);
+            $count = (isset($meta['summary']['total_count'])) ? $meta['summary']['total_count'] : 0;
         } else {
             $count = 0;
         }
@@ -64,23 +64,30 @@ class FacebookService extends ScraperServices
 
         $ctx = stream_context_create(array(
             'http' => array(
-                'timeout' => 15
+                'timeout' => 5
                 )
             )
         );
 
-        $imgData = file_get_contents($imgSrc, false, $ctx);
-        if (empty($imgData)) {
-            return false;
+        try {
+            $imgData = file_get_contents($imgSrc, false, $ctx);
+        } catch (\Exception $e) {
+            echo $e->getMessage();
+            $out['errors'][] = [$code => $e->getMessage()];
         }
 
-        $imgName = strtolower($code).'.'.$imgFmt;
-        $imgPath = $imgRoot.$imgName;
-        file_put_contents($imgPath, $imgData);
+        if (!empty($imgData)) {
+            $imgName = strtolower($code).'.'.$imgFmt;
+            $imgPath = $imgRoot.$imgName;
+            file_put_contents($imgPath, $imgData);
 
-        $this->cropImage($imgPath);
+            $this->cropImage($imgPath);
 
-        return '/img/fb-covers/'.$imgName;
+            return '/img/fb-covers/'.$imgName;
+
+        } else {
+            return false;
+        }
     }
 
 
@@ -144,16 +151,17 @@ class FacebookService extends ScraperServices
             'basic'    => 'cover,engagement,talking_about_count,about,emails,single_line_address',
             'pStats'   => 'posts.limit(100){id}',
             'iStats'   => 'albums{count}',
+            'vStats'   => 'videos.limit(100){id}',
             'eStats'   => 'events.limit(100){id}',
-            'pDetails' => 'posts.limit(50){id,type,permalink_url,message,story,link,name,caption,picture,created_time,updated_time,shares,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true)}',
+            'pDetails' => 'posts.limit(50){id,type,permalink_url,message,story,link,name,caption,picture,object_id,created_time,updated_time,shares,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true)}',
             'iDetails' => 'albums{count,photos{created_time,updated_time,picture,source,link,name,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}',
             'eDetails' => 'events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
         ];
 
 
-        //
-        // Basic page info and stats
-        //
+    //
+    // Basic page info and stats
+    //
         if ($what == null || $what == 'info') {
 
             $request = $fb->request('GET', $fbPageId, ['fields' => $req['basic']]);
@@ -174,6 +182,7 @@ class FacebookService extends ScraperServices
             }
 
             $graphNode = $response->getGraphNode();
+            echo "     + Info and stats.... ";
 
             $out['info'] = [
                 'about'   => $graphNode->getField('about'),
@@ -187,22 +196,23 @@ class FacebookService extends ScraperServices
                 }
             }
 
-            $coverId = $graphNode->getField('cover')->getField('cover_id'); // set-up for later (line ~900)
-            $out['likes']   = $graphNode->getField('engagement')->getField('count');
-            $out['talking'] = $graphNode->getField('talking_about_count');
-            echo "     + Info and stats... ok\n";
+            $coverId = !empty($graphNode->getField('cover')) ? $graphNode->getField('cover')->getField('cover_id') : null;
+            // set-up for later (line ~635)
+            $out['likes']   = !empty($graphNode->getField('engagement')) ? $graphNode->getField('engagement')->getField('count') : '?';
+            $out['talking'] = !empty($graphNode->getField('talking_about_count')) ? $graphNode->getField('talking_about_count') : '?';
+
+            if ($out['likes'] == '?') {
+                echo "not found";
+            } else echo "ok";
+            echo "\n";
         }
 
 
-        //
-        // Posts
-        //
-        if ($what == null || $what == 'posts' || $what == 'info') {
-            echo "     + Text posts... \n";
-        }
+        if ($what == null || $what == 'info') {
 
-        if ($what == null || $what == 'info') { // count only
-
+    //
+    // Post count
+    //
             $request = $fb->request('GET', $fbPageId, ['fields' => $req['pStats']]);
 
             try {
@@ -224,7 +234,7 @@ class FacebookService extends ScraperServices
             $fdPcount  = $graphNode->getField('posts');
 
             if (!empty($fdPcount)) {
-                echo "       + Counting... page ";
+                echo "     + Counting posts.... page ";
                 $pageCount = 0;
 
                 do {
@@ -243,17 +253,156 @@ class FacebookService extends ScraperServices
                 echo "...total ". $out['postCount'] ." found";
 
             } else {
-                echo "not found";
+                echo "     - Posts not found";
                 $out['postCount'] = 0;
+            }
+
+            echo "\n";
+
+    //
+    // Image count
+    //
+            $request = $fb->request('GET', $fbPageId, ['fields' => $req['iStats']]);
+
+            try {
+                $response = $fb->getClient()->sendRequest($request);
+            } catch(Facebook\Exceptions\FacebookResponseException $e) {
+                // When Graph returns an error
+                echo 'Graph returned an error: ' . $e->getMessage();
+                exit;
+            } catch(Facebook\Exceptions\FacebookSDKException $e) {
+                // When validation fails or other local issues
+                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                exit;
+            } catch(\Exception $e) {
+                echo $fbPageId . " - Exception: " . $e->getMessage();
+                return false;
+            }
+
+            $graphNode = $response->getGraphNode();
+            $fdAlbums  = $graphNode->getField('albums');
+
+            if (!empty($fdAlbums)) {
+                echo "     + Counting photos... page ";
+                $pageCount = 0;
+
+                foreach ($fdAlbums as $key => $album) {
+                    echo $pageCount.", ";
+                    $photoCount[] = $album->getField('count');
+                    $pageCount++;
+                }
+
+                $out['photoCount'] = array_sum($photoCount);
+                echo "...total ". $out['photoCount'] ." found";
+
+            } else {
+                echo "     - Photos not found";
+                $out['photoCount'] = 0;
+            }
+
+            echo "\n";
+
+    //
+    // Video count
+    //
+            $request = $fb->request('GET', $fbPageId, ['fields' => $req['vStats']]);
+
+            try {
+                $response = $fb->getClient()->sendRequest($request);
+            } catch(Facebook\Exceptions\FacebookResponseException $e) {
+                // When Graph returns an error
+                echo 'Graph returned an error: ' . $e->getMessage();
+                exit;
+            } catch(Facebook\Exceptions\FacebookSDKException $e) {
+                // When validation fails or other local issues
+                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                exit;
+            } catch(\Exception $e) {
+                echo $fbPageId . " - Exception: " . $e->getMessage();
+                return false;
+            }
+
+            $graphNode = $response->getGraphNode();
+            $fdVcount  = $graphNode->getField('videos');
+
+            if (!empty($fdVcount)) {
+                echo "     + Counting videos... page ";
+                $pageCount = 0;
+
+                do {
+                    echo $pageCount.', ';
+
+                    foreach ($fdVcount as $key => $post) {
+                        $temp['videos'][] = ['id' => $post->getField('id')]; // count all posts
+                    }
+
+                    $pageCount++;
+
+                } while ($fdVcount = $fb->next($fdVcount));
+                // while next page is not null
+
+                $out['videoCount'] = count($temp['videos']);
+                echo "...total ". $out['videoCount'] ." found";
+
+            } else {
+                echo "     - Videos not found";
+                $out['videoCount'] = 0;
+            }
+
+            echo "\n";
+
+    //
+    // Event count
+    //
+            $request = $fb->request('GET', $fbPageId, ['fields' => $req['eStats']]);
+
+            try {
+                $response = $fb->getClient()->sendRequest($request);
+            } catch(Facebook\Exceptions\FacebookResponseException $e) {
+                // When Graph returns an error
+                echo 'Graph returned an error: ' . $e->getMessage();
+                exit;
+            } catch(Facebook\Exceptions\FacebookSDKException $e) {
+                // When validation fails or other local issues
+                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                exit;
+            } catch(\Exception $e) {
+                echo $fbPageId . " - Exception: " . $e->getMessage();
+                return false;
+            }
+
+            $graphNode = $response->getGraphNode();
+            $fdEvents  = $graphNode->getField('events');
+
+            if (!empty($fdEvents)) {
+                echo "     + Counting events... page ";
+                $pageCount = 0;
+                do {
+                    echo $pageCount.", ";
+                    foreach ($fdEvents as $key => $event) {
+                        $temp['events'][] = ['id' => $event->getField('id')];
+                    }
+                    $pageCount++;
+                } while ($fdEvents = $fb->next($fdEvents));
+                // while next page is not null
+
+                $out['eventCount'] = count($temp['events']);
+                echo "...total ". $out['eventCount'] ." found";
+
+            } else {
+                echo "     - Events not found";
+                $out['eventCount'] = 0;
             }
 
             echo "\n";
         }
 
-        //
-        // Getting details
-        //
-        if ($what == null || $what == 'posts') {
+
+
+    //
+    // Post, image and video details
+    //
+        if ($what == null) {
 
             $request = $fb->request('GET', $fbPageId, ['fields' => $req['pDetails']]);
 
@@ -275,10 +424,10 @@ class FacebookService extends ScraperServices
             $graphNode = $response->getGraphNode();
             $fdPosts   = $graphNode->getField('posts');
 
+            echo "     + Post details.... ";
             if (!empty($fdPosts)) {
 
-                echo "       + Details... ";
-                $timeLimit = $scraper->getTimeLimit('fb', 'T', $code, $what);
+                $timeLimit = $scraper->getTimeLimit('fb', $code, $what);
                 echo "page ";
                 $pageCount = 0;
 
@@ -287,21 +436,41 @@ class FacebookService extends ScraperServices
 
                     foreach ($fdPosts as $key => $post) {
 
-                        $type = $post->getField('type');
-                        if ($type != 'photo' && $type != 'event') { // get images and events seperately
-                        // types = 'status', 'link', 'photo', 'video', 'event'
+                        $type = $post->getField('type'); // types = 'status', 'link', 'photo', 'video', 'event'
+                        if ($type != 'event') { // get events separately to get all details (location, etc.)
 
-                            $text = ((!empty($post->getField('message'))) ? $post->getField('message') : $post->getField('story'));
+                            switch ($type) {
+                                case 'photo':
+                                    $arType = 'photos';
+                                    $text   = $post->getField('name');
+                                    $imgSrc = $post->getField('source');  // original file
+                                    $imgBkp = $post->getField('picture'); // 130x130 thumbnail
+                                    break;
+                                case 'video':
+                                    $arType = 'videos';
+                                    $text   = $post->getField('title');
+                                    $imgSrc = null; // find a way to get thumbnail, 'picture' doesn't work
+                                    break;
+                                default: // case 'status' or 'link'
+                                    $arType = 'posts';
+                                    $text   = !is_null($post->getField('message')) ? $post->getField('message') : $post->getField('story');
+                                    $imgSrc = null;
+                                    break;
+                                }
+
+                            // save image to disk (if not null)
+                            $img = !is_null($imgSrc) ? $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id')) : null;
+
                             $likeCount     = $this->fbCount($post->getField('likes'));
                             $reactionCount = $this->fbCount($post->getField('reactions'));
                             $commentCount  = $this->fbCount($post->getField('comments'));
-                            $shareCount    = ((!empty($post->getField('shares'))) ? json_decode($post->getField('shares')->getField('count'), true) : 0);
+                            $shareCount    = !empty($post->getField('shares')) ? json_decode($post->getField('shares')->getField('count'), true) : 0;
 
-                            $out['posts'][] = [
+                            $out[$arType][] = [
                                 'postId'    => $post->getField('id'),
                                 'postTime'  => $post->getField('updated_time'), // DateTime
                                 'postText'  => $text,
-                                'postImage' => null,
+                                'postImage' => $img,
                                 'postLikes' => $reactionCount,
                                 'postData'  => [
                                     'id'        => $post->getField('id'),
@@ -331,7 +500,10 @@ class FacebookService extends ScraperServices
                 } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
                 // while next page is not null and within our time limit
 
-                echo "...".count($out['posts'])." since ".date('d/m/Y', $timeCheck)." processed";
+                $txtCount = array_key_exists('posts',  $out) ? count($out['posts'])  : 0;
+                $imgCount = array_key_exists('photos', $out) ? count($out['photos']) : 0;
+                $vidCount = array_key_exists('videos', $out) ? count($out['videos']) : 0;
+                echo "...".$txtCount." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed";
 
             } else {
                 echo "not found";
@@ -340,200 +512,10 @@ class FacebookService extends ScraperServices
         }
 
 
-        //
-        // Images
-        //
-        if ($what == 'info') {
 
-            $request = $fb->request('GET', $fbPageId, ['fields' => $req['iStats']]);
-
-            try {
-                $response = $fb->getClient()->sendRequest($request);
-            } catch(Facebook\Exceptions\FacebookResponseException $e) {
-                // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
-                exit;
-            } catch(Facebook\Exceptions\FacebookSDKException $e) {
-                // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
-                exit;
-            } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
-                return false;
-            }
-
-            $graphNode = $response->getGraphNode();
-            $fdAlbums  = $graphNode->getField('albums');
-            echo "     + Photos... ";
-
-            if (!empty($fdAlbums)) {
-                echo "counting... page ";
-                $pageCount = 0;
-
-                foreach ($fdAlbums as $key => $album) {
-                    echo $pageCount.", ";
-                    $photoCount[] = $album->getField('count');
-                    $pageCount++;
-                }
-
-                $out['photoCount'] = array_sum($photoCount);
-                echo "total ". $out['photoCount'] ." photos found";
-
-            } else {
-                echo "not found";
-                $out['photoCount'] = 0;
-            }
-
-            echo "\n";
-        }
-
-        //
-        // Getting details
-        //
-        if ($what == null || $what == 'images') {
-
-            $request = $fb->request('GET', $fbPageId, ['fields' => $req['iDetails']]);
-
-            try {
-                $response = $fb->getClient()->sendRequest($request);
-            } catch(Facebook\Exceptions\FacebookResponseException $e) {
-                // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
-                exit;
-            } catch(Facebook\Exceptions\FacebookSDKException $e) {
-                // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
-                exit;
-            } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
-                return false;
-            }
-
-            $graphNode = $response->getGraphNode();
-            $fdAlbums  = $graphNode->getField('albums');
-            echo "     + Photos... ";
-
-            if (!empty($fdAlbums)) {
-                $timeLimit = $scraper->getTimeLimit('fb', 'I', $code, $what);
-                echo "page ";
-                $pageCount = 0;
-
-                foreach ($fdAlbums as $key => $album) {
-
-                    $photoCount[] = $album->getField('count');
-                    $fdPhotos     = $album->getField('photos');
-
-                    if (!empty($fdPhotos)) {
-                        do {
-                            echo $pageCount .', ';
-                            foreach ($fdPhotos as $key => $photo) {
-
-                                $imgId  = $photo->getField('id');
-                                $imgSrc = $photo->getField('source');
-                                $imgBkp = $photo->getField('picture');
-                                // 'picture'=130x130 thumbnail, 'source'=original file
-
-                                // save image to disk
-                                $img = $scraper->saveImage('fb', $code, $imgSrc, $imgId);
-
-                                $likeCount     = $this->fbCount($photo->getField('likes'));
-                                $reactionCount = $this->fbCount($photo->getField('reactions'));
-                                $commentCount  = $this->fbCount($photo->getField('comments'));
-                                $shareCount    = count(json_decode($photo->getField('sharedposts'), true));
-
-                                $out['photos'][] = [
-                                    'postId'    => $imgId,
-                                    'postTime'  => $photo->getField('updated_time'), // DateTime
-                                    'postText'  => $photo->getField('name'),
-                                    'postImage' => $img,
-                                    'postLikes' => $reactionCount,
-                                    'postData'  => [
-                                        'id'        => $imgId,
-                                        'posted'    => $photo->getField('created_time')->format('Y-m-d H:i:s'), // string
-                                        'updated'   => $photo->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                                        'caption'   => $photo->getField('name'),
-                                        'source'    => $imgSrc,
-                                        'url'       => $photo->getField('link'),
-                                        'likes'     => $likeCount,
-                                        'reactions' => $reactionCount,
-                                        'comments'  => $commentCount,
-                                        'shares'    => $shareCount
-                                        ]
-                                    ];
-                            }
-
-                            $timeCheck = $photo->getField('updated_time')->getTimestamp(); // check time of last scraped post
-                            $pageCount++;
-
-                        } while ($timeCheck > $timeLimit && $fdPhotos = $fb->next($fdPhotos));
-                        // while next page is not null and within our time limit
-                    }
-
-                }
-
-                $out['photoCount'] = array_sum($photoCount);
-                echo "...".$out['photoCount']." found, ".count($out['photos'])." since ".date('d/m/Y', $timeCheck)." processed";
-
-            } else {
-                $out['photoCount'] = 0;
-                echo "not found";
-            }
-            echo "\n";
-        }
-
-
-        //
-        // Events
-        //
-        if ($what == 'info') { // count only
-
-            $request = $fb->request('GET', $fbPageId, ['fields' => $req['eStats']]);
-
-            try {
-                $response = $fb->getClient()->sendRequest($request);
-            } catch(Facebook\Exceptions\FacebookResponseException $e) {
-                // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
-                exit;
-            } catch(Facebook\Exceptions\FacebookSDKException $e) {
-                // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
-                exit;
-            } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
-                return false;
-            }
-
-            $graphNode = $response->getGraphNode();
-            $fdEvents  = $graphNode->getField('events');
-            echo "     + Events... counting... ";
-
-            if (!empty($fdEvents)) {
-                echo "page ";
-                $pageCount = 0;
-                do {
-                    echo $pageCount.", ";
-                    foreach ($fdEvents as $key => $event) {
-                        $temp['events'][] = ['id' => $event->getField('id')];
-                    }
-                    $pageCount++;
-                } while ($fdEvents = $fb->next($fdEvents));
-                // while next page is not null
-
-                $out['eventCount'] = count($temp['events']);
-                echo "...total ". $out['eventCount'] ." found";
-
-            } else {
-                echo "not found";
-                $out['postCount'] = 0;
-            }
-
-            echo "\n";
-        }
-
-        //
-        // Getting details
-        //
+    //
+    // Event details
+    //
         if ($what == null || $what == 'events') {
 
             $request = $fb->request('GET', $fbPageId, ['fields' => $req['eDetails']]);
@@ -555,11 +537,11 @@ class FacebookService extends ScraperServices
 
             $graphNode = $response->getGraphNode();
             $fdEvents  = $graphNode->getField('events');
-            echo "     + Events... ";
+            echo "     + Event details... ";
 
             if (!empty($fdEvents)) {
 
-                $timeLimit = $scraper->getTimeLimit('fb', 'E', $code, $what);
+                $timeLimit = $scraper->getTimeLimit('fb', $code, $what);
                 echo "page ";
                 $pageCount = 0;
 
@@ -645,59 +627,63 @@ class FacebookService extends ScraperServices
         }
 
 
-        //
-        // Second step for cover images (crop and/or resize)
-        //
+    //
+    // Second step for cover images (crop and/or resize)
+    //
         if ($what == null || $what == 'info') {
 
-            $request = $fb->request(
-                'GET',
-                $coverId, // retrieved earlier (line ~435)
-                array(
-                    'fields' => 'height,width,album,images'
-                )
-            );
-
-            try {
-                $response = $fb->getClient()->sendRequest($request);
-            } catch(Facebook\Exceptions\FacebookResponseException $e) {
-                // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
-                exit;
-            } catch(Facebook\Exceptions\FacebookSDKException $e) {
-                // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
-                exit;
-            } catch (\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
-                return false;
-            }
-
-            $graphNode = $response->getGraphNode();
-            $images    = $graphNode->getField('images');
-
-            $tmpI = [];
-            $tmpA = [];
-            foreach ($images as $key => $img) {
-                if ($img->getField('width') == 851 && $img->getField('height') == 351) {
-                    $out['cover'] = $img->getField('source');
-                    return $out;
-                } else if ($img->getField('width') > 851 && $img->getField('height') > 351) {
-                    $tmpI[$img->getField('width') + $img->getField('height')] = $img->getField('source');
-                } else {
-                    $tmpA[$img->getField('width') + $img->getField('height')] = $img->getField('source');
-                }
-            }
-
-            if (!empty($tmpI)) {
-                $t   = max(array_keys($tmpI));
-                $img = $tmpI[$t];
+            if (is_null($coverId)) {
+                $out['cover'] = null;
             } else {
-                $t   = max(array_keys($tmpA));
-                $img = $tmpA[$t];
-            }
+                $request = $fb->request(
+                    'GET',
+                    $coverId, // retrieved earlier (line ~200)
+                    array(
+                        'fields' => 'height,width,album,images'
+                    )
+                );
 
-            $out['cover'] = $img;
+                try {
+                    $response = $fb->getClient()->sendRequest($request);
+                } catch(Facebook\Exceptions\FacebookResponseException $e) {
+                    // When Graph returns an error
+                    echo 'Graph returned an error: ' . $e->getMessage();
+                    exit;
+                } catch(Facebook\Exceptions\FacebookSDKException $e) {
+                    // When validation fails or other local issues
+                    echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                    exit;
+                } catch (\Exception $e) {
+                    echo $fbPageId . " - Exception: " . $e->getMessage();
+                    return false;
+                }
+
+                $graphNode = $response->getGraphNode();
+                $images    = $graphNode->getField('images');
+
+                $tmpI = [];
+                $tmpA = [];
+                foreach ($images as $key => $img) {
+                    if ($img->getField('width') == 851 && $img->getField('height') == 351) {
+                        $out['cover'] = $img->getField('source');
+                        return $out;
+                    } else if ($img->getField('width') > 851 && $img->getField('height') > 351) {
+                        $tmpI[$img->getField('width') + $img->getField('height')] = $img->getField('source');
+                    } else {
+                        $tmpA[$img->getField('width') + $img->getField('height')] = $img->getField('source');
+                    }
+                }
+
+                if (!empty($tmpI)) {
+                    $t   = max(array_keys($tmpI));
+                    $img = $tmpI[$t];
+                } else {
+                    $t   = max(array_keys($tmpA));
+                    $img = $tmpA[$t];
+                }
+
+                $out['cover'] = $img;
+            }
         }
 
         return $out;

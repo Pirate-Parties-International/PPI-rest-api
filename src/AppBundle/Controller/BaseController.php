@@ -74,7 +74,8 @@ class BaseController extends Controller
             'likes'        => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES),
             'talkingAbout' => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_TALKING),
             'postCount'    => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_POSTS),
-            'imageCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_IMAGES),
+            'photoCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_IMAGES),
+            'videoCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_VIDEOS),
             'eventCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_EVENTS),
         ];
         $out['pageInfo'] = $this->getMeta($code, Metadata::TYPE_FACEBOOK_INFO);
@@ -86,6 +87,10 @@ class BaseController extends Controller
         $photos = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_IMAGE);
         if (!empty($photos)) {
             $out['photos'] = $photos;
+        }
+        $videos = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_VIDEO);
+        if (!empty($videos)) {
+            $out['videos'] = $videos;
         }
         $events = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_EVENT);
         if (!empty($events)) {
@@ -116,6 +121,10 @@ class BaseController extends Controller
         $images = $this->getSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_IMAGE);
         if (!empty($tweets)) {
             $out['images'] = $images;
+        }
+        $videos = $this->getSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_VIDEO);
+        if (!empty($videos)) {
+            $out['videos'] = $videos;
         }
 
         return $out;

@@ -107,10 +107,11 @@ class DefaultController extends BaseController
                     'All images'     => 'img',
                     'All videos'     => 'vid',
                     'Facebook' => [
-                        'All FB posts'       => 'fba',
-                        'FB text posts only' => 'fbt',
-                        'FB images only'     => 'fbi',
-                        'FB events only'     => 'fbe',
+                        'All FB posts'     => 'fba',
+                        'FB statuses only' => 'fbt',
+                        'FB images only'   => 'fbi',
+                        'FB videos only'   => 'fbv',
+                        'FB events only'   => 'fbe',
                         ],
                     'Twitter' => [
                         'All tweets'        => 'twa',
@@ -119,7 +120,7 @@ class DefaultController extends BaseController
                         'Video tweets only' => 'twv',
                         ],
                     'Youtube' => [
-                        'Videos only' => 'ytv',
+                        'YT videos only' => 'ytv',
                         ],
                     ],
                 'choices_as_values' => true,
@@ -158,6 +159,9 @@ class DefaultController extends BaseController
                 case 'fbi': // FB images
                     $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'I']);
                     break;
+                case 'fbv': // FB videos
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'V']);
+                    break;
                 case 'fbe': // FB events
                     $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'E']);
                     break;
@@ -170,8 +174,9 @@ class DefaultController extends BaseController
                 case 'twi': // TW images
                     $social_media = $party->findBy(['code' => $id, 'type' => 'tw', 'subType' => 'I']);
                     break;
-                case 'twv': //TW videos
+                case 'twv': // TW videos
                     $social_media = $party->findBy(['code' => $id, 'type' => 'tw', 'subType' => 'V']);
+                    break;
                 case 'ytv': // YT videos
                     $social_media = $party->findBy(['code' => $id, 'type' => 'yt']);
                     break;

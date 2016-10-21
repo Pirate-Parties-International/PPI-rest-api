@@ -81,13 +81,13 @@ class TwitterService extends ScraperServices
                 ->buildOauth($tweetUrl, $requestMethod)
                 ->performRequest();
 
-        echo "     + Tweets... ";
+        echo "     + Getting tweets... ";
         if (empty($tweetData)) {
             echo "not found\n";
             return false;
         } else {
             $tweetData = json_decode($tweetData);
-            $timeLimit = $scraper->getTimeLimit('tw', 'T', $code, 'tweets');
+            $timeLimit = $scraper->getTimeLimit('tw', $code, 'tweets');
             $pageCount = 0;
             echo "page ";
 
