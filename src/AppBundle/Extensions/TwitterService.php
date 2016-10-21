@@ -189,8 +189,8 @@ class TwitterService extends ScraperServices
             } while ($timeCheck > $timeLimit && $pageCount < 100);
             // while tweet times are more recent than the limit as set above, up to 5000
 
-            $imgCount = array_key_exists('images', $out) ? $out['images'] : '0';
-            $vidCount = array_key_exists('videos', $out) ? $out['videos'] : '0';
+            $imgCount = array_key_exists('images', $out) ? count($out['images']) : '0';
+            $vidCount = array_key_exists('videos', $out) ? count($out['videos']) : '0';
             echo "...total ".$out['tweets']." tweets found: ".count($out['posts'])." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed\n";
         }
 

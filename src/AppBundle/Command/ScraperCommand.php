@@ -333,26 +333,23 @@ class ScraperCommand extends ContainerAwareCommand
                                         json_encode($image['postData'])
                                     );
                                 }
-                                $output->writeln("     + Images added");
-                            }
 
-                            if (empty($td['videos'])) {
-                                $output->writeln("     + Video data not found");
-                            } else {
-                                foreach ($td['videos'] as $key => $video) {
-                                    $scraperService->addSocial(
-                                        $code,
-                                        SocialMedia::TYPE_TWITTER,
-                                        SocialMedia::SUBTYPE_VIDEO,
-                                        $image['postId'],
-                                        $image['postTime'],
-                                        $image['postText'],
-                                        $image['postImage'],
-                                        $image['postLikes'],
-                                        json_encode($image['postData'])
-                                    );
+                                if (!empty($td['videos'])) {
+                                    foreach ($td['videos'] as $key => $video) {
+                                        $scraperService->addSocial(
+                                            $code,
+                                            SocialMedia::TYPE_TWITTER,
+                                            SocialMedia::SUBTYPE_VIDEO,
+                                            $image['postId'],
+                                            $image['postTime'],
+                                            $image['postText'],
+                                            $image['postImage'],
+                                            $image['postLikes'],
+                                            json_encode($image['postData'])
+                                        );
+                                    }
                                 }
-                                $output->writeln("     + Videos added");
+                                $output->writeln("     + Images and videos added");
                             }
 
                             $output->writeln("   + All social media added");
