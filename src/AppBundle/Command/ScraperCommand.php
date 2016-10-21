@@ -7,14 +7,11 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use Pirates\PapiInfo\Compile;
-
 use AppBundle\Entity\Metadata;
 use AppBundle\Entity\Statistic;
 use AppBundle\Entity\SocialMedia;
-use AppBundle\Extensions\ScraperServices;
-use AppBundle\Extensions\FacebookService;
 
+use Pirates\PapiInfo\Compile;
 
 class ScraperCommand extends ContainerAwareCommand
 {
@@ -338,6 +335,26 @@ class ScraperCommand extends ContainerAwareCommand
                                 }
                                 $output->writeln("     + Images added");
                             }
+
+                            if (empty($td['videos'])) {
+                                $output->writeln("     + Video data not found");
+                            } else {
+                                foreach ($td['videos'] as $key => $video) {
+                                    $scraperService->addSocial(
+                                        $code,
+                                        SocialMedia::TYPE_TWITTER,
+                                        SocialMedia::SUBTYPE_VIDEO,
+                                        $image['postId'],
+                                        $image['postTime'],
+                                        $image['postText'],
+                                        $image['postImage'],
+                                        $image['postLikes'],
+                                        json_encode($image['postData'])
+                                    );
+                                }
+                                $output->writeln("     + Videos added");
+                            }
+
                             $output->writeln("   + All social media added");
                         }
                     }
@@ -355,7 +372,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $output->writeln("     + ERROR while retrieving G+ data");
                             $sn['errors'][] = [$code => 'g+'];
                         } else {
-                            $output->writeln("   + GooglePlus data retrieved");
+                            $output->writeln("     + GooglePlus data retrieved");
 
                             $scraperService->addStatistic(
                                 $code,
@@ -363,7 +380,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 Statistic::SUBTYPE_FOLLOWERS,
                                 $gd
                             );
-                            $output->writeln("   + Follower count added");
+                            $output->writeln("     + Follower count added");
                         }
                     }
                 }

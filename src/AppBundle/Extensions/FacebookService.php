@@ -180,7 +180,7 @@ class FacebookService extends ScraperServices
                 'address' => $graphNode->getField('single_line_address')
             ];
 
-           $fdEmails = $graphNode->getField('emails');
+            $fdEmails = $graphNode->getField('emails');
             if (!empty($fdEmails)) {
                 foreach ($fdEmails as $key => $email) {
                     $out['info']['email'][] = $email;

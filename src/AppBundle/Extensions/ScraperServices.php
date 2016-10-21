@@ -233,7 +233,7 @@ class ScraperServices
         $appRoot = $this->container->get('kernel')->getRootDir().'/..';
         $imgRoot = $appRoot.'/web/img/'.$site.'-uploads/';
 
-        preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
+        preg_match('/.+\.(png|jpg|gif)/i', $imgSrc, $matches);
         $imgFmt  = $matches[1];
         $imgName = $imgId.'.'.$imgFmt;
         $imgPath = $imgRoot.$code.'/'.$imgName;

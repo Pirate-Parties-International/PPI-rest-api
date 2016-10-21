@@ -101,15 +101,33 @@ class TwitterService extends ScraperServices
                     // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
 
                     if (!empty($item->entities->media)) { // if tweet contains an image
-                        $media = $item->entities->media;
+                        $media = $item->extended_entities->media;
                         foreach ($media as $photo) {
-                            if ($photo->type == 'photo') {
-                                $imgSrc = $photo->media_url;
-                                $imgId  = $photo->id;
+                            $imgSrc = $photo->media_url;
+                            $imgId  = $photo->id;
 
-                                // save image to disk
-                                $img = $scraper->saveImage('tw', $code, $imgSrc, $imgId);
+                            // save image to disk
+                            $img = $scraper->saveImage('tw', $code, $imgSrc, $imgId);
 
+                            if ($photo->type == 'video') {
+                                $out['videos'][] = [
+                                    'postId'    => $imgId,
+                                    'postTime'  => $twTime, // DateTime
+                                    'postText'  => $item->text,
+                                    'postImage' => $img,
+                                    'postLikes' => $item->favorite_count,
+                                    'postData'  => [
+                                        'id'       => $imgId,
+                                        'posted'   => $twTime->format('Y-m-d H:i:s'), // string
+                                        'text'     => $item->text,
+                                        'image'    => $imgSrc,
+                                        'url'      => 'https://twitter.com/statuses/'.$item->id,
+                                        'likes'    => $item->favorite_count,
+                                        'retweets' => $item->retweet_count
+                                        ]
+                                    ];
+
+                    	    } else { // if 'photo' or 'animated_gif'
                                 $out['images'][] = [
                                     'postId'    => $imgId,
                                     'postTime'  => $twTime, // DateTime
@@ -128,6 +146,7 @@ class TwitterService extends ScraperServices
                                     ];
                             }
                         }
+
                     } else { // if text only
                         $out['posts'][] = [
                             'postId'    => $item->id,
@@ -170,7 +189,9 @@ class TwitterService extends ScraperServices
             } while ($timeCheck > $timeLimit && $pageCount < 100);
             // while tweet times are more recent than the limit as set above, up to 5000
 
-            echo "...total ".$out['tweets']." tweets found, ".count($out['posts'])." since ".date('d/m/Y', $timeCheck)." processed\n";
+            $imgCount = array_key_exists('images', $out) ? $out['images'] : '0';
+            $vidCount = array_key_exists('videos', $out) ? $out['videos'] : '0';
+            echo "...total ".$out['tweets']." tweets found: ".count($out['posts'])." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed\n";
         }
 
         return $out;

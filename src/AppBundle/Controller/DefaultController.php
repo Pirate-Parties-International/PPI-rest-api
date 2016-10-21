@@ -105,6 +105,7 @@ class DefaultController extends BaseController
                     'All data'       => 'all',
                     'All text posts' => 'txt',
                     'All images'     => 'img',
+                    'All videos'     => 'vid',
                     'Facebook' => [
                         'All FB posts'       => 'fba',
                         'FB text posts only' => 'fbt',
@@ -114,7 +115,8 @@ class DefaultController extends BaseController
                     'Twitter' => [
                         'All tweets'        => 'twa',
                         'Text tweets only'  => 'twt',
-                        'Image tweets only' => 'twi'
+                        'Image tweets only' => 'twi',
+                        'Video tweets only' => 'twv',
                         ],
                     'Youtube' => [
                         'Videos only' => 'ytv',
@@ -144,6 +146,9 @@ class DefaultController extends BaseController
                 case 'img': // all images
                     $social_media = $party->findBy(['code' => $id, 'subType' => 'I']);
                     break;
+                case 'vid': // all videos
+                    $social_media = $party->findBy(['code' => $id, 'subType' => 'V']);
+                    break;
                 case 'fba': // FB all
                     $social_media = $party->findBy(['code' => $id, 'type' => 'fb']);
                     break;
@@ -165,6 +170,8 @@ class DefaultController extends BaseController
                 case 'twi': // TW images
                     $social_media = $party->findBy(['code' => $id, 'type' => 'tw', 'subType' => 'I']);
                     break;
+                case 'twv': //TW videos
+                    $social_media = $party->findBy(['code' => $id, 'type' => 'tw', 'subType' => 'V']);
                 case 'ytv': // YT videos
                     $social_media = $party->findBy(['code' => $id, 'type' => 'yt']);
                     break;
