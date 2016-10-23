@@ -40,7 +40,7 @@ class BaseController extends Controller
 	}
 
 
-    public function getOneSocial($code = null) {
+    public function getAllSocial($code = null) {
         $party = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia');
 

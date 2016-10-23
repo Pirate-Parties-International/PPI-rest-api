@@ -79,7 +79,7 @@ class DefaultController extends BaseController
     public function pageAction($id)
     {   
         $pagesPath = __DIR__ . '/../Resources/staticContent';
-        
+
         $data = @file_get_contents(sprintf('%s/%s.md', $pagesPath, $id));
 
         if ($data === false) {
@@ -97,24 +97,24 @@ class DefaultController extends BaseController
      */
     public function socialAction($id, Request $request)
     {
-        $social_media = $this->getOneSocial($id);
+        $social_media = $this->getAllSocial($id);
 
         $form = $this->createFormBuilder($social_media)
             ->add('display', ChoiceType::class, [
                 'choices' => [
-                    'All data'       => 'all',
-                    'All text posts' => 'txt',
-                    'All images'     => 'img',
-                    'All videos'     => 'vid',
+                    'All data'       => 'xxx',
+                    'All text posts' => 'xxt',
+                    'All images'     => 'xxi',
+                    'All videos'     => 'xxv',
                     'Facebook' => [
-                        'All FB posts'     => 'fba',
+                        'All FB posts'     => 'fbx',
                         'FB statuses only' => 'fbt',
                         'FB images only'   => 'fbi',
                         'FB videos only'   => 'fbv',
                         'FB events only'   => 'fbe',
                         ],
                     'Twitter' => [
-                        'All tweets'        => 'twa',
+                        'All tweets'        => 'twx',
                         'Text tweets only'  => 'twt',
                         'Image tweets only' => 'twi',
                         'Video tweets only' => 'twv',
@@ -132,55 +132,25 @@ class DefaultController extends BaseController
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
-            $data['value'] = $form['display']->getData();
+            $data = $form['display']->getData();
 
             $party = $this->getDoctrine()
                 ->getRepository('AppBundle:SocialMedia');
 
-            switch ($data['value']) {
-                case 'all': // all data
-                    $social_media = $this->getOneSocial($id);
-                    break;
-                case 'txt': // all text
-                    $social_media = $party->findBy(['code' => $id, 'subType' => 'T']);
-                    break;
-                case 'img': // all images
-                    $social_media = $party->findBy(['code' => $id, 'subType' => 'I']);
-                    break;
-                case 'vid': // all videos
-                    $social_media = $party->findBy(['code' => $id, 'subType' => 'V']);
-                    break;
-                case 'fba': // FB all
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb']);
-                    break;
-                case 'fbt': // FB text
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'T']);
-                    break;
-                case 'fbi': // FB images
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'I']);
-                    break;
-                case 'fbv': // FB videos
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'V']);
-                    break;
-                case 'fbe': // FB events
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'fb', 'subType' => 'E']);
-                    break;
-                case 'twa': // TW all
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'tw']);
-                    break;
-                case 'twt': // TW text
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'tw', 'subType' => 'T']);
-                    break;
-                case 'twi': // TW images
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'tw', 'subType' => 'I']);
-                    break;
-                case 'twv': // TW videos
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'tw', 'subType' => 'V']);
-                    break;
-                case 'ytv': // YT videos
-                    $social_media = $party->findBy(['code' => $id, 'type' => 'yt']);
-                    break;
+            $type = substr($data, 0, 2) == 'xx' ? null : substr($data, 0, 2);
+            $subType = strtoupper(substr($data, -1)) == 'X' ? null : strtoupper(substr($data, -1));
+
+            if ($id) {
+                $terms['code'] = $id;
             }
+            if ($type) {
+                $terms['type'] = $type;
+            }
+            if ($subType) {
+                $terms['subType'] = $subType;
+            }
+
+            $social_media = $party->findBy($terms);
         }
 
         if (empty($social_media)) {

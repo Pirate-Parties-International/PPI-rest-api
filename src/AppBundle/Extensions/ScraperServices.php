@@ -171,9 +171,8 @@ class ScraperServices
 
 
     /**
-     * Queries DB for a party's latest social media entry of a specified type and subtype
+     * Queries DB for a party's latest social media entry of a specified type
      * @param  string $type
-     * @param  string $subType
      * @param  string $code
      * @param  string $what
      * @return int
@@ -190,8 +189,8 @@ class ScraperServices
             echo "checking database...";
 
             $p = $this->container->get('doctrine')
-                ->getRepository('AppBundle:Statistic')
-                ->findOneBy(['code' => strtolower($code), 'type' => $type],['timestamp' => 'DESC']);
+                ->getRepository('AppBundle:SocialMedia')
+                ->findOneBy(['code' => $code, 'type' => $type],['postTime' => 'DESC']);
 
             if (empty($p)) { // if there are no entries in the database, populate fully
                 if ($type == 'fb' || $type == 'tw') {
@@ -203,11 +202,11 @@ class ScraperServices
 
             } else { // if there are entries already in the db, only get updates since the latest one
                 echo " !empty, updating... ";
-                $time = $p->getTimestamp();
+                $time = $p->getPostTime()->getTimestamp();
             }
         }
 
-        return $time->getTimestamp();
+        return $time;
     }
 
 
@@ -249,17 +248,13 @@ class ScraperServices
             }
         }
 
-        if (empty($imgData)) {
-            if (!empty($imgBkp)) {
-                try {
-                    $imgData = file_get_contents($imgBkp, false, $ctx); // try to save thumbnail instead
-                } catch (\Exception $e) {
-                    echo $e->getMessage();
-                    $out['errors'][] = [$code => $imgPath];
-                }
+        if (!empty($imgData)) {
+            try {
+                file_put_contents($imgPath, $imgData);
+            } catch (\Exception $e) {
+                echo $e->getMessage();
+                $out['errors'][] = [$code => $imgPath];
             }
-        } else {
-            file_put_contents($imgPath, $imgData);
         }
 
         return $imgName;

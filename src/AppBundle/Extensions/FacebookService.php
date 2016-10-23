@@ -439,24 +439,19 @@ class FacebookService extends ScraperServices
                         $type = $post->getField('type'); // types = 'status', 'link', 'photo', 'video', 'event'
                         if ($type != 'event') { // get events separately to get all details (location, etc.)
 
-                            switch ($type) {
-                                case 'photo':
-                                    $arType = 'photos';
-                                    $imgSrc = $post->getField('source');  // original file
-                                    $imgBkp = $post->getField('picture'); // 130x130 thumbnail
-                                    break;
-                                case 'video':
-                                    $arType = 'videos';
-                                    $imgSrc = null; // find a way to get thumbnail, 'picture' doesn't work
-                                    break;
-                                default: // case 'status' or 'link'
-                                    $arType = 'posts';
-                                    $imgSrc = null;
-                            }
+                            $img = null;
+                            if ($type == 'photo' || $type == 'video') {
+                                $arType = $type.'s';
+                                try {
+                                    $imgSrc = !empty($post->getField('full_picture')) ? $post->getField('full_picture') : $post->getField('picture') ;
+                                    $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'));
+                                } catch (\Exception $e) {
+                                    echo $e->getMessage();
+                                    $out['errors'][] = [$code => $e->getMessage()];
+                                }
+                            } else $arType = 'posts';
 
-                            // save image to disk (if not null)
-                            $img  = !is_null($imgSrc) ? $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id')) : null;
-                            $text = !is_null($post->getField('message')) ? $post->getField('message') : $post->getField('story');
+                            $text = !empty($post->getField('message')) ? $post->getField('message') : $post->getField('story');
 
                             $likeCount     = $this->fbCount($post->getField('likes'));
                             $reactionCount = $this->fbCount($post->getField('reactions'));
@@ -473,7 +468,6 @@ class FacebookService extends ScraperServices
                                     'id'        => $post->getField('id'),
                                     'posted'    => $post->getField('created_time')->format('Y-m-d H:i:s'), // string
                                     'updated'   => $post->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                                    'name'      => $post->getField('name'),    // posted by...
                                     'message'   => $post->getField('message'), // main body of text
                                     'story'     => $post->getField('story'),   // "[page] shared a link", etc.
                                     'link'      => [
