@@ -358,7 +358,7 @@ class SocialMedia
      */
     public function getTimestamp()
     {
-        return $this->timestamp->format('Y-m-d H:i:s');
+        return $this->timestamp->getTimestamp();
     }
 
 }

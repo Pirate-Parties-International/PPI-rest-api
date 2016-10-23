@@ -442,24 +442,21 @@ class FacebookService extends ScraperServices
                             switch ($type) {
                                 case 'photo':
                                     $arType = 'photos';
-                                    $text   = $post->getField('name');
                                     $imgSrc = $post->getField('source');  // original file
                                     $imgBkp = $post->getField('picture'); // 130x130 thumbnail
                                     break;
                                 case 'video':
                                     $arType = 'videos';
-                                    $text   = $post->getField('title');
                                     $imgSrc = null; // find a way to get thumbnail, 'picture' doesn't work
                                     break;
                                 default: // case 'status' or 'link'
                                     $arType = 'posts';
-                                    $text   = !is_null($post->getField('message')) ? $post->getField('message') : $post->getField('story');
                                     $imgSrc = null;
-                                    break;
-                                }
+                            }
 
                             // save image to disk (if not null)
-                            $img = !is_null($imgSrc) ? $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id')) : null;
+                            $img  = !is_null($imgSrc) ? $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id')) : null;
+                            $text = !is_null($post->getField('message')) ? $post->getField('message') : $post->getField('story');
 
                             $likeCount     = $this->fbCount($post->getField('likes'));
                             $reactionCount = $this->fbCount($post->getField('reactions'));
@@ -476,8 +473,9 @@ class FacebookService extends ScraperServices
                                     'id'        => $post->getField('id'),
                                     'posted'    => $post->getField('created_time')->format('Y-m-d H:i:s'), // string
                                     'updated'   => $post->getField('updated_time')->format('Y-m-d H:i:s'), // string
+                                    'name'      => $post->getField('name'),    // posted by...
                                     'message'   => $post->getField('message'), // main body of text
-                                    'story'     => $post->getField('story'), // "[page] shared a link", etc.
+                                    'story'     => $post->getField('story'),   // "[page] shared a link", etc.
                                     'link'      => [
                                         'url'       => $post->getField('link'),
                                         'name'      => $post->getField('name'),

@@ -189,16 +189,9 @@ class ScraperServices
 
             echo "checking database...";
 
-            $p = $this->container->get('doctrine') // find most recent entry
-                ->getRepository('AppBundle:SocialMedia')
-                ->createQueryBuilder('qb')
-                ->select('p')->from('AppBundle:SocialMedia', 'p')
-                ->where(sprintf("p.code = '%s'", $code))
-                ->andwhere(sprintf("p.type = '%s'", $type))
-                ->orderBy('p.timestamp', 'DESC')
-                ->setMaxResults(1)
-                ->getQuery()
-                ->getOneOrNullResult();
+            $p = $this->container->get('doctrine')
+                ->getRepository('AppBundle:Statistic')
+                ->findOneBy(['code' => strtolower($code), 'type' => $type],['timestamp' => 'DESC']);
 
             if (empty($p)) { // if there are no entries in the database, populate fully
                 if ($type == 'fb' || $type == 'tw') {
@@ -210,11 +203,11 @@ class ScraperServices
 
             } else { // if there are entries already in the db, only get updates since the latest one
                 echo " !empty, updating... ";
-                $time = $p->getPostTime()->getTimestamp();
+                $time = $p->getTimestamp();
             }
         }
 
-        return $time;
+        return $time->getTimestamp();
     }
 
 

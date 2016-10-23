@@ -100,51 +100,37 @@ class TwitterService extends ScraperServices
                     $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
                     // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
 
-                    if (!empty($item->entities->media)) { // if tweet contains an image
+                    if (!empty($item->entities->media)) { // if tweet contains media
                         $media = $item->extended_entities->media;
-                        foreach ($media as $photo) {
+                        foreach ($media as $photo) { // if tweet contains multiple images
                             $imgSrc = $photo->media_url;
                             $imgId  = $photo->id;
+
+                            if ($photo->type == 'video') {
+                                $arType = 'videos';
+                            } else { // if type == 'photo' or 'animated_gif'
+                                $arType = 'images';
+                            }
 
                             // save image to disk
                             $img = $scraper->saveImage('tw', $code, $imgSrc, $imgId);
 
-                            if ($photo->type == 'video') {
-                                $out['videos'][] = [
-                                    'postId'    => $imgId,
-                                    'postTime'  => $twTime, // DateTime
-                                    'postText'  => $item->text,
-                                    'postImage' => $img,
-                                    'postLikes' => $item->favorite_count,
-                                    'postData'  => [
-                                        'id'       => $imgId,
-                                        'posted'   => $twTime->format('Y-m-d H:i:s'), // string
-                                        'text'     => $item->text,
-                                        'image'    => $imgSrc,
-                                        'url'      => 'https://twitter.com/statuses/'.$item->id,
-                                        'likes'    => $item->favorite_count,
-                                        'retweets' => $item->retweet_count
-                                        ]
-                                    ];
-
-                    	    } else { // if 'photo' or 'animated_gif'
-                                $out['images'][] = [
-                                    'postId'    => $imgId,
-                                    'postTime'  => $twTime, // DateTime
-                                    'postText'  => $item->text,
-                                    'postImage' => $img,
-                                    'postLikes' => $item->favorite_count,
-                                    'postData'  => [
-                                        'id'       => $imgId,
-                                        'posted'   => $twTime->format('Y-m-d H:i:s'), // string
-                                        'text'     => $item->text,
-                                        'image'    => $imgSrc,
-                                        'url'      => 'https://twitter.com/statuses/'.$item->id,
-                                        'likes'    => $item->favorite_count,
-                                        'retweets' => $item->retweet_count
-                                        ]
-                                    ];
-                            }
+                            $out[$arType][] = [
+                                'postId'    => $imgId,
+                                'postTime'  => $twTime, // DateTime
+                                'postText'  => $item->text,
+                                'postImage' => $img,
+                                'postLikes' => $item->favorite_count,
+                                'postData'  => [
+                                    'id'       => $imgId,
+                                    'posted'   => $twTime->format('Y-m-d H:i:s'), // string
+                                    'text'     => $item->text,
+                                    'image'    => $imgSrc,
+                                    'url'      => 'https://twitter.com/statuses/'.$item->id,
+                                    'likes'    => $item->favorite_count,
+                                    'retweets' => $item->retweet_count
+                                    ]
+                                ];
                         }
 
                     } else { // if text only
