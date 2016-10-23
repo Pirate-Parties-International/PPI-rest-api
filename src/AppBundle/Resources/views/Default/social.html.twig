@@ -76,6 +76,15 @@
                                             {% else %}
                                                 <i class="icon-youtube tiny darken-1"></i>
                                             {% endif %}
+                                            {% if sm.subType == 'T' %}
+                                                <i class="material-icons tiny">subject</i>
+                                            {% elseif sm.subType == 'I' %}
+                                                <i class="material-icons tiny">perm_media</i>
+                                            {% elseif sm.subType == 'V' %}
+                                                <i class="material-icons tiny">video_library</i>
+                                            {% elseif sm.subType == 'E' %}
+                                                <i class="material-icons tiny">perm_contact_calendar</i>
+                                            {% endif %}
                                         {{ sm.postText }}
                                         {% if sm.subType == 'E' %}
                                             </br>{{ sm.postData.details.description }}
