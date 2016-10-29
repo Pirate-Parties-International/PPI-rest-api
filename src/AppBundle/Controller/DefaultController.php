@@ -153,15 +153,11 @@ class DefaultController extends BaseController
             $social_media = $party->findBy($terms);
         }
 
-        if (empty($social_media)) {
-            $empty = true;
-        } else $empty = false;
-
         return $this->render(
             'AppBundle:Default:social.html.twig',
             array(
                 'social_media' => $social_media,
-                'empty' => $empty,
+                'empty' => empty($social_media),
                 'form' => $form->createView()
             )
         );

@@ -198,6 +198,7 @@ class FacebookService extends ScraperServices
 
             $coverId = !empty($graphNode->getField('cover')) ? $graphNode->getField('cover')->getField('cover_id') : null;
             // set-up for later (line ~635)
+
             $out['likes']   = !empty($graphNode->getField('engagement')) ? $graphNode->getField('engagement')->getField('count') : '?';
             $out['talking'] = !empty($graphNode->getField('talking_about_count')) ? $graphNode->getField('talking_about_count') : '?';
 
@@ -443,7 +444,7 @@ class FacebookService extends ScraperServices
                             if ($type == 'photo' || $type == 'video') {
                                 $arType = $type.'s';
                                 try {
-                                    $imgSrc = !empty($post->getField('full_picture')) ? $post->getField('full_picture') : $post->getField('picture') ;
+                                    $imgSrc = !empty($post->getField('full_picture')) ? $post->getField('full_picture') : $post->getField('picture');
                                     $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'));
                                 } catch (\Exception $e) {
                                     echo $e->getMessage();

@@ -222,8 +222,12 @@ class ScraperServices
 
         $appRoot = $this->container->get('kernel')->getRootDir().'/..';
         $imgRoot = $appRoot.'/web/img/'.$site.'-uploads/';
-
         preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
+
+        if (empty($matches)) {
+            return null;
+        }
+
         $imgFmt  = $matches[1];
         $imgName = $imgId.'.'.$imgFmt;
         $imgPath = $imgRoot.$code.'/'.$imgName;
@@ -241,7 +245,7 @@ class ScraperServices
 
         if (!file_exists($imgPath)) { // check if file exists on disk before saving
             try {
-                $imgData = file_get_contents($imgSrc, false, $ctx); // try to save full source
+                $imgData = file_get_contents($imgSrc, false, $ctx);
             } catch (\Exception $e) {
                 echo $e->getMessage();
                 $out['errors'][] = [$code => $imgPath];
