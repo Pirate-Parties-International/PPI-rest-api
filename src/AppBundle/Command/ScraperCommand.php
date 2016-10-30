@@ -24,15 +24,17 @@ class ScraperCommand extends ContainerAwareCommand
             ->addOption('site',   'w', InputOption::VALUE_OPTIONAL, 'Choose a single website to scrape (fb, tw, g+ or yt)')
             ->addOption('data',   'd', InputOption::VALUE_OPTIONAL, 'Choose a single data type to scrape, fb only (info, posts, images, events)')
             ->addOption('resume', 'r', InputOption::VALUE_OPTIONAL, 'Choose a point to resume scraping, by party code (e.g. if previously interrupted)')
+            ->addOption('full',   'f', InputOption::VALUE_NONE,     'Scrape all data, overwriting db (by default, only posts more recent than the latest db entry are scraped)')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $full  = $input->getOption('full');   // if null, get most recent posts only
         $who   = $input->getOption('party');  // if null, get all
         $where = $input->getOption('site');   // if null, get all
-        $what  = $input->getOption('data');   // if null, get all
         $when  = $input->getOption('resume'); // if null, get all
+        $what  = $input->getOption('data');   // if null, get all
         switch ($what) {
             case 'photos':
             case 'pictures':
@@ -104,7 +106,7 @@ class ScraperCommand extends ContainerAwareCommand
                 if ($where == null || $where == 'fb') {
                     if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
                         $output->writeln("   + Starting Facebook import");
-                        $fd = $facebookService->getFBData($sn['facebook']['username'], $what, $code);
+                        $fd = $facebookService->getFBData($sn['facebook']['username'], $what, $code, $full);
 
                         if ($what == null || $what == 'info') {
                             if ($fd == false || empty($fd['likes'])) {
@@ -281,7 +283,7 @@ class ScraperCommand extends ContainerAwareCommand
                 if ($where == null || $where == 'tw') {
                     if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
                         $output->writeln("   + Starting Twitter import");
-                        $td = $twitterService->getTwitterData($sn['twitter']['username'], $code);
+                        $td = $twitterService->getTwitterData($sn['twitter']['username'], $code, $full);
 
                         if ($td == false || empty($td['followers']) || empty($td['tweets'])) {
                             $output->writeln("     + ERROR while retrieving TW data");
@@ -483,12 +485,12 @@ class ScraperCommand extends ContainerAwareCommand
 
                 $endTime = new \DateTime('now');
                 $midDiff = $midTime->diff($endTime);
-                $output->writeln("   + Done in ".$midDiff->format('%H:%I:%S'));
+                $output->writeln("   + Done with ".$code." in ".$midDiff->format('%H:%I:%S'));
             }
         }
 
-        $fullDiff = $startTime->diff($endTime);
-        $output->writeln("# Completed in ".$fullDiff->format('%H:%I:%S'));
+        $endDiff = $startTime->diff($endTime);
+        $output->writeln("# All done in ".$endDiff->format('%H:%I:%S'));
 
         if (!empty($sn['errors'])) {
             $output->writeln("# Errors:");

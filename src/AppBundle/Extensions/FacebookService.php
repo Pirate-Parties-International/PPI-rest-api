@@ -137,7 +137,7 @@ class FacebookService extends ScraperServices
      * @param  string $code     party code
      * @return array
      */
-    public function getFBData($fbPageId, $what, $code) {
+    public function getFBData($fbPageId, $what, $code, $full = null) {
     	$scraper = $this->container->get('ScraperServices');
 
         $fb = new Facebook([
@@ -428,7 +428,7 @@ class FacebookService extends ScraperServices
             echo "     + Post details.... ";
             if (!empty($fdPosts)) {
 
-                $timeLimit = $scraper->getTimeLimit('fb', $code, $what);
+                $timeLimit = $scraper->getTimeLimit('fb', $code, $what, $full);
                 echo "page ";
                 $pageCount = 0;
 
@@ -534,7 +534,7 @@ class FacebookService extends ScraperServices
 
             if (!empty($fdEvents)) {
 
-                $timeLimit = $scraper->getTimeLimit('fb', $code, $what);
+                $timeLimit = $scraper->getTimeLimit('fb', $code, $what, $full);
                 echo "page ";
                 $pageCount = 0;
 

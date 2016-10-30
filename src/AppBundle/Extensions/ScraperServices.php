@@ -177,15 +177,23 @@ class ScraperServices
      * @param  string $what
      * @return int
      */
-    public function getTimeLimit($type, $code, $what) {
+    public function getTimeLimit($type, $code, $what, $full = null) {
 
         $limited   = strtotime("-1 year"); // set age limit for fb text posts and tweets
         $unlimited = strtotime("-20 years"); // practically no limit, get all
 
         if ($what == 'info' || $what == 'stats') { // if only getting stats, not full data
             $time = $unlimited;
-        } else {
 
+        } else if ($full) { // if user requested a full scrape
+            echo "getting all... ";
+            if ($type == 'fb' || $type == 'tw') {
+                $time = $limited; // age limit for tweets and fb posts
+            } else {
+                $time = $unlimited; // no limit for yt videos, get all
+            }
+
+        } else {
             echo "checking database...";
 
             $p = $this->container->get('doctrine')

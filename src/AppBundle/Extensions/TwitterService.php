@@ -31,7 +31,7 @@ class TwitterService extends ScraperServices
      * @param  string $code     party code
      * @return array
      */
-    public function getTwitterData($username, $code) {
+    public function getTwitterData($username, $code, $full = null) {
     	$scraper = $this->container->get('ScraperServices');
 
         $settings = array(
@@ -81,13 +81,13 @@ class TwitterService extends ScraperServices
                 ->buildOauth($tweetUrl, $requestMethod)
                 ->performRequest();
 
-        echo "     + Getting tweets... ";
+        echo "     + Tweet details.... ";
         if (empty($tweetData)) {
             echo "not found\n";
             return false;
         } else {
             $tweetData = json_decode($tweetData);
-            $timeLimit = $scraper->getTimeLimit('tw', $code, 'tweets');
+            $timeLimit = $scraper->getTimeLimit('tw', $code, 'tweets', $full);
             $pageCount = 0;
             echo "page ";
 
@@ -154,21 +154,27 @@ class TwitterService extends ScraperServices
 
                 $timeCheck = $twTime->getTimestamp(); // check time of last tweet scraped
 
-                // check rate limit
-                $limitUrl   = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
-                $limitData  = json_decode($twitter->buildOauth($limitUrl, $requestMethod)->performRequest(), true);
-                $limitCheck = $limitData['resources']['application']['/application/rate_limit_status'];
+                try {
+                    // check rate limit
+                    $limitUrl   = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
+                    $limitData  = json_decode($twitter->buildOauth($limitUrl, $requestMethod)->performRequest(), true);
+                    $limitCheck = $limitData['resources']['application']['/application/rate_limit_status'];
 
-                if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
-                    echo "...Rate limit reached! Resuming at ".date('H:i:s', $limitCheck['reset'])."... ";
-                    time_sleep_until($limitCheck['reset']);
+                    if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
+                        echo "...Rate limit reached! Resuming at ".date('H:i:s', $limitCheck['reset'])."... ";
+                        time_sleep_until($limitCheck['reset']);
+                    }
+
+                    // make new request to get next page of results
+                    $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id).'&count=50';
+                    $tweetData = json_decode($twitter->setGetField($nextField)
+                        ->buildOauth($tweetUrl, $requestMethod)
+                        ->performRequest());
+                } catch (\Exception $e) {
+                    echo $e->getMessage();
+                    $out['errors'][] = [$code => $e->getMessage()];
+                    return false;
                 }
-
-                // make new request to get next page of results
-                $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id).'&count=50';
-                $tweetData = json_decode($twitter->setGetField($nextField)
-                    ->buildOauth($tweetUrl, $requestMethod)
-                    ->performRequest());
 
                 $pageCount++;
 
