@@ -227,7 +227,7 @@
             	 #}
 
             {% if party.socialNetworks %}
-				<a href ="{{ path('papi_social_show', {'id': party.code}) | lower }}"><h3>Social Media</h3></a>
+				<a href ="{{ path('papi_social_show', {'id': party.code}) | lower }}"><h5>Social Media</h5></a>
             	{% if party.socialNetworks.facebook is defined and party.socialNetworks.facebook %}
 				<div class="col s12 m6 l4">
 					<div class="card social facebook">

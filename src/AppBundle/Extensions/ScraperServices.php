@@ -26,7 +26,7 @@ class ScraperServices
 
 
     public function exception_handler($e) {
-        echo $e->getMessage();
+        echo $e->getMessage()."\n";
         $out['errors'][] = ["Exception" => $e->getMessage()];
     }
 
@@ -285,18 +285,20 @@ class ScraperServices
             CURLOPT_USERAGENT => 'PAPI'
         ));
 
-        $tryCount = 0;
+        $connected = false;
+        $tryCount  = 0;
         do {
             try {
                 // Send the request & save response to $resp
                 $resp = curl_exec($curl);
-                $tryCount++;
+                $connected = true;
             } catch (\Exception $e) {
-                echo $e->getMessage();
+                echo $e->getMessage()."\n";
                 $out['errors'][] = [$code => $e->getMessage()];
-                return $out;
+                $tryCount++;
+                return false;
             }
-        } while ($tryCount < 5);
+        } while ($connected == false && $tryCount < 5);
 
         // Close request to clear up some resources
         curl_close($curl);

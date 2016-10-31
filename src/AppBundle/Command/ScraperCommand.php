@@ -22,7 +22,7 @@ class ScraperCommand extends ContainerAwareCommand
             ->setDescription('Scrapes FB, TW and G+ data. Should be run once per day.')
             ->addOption('party',  'p', InputOption::VALUE_OPTIONAL, 'Choose a single party to scrape, by code (i.e. ppse, ppsi)')
             ->addOption('site',   'w', InputOption::VALUE_OPTIONAL, 'Choose a single website to scrape (fb, tw, g+ or yt)')
-            ->addOption('data',   'd', InputOption::VALUE_OPTIONAL, 'Choose a single data type to scrape, fb only (info, posts, images, events)')
+            ->addOption('data',   'd', InputOption::VALUE_OPTIONAL, 'Choose a single data type to scrape, fb only (info, posts or events)')
             ->addOption('resume', 'r', InputOption::VALUE_OPTIONAL, 'Choose a point to resume scraping, by party code (e.g. if previously interrupted)')
             ->addOption('full',   'f', InputOption::VALUE_NONE,     'Scrape all data, overwriting db (by default, only posts more recent than the latest db entry are scraped)')
         ;
@@ -36,10 +36,6 @@ class ScraperCommand extends ContainerAwareCommand
         $when  = $input->getOption('resume'); // if null, get all
         $what  = $input->getOption('data');   // if null, get all
         switch ($what) {
-            case 'photos':
-            case 'pictures':
-                $what = 'images';
-                break;
             case 'text':
                 $what = 'posts';
                 break;

@@ -72,7 +72,7 @@ class FacebookService extends ScraperServices
         try {
             $imgData = file_get_contents($imgSrc, false, $ctx);
         } catch (\Exception $e) {
-            echo $e->getMessage();
+            echo $e->getMessage()."\n";
             $out['errors'][] = [$code => $e->getMessage()];
         }
 
@@ -170,14 +170,14 @@ class FacebookService extends ScraperServices
                 $response = $fb->getClient()->sendRequest($request);
             } catch(Facebook\Exceptions\FacebookResponseException $e) {
                 // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
+                echo 'Graph returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(Facebook\Exceptions\FacebookSDKException $e) {
                 // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
+                echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
                 return false;
             }
 
@@ -220,14 +220,14 @@ class FacebookService extends ScraperServices
                 $response = $fb->getClient()->sendRequest($request);
             } catch(Facebook\Exceptions\FacebookResponseException $e) {
                 // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
+                echo 'Graph returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(Facebook\Exceptions\FacebookSDKException $e) {
                 // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
+                echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
                 return false;
             }
 
@@ -269,14 +269,14 @@ class FacebookService extends ScraperServices
                 $response = $fb->getClient()->sendRequest($request);
             } catch(Facebook\Exceptions\FacebookResponseException $e) {
                 // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
+                echo 'Graph returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(Facebook\Exceptions\FacebookSDKException $e) {
                 // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
+                echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
                 return false;
             }
 
@@ -312,14 +312,14 @@ class FacebookService extends ScraperServices
                 $response = $fb->getClient()->sendRequest($request);
             } catch(Facebook\Exceptions\FacebookResponseException $e) {
                 // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
+                echo 'Graph returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(Facebook\Exceptions\FacebookSDKException $e) {
                 // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
+                echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
                 return false;
             }
 
@@ -361,14 +361,14 @@ class FacebookService extends ScraperServices
                 $response = $fb->getClient()->sendRequest($request);
             } catch(Facebook\Exceptions\FacebookResponseException $e) {
                 // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
+                echo 'Graph returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(Facebook\Exceptions\FacebookSDKException $e) {
                 // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
+                echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
                 return false;
             }
 
@@ -403,7 +403,7 @@ class FacebookService extends ScraperServices
     //
     // Post, image and video details
     //
-        if ($what == null) {
+        if ($what == null || $what == 'posts') {
 
             $request = $fb->request('GET', $fbPageId, ['fields' => $req['pDetails']]);
 
@@ -411,14 +411,14 @@ class FacebookService extends ScraperServices
                 $response = $fb->getClient()->sendRequest($request);
             } catch(Facebook\Exceptions\FacebookResponseException $e) {
                 // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
+                echo 'Graph returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(Facebook\Exceptions\FacebookSDKException $e) {
                 // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
+                echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
                 return false;
             }
 
@@ -443,13 +443,14 @@ class FacebookService extends ScraperServices
                             $img = null;
                             if ($type == 'photo' || $type == 'video') {
                                 $arType = $type.'s';
-                                try {
+
+                                if ($type == 'photo') {
+                                    $imgSrc = !empty($post->getField('source')) ? $post->getField('source') : $post->getField('picture');
+                                } else {
                                     $imgSrc = !empty($post->getField('full_picture')) ? $post->getField('full_picture') : $post->getField('picture');
-                                    $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'));
-                                } catch (\Exception $e) {
-                                    echo $e->getMessage();
-                                    $out['errors'][] = [$code => $e->getMessage()];
                                 }
+                                $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'));
+
                             } else $arType = 'posts';
 
                             $text = !empty($post->getField('message')) ? $post->getField('message') : $post->getField('story');
@@ -517,14 +518,14 @@ class FacebookService extends ScraperServices
                 $response = $fb->getClient()->sendRequest($request);
             } catch(Facebook\Exceptions\FacebookResponseException $e) {
                 // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage();
+                echo 'Graph returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(Facebook\Exceptions\FacebookSDKException $e) {
                 // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
                 exit;
             } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage();
+                echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
                 return false;
             }
 
@@ -640,14 +641,14 @@ class FacebookService extends ScraperServices
                     $response = $fb->getClient()->sendRequest($request);
                 } catch(Facebook\Exceptions\FacebookResponseException $e) {
                     // When Graph returns an error
-                    echo 'Graph returned an error: ' . $e->getMessage();
+                    echo 'Graph returned an error: ' . $e->getMessage() . "\n";
                     exit;
                 } catch(Facebook\Exceptions\FacebookSDKException $e) {
                     // When validation fails or other local issues
-                    echo 'Facebook SDK returned an error: ' . $e->getMessage();
+                    echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
                     exit;
                 } catch (\Exception $e) {
-                    echo $fbPageId . " - Exception: " . $e->getMessage();
+                    echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
                     return false;
                 }
 

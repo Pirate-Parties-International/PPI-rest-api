@@ -76,10 +76,16 @@ class TwitterService extends ScraperServices
         //
         // Tweet details
         //
-        $tweetUrl  = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
-        $tweetData = $twitter->setGetField($getfield)
+        try {
+            $tweetUrl  = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+            $tweetData = $twitter->setGetField($getfield)
                 ->buildOauth($tweetUrl, $requestMethod)
                 ->performRequest();
+        } catch (\Exception $e) {
+            echo $e->getMessage()."\n";
+            $out['errors'][] = [$code => $e->getMessage()];
+            return false;
+        }
 
         echo "     + Tweet details.... ";
         if (empty($tweetData)) {
@@ -171,7 +177,7 @@ class TwitterService extends ScraperServices
                         ->buildOauth($tweetUrl, $requestMethod)
                         ->performRequest());
                 } catch (\Exception $e) {
-                    echo $e->getMessage();
+                    echo $e->getMessage()."\n";
                     $out['errors'][] = [$code => $e->getMessage()];
                     return false;
                 }
