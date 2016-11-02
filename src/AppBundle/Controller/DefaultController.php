@@ -8,9 +8,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-
 class DefaultController extends BaseController
 {
     /**
@@ -73,68 +70,23 @@ class DefaultController extends BaseController
     }
 
     /**
-     * @Route("/{id}", name="papi_page_show")
+     * @Route("social/{id}", name="papi_social_show")
      * @Template()
      */
-    public function pageAction($id)
-    {   
-        $pagesPath = __DIR__ . '/../Resources/staticContent';
-
-        $data = @file_get_contents(sprintf('%s/%s.md', $pagesPath, $id));
-
-        if ($data === false) {
-            throw $this->createNotFoundException(
-                'Page not found.'
-            );
-        }
-
-        return ['page' => $data];
-    }
-
-    /**
-     * @Route("party/{id}/social", name="papi_social_show")
-     * @Template()
-     */
-    public function socialAction($id, Request $request)
+    public function socialAction($id = null, Request $request)
     {
-        $social_media = $this->getAllSocial($id);
+        $social = $this->getDoctrine()
+            ->getRepository('AppBundle:SocialMedia');
 
-        $form = $this->createFormBuilder($social_media)
-            ->add('display', ChoiceType::class, [
-                'choices' => [
-                    'All data'       => 'xxx',
-                    'All text posts' => 'xxt',
-                    'All images'     => 'xxi',
-                    'All videos'     => 'xxv',
-                    'Facebook' => [
-                        'All FB posts'     => 'fbx',
-                        'FB statuses only' => 'fbt',
-                        'FB images only'   => 'fbi',
-                        'FB videos only'   => 'fbv',
-                        'FB events only'   => 'fbe',
-                        ],
-                    'Twitter' => [
-                        'All tweets'        => 'twx',
-                        'Text tweets only'  => 'twt',
-                        'Image tweets only' => 'twi',
-                        'Video tweets only' => 'twv',
-                        ],
-                    'Youtube' => [
-                        'YT videos only' => 'ytv',
-                        ],
-                    ],
-                'choices_as_values' => true,
-                ]
-            )
-            ->add('submit', SubmitType::class, array('label' => 'Submit'))
-            ->getForm();
+        $social_media = $id ? $social->findBy(['code' => $id], ['postLikes' => 'DESC']) : $social->findAll();
 
+        $form = $this->getSocialForm($social_media);
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
             $data = $form['display']->getData();
 
-            $party = $this->getDoctrine()
+            $social = $this->getDoctrine()
                 ->getRepository('AppBundle:SocialMedia');
 
             $type = substr($data, 0, 2) == 'xx' ? null : substr($data, 0, 2);
@@ -150,7 +102,7 @@ class DefaultController extends BaseController
                 $terms['subType'] = $subType;
             }
 
-            $social_media = $party->findBy($terms);
+            $social_media = $social->findBy($terms, ['postLikes' => 'DESC']);
         }
 
         return $this->render(
@@ -161,6 +113,25 @@ class DefaultController extends BaseController
                 'form' => $form->createView()
             )
         );
+    }
+
+    /**
+     * @Route("/{id}", name="papi_page_show")
+     * @Template()
+     */
+    public function pageAction($id)
+    {
+        $pagesPath = __DIR__ . '/../Resources/staticContent';
+
+        $data = @file_get_contents(sprintf('%s/%s.md', $pagesPath, $id));
+
+        if ($data === false) {
+            throw $this->createNotFoundException(
+                'Page not found.'
+            );
+        }
+
+        return ['page' => $data];
     }
 
 }

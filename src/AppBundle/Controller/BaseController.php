@@ -5,6 +5,9 @@ namespace AppBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+
 use AppBundle\Entity\Metadata;
 use AppBundle\Entity\Statistic as Stat;
 use AppBundle\Entity\SocialMedia as Sm;
@@ -38,20 +41,6 @@ class BaseController extends Controller
 
         return $party;
 	}
-
-
-    public function getAllSocial($code = null) {
-        $party = $this->getDoctrine()
-            ->getRepository('AppBundle:SocialMedia');
-
-        if ($code) {
-            $party = $party->findByCode($code);
-        } else {
-            $party = $party->findAll();
-        }
-
-        return $party;
-    }
 
 
     public function getCoverImage($code) {
@@ -209,7 +198,6 @@ class BaseController extends Controller
     * @return SocialMedia
     */
     public function getSocial($code, $type, $subType) {
-
         $party = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia')
             ->findBy([
@@ -223,6 +211,41 @@ class BaseController extends Controller
         }
 
         return $party;
+    }
+
+
+    public function getSocialForm($social_media) {
+        $form = $this->createFormBuilder($social_media)
+            ->add('display', ChoiceType::class, [
+                'choices' => [
+                    'All data'       => 'xxx',
+                    'All text posts' => 'xxt',
+                    'All images'     => 'xxi',
+                    'All videos'     => 'xxv',
+                    'Facebook' => [
+                        'All FB posts'     => 'fbx',
+                        'FB statuses only' => 'fbt',
+                        'FB images only'   => 'fbi',
+                        'FB videos only'   => 'fbv',
+                        'FB events only'   => 'fbe',
+                        ],
+                    'Twitter' => [
+                        'All tweets'        => 'twx',
+                        'Text tweets only'  => 'twt',
+                        'Image tweets only' => 'twi',
+                        'Video tweets only' => 'twv',
+                        ],
+                    'Youtube' => [
+                        'YT videos only' => 'ytv',
+                        ],
+                    ],
+                'choices_as_values' => true,
+                ]
+            )
+            ->add('submit', SubmitType::class, array('label' => 'Submit'))
+            ->getForm();
+
+        return $form;
     }
 
 }
