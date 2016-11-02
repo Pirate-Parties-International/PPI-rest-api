@@ -229,7 +229,7 @@ class ScraperServices
     public function saveImage($site, $code, $imgSrc, $imgId) {
 
         $appRoot = $this->container->get('kernel')->getRootDir().'/..';
-        $imgRoot = $appRoot.'/web/img/'.$site.'-uploads/';
+        $imgRoot = $appRoot.'/web/img/uploads/'.$site.'/';
         preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
 
         if (empty($matches)) {
