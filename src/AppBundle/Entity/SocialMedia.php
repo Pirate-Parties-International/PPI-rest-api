@@ -4,11 +4,16 @@ namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
+use JMS\Serializer\Annotation\Exclude;
+use JMS\Serializer\Annotation\ExclusionPolicy;
+use JMS\Serializer\Annotation\Type as SerializerType;
+
 /**
  * SocialMedia
  *
  * @ORM\Table(name="social_media")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\SocialMediaRepository")
+ * @ExclusionPolicy("none")
  */
 class SocialMedia
 {
@@ -27,6 +32,7 @@ class SocialMedia
      * @ORM\Column(name="id", type="integer")
      * @ORM\Id
      * @ORM\GeneratedValue(strategy="AUTO")
+     * @Exclude
      */
     private $id;
 
@@ -90,6 +96,8 @@ class SocialMedia
      * @var array
      *
      * @ORM\Column(name="postData", type="json_array", nullable=true)
+     * @SerializerType("array")
+     * @Exclude
      */
     private $postData;
 
@@ -97,6 +105,7 @@ class SocialMedia
      * @var \DateTime
      *
      * @ORM\Column(name="timestamp", type="datetime")
+     * @Exclude
      */
     private $timestamp;
 

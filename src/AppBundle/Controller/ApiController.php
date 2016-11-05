@@ -71,6 +71,45 @@ class ApiController extends BaseController
     	return new Response($data, 200);
     }
 
+    /**
+     * List data about social media
+     *
+     * @Route("social/", name="ppi_api_social")
+     * @Method({"GET"})
+     *
+     * @ApiDoc(
+     *  resource=false,
+     *  section="Social",
+     *  filters={
+     *      {"name"="code", "dataType"="string", "required"="false", "description"="Get only posts from one party (by code, i.e. ppsi, ppse)"},
+     *      {"name"="type", "dataType"="string", "required"="false", "description"="Get only Facebook, Twitter or YouTube posts", "pattern"="fb | tw | yt"},
+     *      {"name"="sub_type", "dataType"="string", "required"="false", "description"="Get only text posts, images, videos or events", "pattern"="t | i | v | e"},
+     *      {"name"="page", "dataType"="int", "required"="false", "description"="Page of results to get (100 results per page)"}
+     *  },
+     *  statusCodes={
+     *          200="Returned when successful.",
+     *          404="Returned when not found."
+     *  }
+     * )
+     */
+    public function socialAction() {
+
+        $code    = isset($_GET['code'])     ? $_GET['code']     : null;
+        $type    = isset($_GET['type'])     ? $_GET['type']     : null;
+        $subType = isset($_GET['sub_type']) ? $_GET['sub_type'] : null;
+        $page    = isset($_GET['page'])     ? $_GET['page']     : null;
+
+        $data = $this->getAllSocial($code, $type, $subType, $page);
+
+        $serializer = $this->get('jms_serializer');
+        $data = $serializer->serialize($data, 'json');
+
+        if ($data == empty) {
+            return new JsonResponse(array("error"=>"No data found"), 404);
+        }
+
+        return new Response($data, 200);
+    }
 
 
 }

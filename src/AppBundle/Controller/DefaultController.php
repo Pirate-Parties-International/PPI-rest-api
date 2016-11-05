@@ -78,9 +78,9 @@ class DefaultController extends BaseController
         $social = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia');
 
-        $social_media = $id ? $social->findBy(['code' => $id], ['postLikes' => 'DESC']) : $social->findAll();
+        $socialMedia = $id ? $social->findBy(['code' => $id], ['postLikes' => 'DESC']) : $social->findAll();
 
-        $form = $this->getSocialForm($social_media);
+        $form = $this->getSocialForm($socialMedia);
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
@@ -90,7 +90,7 @@ class DefaultController extends BaseController
                 ->getRepository('AppBundle:SocialMedia');
 
             $type = substr($data, 0, 2) == 'xx' ? null : substr($data, 0, 2);
-            $subType = strtoupper(substr($data, -1)) == 'X' ? null : strtoupper(substr($data, -1));
+            $subType = substr($data, -1) == 'x' ? null : strtoupper(substr($data, -1));
 
             if ($id) {
                 $terms['code'] = $id;
@@ -102,14 +102,14 @@ class DefaultController extends BaseController
                 $terms['subType'] = $subType;
             }
 
-            $social_media = $social->findBy($terms, ['postLikes' => 'DESC']);
+            $socialMedia = $social->findBy($terms, ['postLikes' => 'DESC']);
         }
 
         return $this->render(
             'AppBundle:Default:social.html.twig',
             array(
-                'social_media' => $social_media,
-                'empty' => empty($social_media),
+                'social_media' => $socialMedia,
+                'empty' => empty($socialMedia),
                 'form' => $form->createView()
             )
         );

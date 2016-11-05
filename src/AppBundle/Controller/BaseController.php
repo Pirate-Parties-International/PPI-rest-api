@@ -198,24 +198,49 @@ class BaseController extends Controller
     * @return SocialMedia
     */
     public function getSocial($code, $type, $subType) {
-        $party = $this->getDoctrine()
+        $socialMedia = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia')
-            ->findBy([
-                'code' => $code,
-                'type' => $type,
-                'subType' => $subType
-            ]);
+            ->findBy(['code' => $code, 'type' => $type, 'subType' => $subType]);
 
-        if (!$party) {
+        if (!$socialMedia) {
             return false;
         }
 
-        return $party;
+        return $socialMedia;
     }
 
 
-    public function getSocialForm($social_media) {
-        $form = $this->createFormBuilder($social_media)
+    public function getAllSocial($code = null, $type = null, $subType = null, $page = 0) {
+        $social = $this->getDoctrine()
+            ->getRepository('AppBundle:SocialMedia');
+
+        if (!$code && !$type && !$subType) {
+            $socialMedia = $social->findAll();
+        } else {
+            if ($code) {
+                $terms['code'] = $code;
+            }
+            if ($type) {
+                $terms['type'] = $type;
+            }
+            if ($subType) {
+                $terms['subType'] = $subType;
+            }
+            $socialMedia = $social->findBy($terms);
+        }
+
+        $allData = array();
+        foreach ($socialMedia as $post) {
+            $allData[] = $post;
+        }
+        $allData = array_slice($allData, ($page*100), 100);
+
+        return $allData;
+    }
+
+
+    public function getSocialForm($socialMedia) {
+        $form = $this->createFormBuilder($socialMedia)
             ->add('display', ChoiceType::class, [
                 'choices' => [
                     'All data'       => 'xxx',
