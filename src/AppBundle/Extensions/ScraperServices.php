@@ -229,7 +229,7 @@ class ScraperServices
     public function saveImage($site, $code, $imgSrc, $imgId) {
 
         $appRoot = $this->container->get('kernel')->getRootDir().'/..';
-        $imgRoot = $appRoot.'/web/img/uploads/'.$site.'/';
+        $imgRoot = $appRoot.'/web/img/uploads/'.$code.'/'.$site.'/';
         preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
 
         if (empty($matches)) {
@@ -238,10 +238,10 @@ class ScraperServices
 
         $imgFmt  = $matches[1];
         $imgName = $imgId.'.'.$imgFmt;
-        $imgPath = $imgRoot.$code.'/'.$imgName;
+        $imgPath = $imgRoot.$imgName;
 
-        if (!is_dir($imgRoot.$code.'/')) { // check if directory exists, else create
-            mkdir($imgRoot.$code.'/', 0755, true);
+        if (!is_dir($imgRoot)) { // check if directory exists, else create
+            mkdir($imgRoot, 0755, true);
         }
 
         $ctx = stream_context_create(array(

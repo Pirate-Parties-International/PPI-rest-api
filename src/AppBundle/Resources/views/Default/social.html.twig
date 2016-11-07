@@ -60,8 +60,8 @@
                                 </td>
                                 {% if sm.postImage != null %}
                                     <td style="text-align:center;">
-                                        <a href="/img/uploads/{{ sm.type }}/{{ sm.code }}/{{ sm.postImage }}" target="_blank">
-                                            <img src="/img/uploads/{{ sm.type }}/{{ sm.code }}/{{ sm.postImage }}" style="max-height:75px;max-width:100px">
+                                        <a href="{{ sm.postData.url }}" target="_blank">
+                                            <img src="/img/uploads/{{ sm.code }}/{{ sm.type }}/{{ sm.postImage }}" style="max-height:75px;max-width:100px">
                                         </a>
                                     </td>
                                     <td style="border-right:1px solid #ddd;">

@@ -32,8 +32,6 @@ class TwitterService extends ScraperServices
      * @return array
      */
     public function getTwitterData($username, $code, $full = null) {
-    	$scraper = $this->container->get('ScraperServices');
-
         $settings = array(
             'oauth_access_token'        => $this->container->getParameter('tw_oauth_access_token'),
             'oauth_access_token_secret' => $this->container->getParameter('tw_oauth_access_token_secret'),
@@ -41,9 +39,9 @@ class TwitterService extends ScraperServices
             'consumer_secret'           => $this->container->getParameter('tw_consumer_secret')
         );
 
-        //
-        // Basic info and stats
-        //
+    //
+    // Basic info and stats
+    //
         $url = 'https://api.twitter.com/1.1/users/show.json';
         $getfield = '?screen_name='.str_replace("@", "", $username);
         $requestMethod = 'GET';
@@ -72,12 +70,26 @@ class TwitterService extends ScraperServices
         ];
         echo "     + Info and stats... ok\n";
 
+        $temp = $this->getTweetDetails($settings, $requestMethod, $username, $code, $full);
+        $out['posts']  = $temp['posts'];
+        $out['images'] = $temp['images'];
+        $out['videos'] = $temp['videos'];
 
-        //
-        // Tweet details
-        //
+        $timeCheck = $temp['timeCheck'];
+        $imgCount  = array_key_exists('images', $out) ? count($out['images']) : '0';
+        $vidCount  = array_key_exists('videos', $out) ? count($out['videos']) : '0';
+        echo "...total ".$out['tweets']." tweets found: ".count($out['posts'])." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed\n";
+    }
+
+
+    //
+    // Tweet details
+    //
+    public function getTweetDetails($settings, $requestMethod, $username, $code, $full) {
+        $tweetUrl  = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+        $getfield = '?screen_name='.str_replace("@", "", $username);
         try {
-            $tweetUrl  = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+            $twitter = new TwitterAPIExchange($settings);
             $tweetData = $twitter->setGetField($getfield)
                 ->buildOauth($tweetUrl, $requestMethod)
                 ->performRequest();
@@ -87,6 +99,7 @@ class TwitterService extends ScraperServices
             return false;
         }
 
+        $scraper = $this->container->get('ScraperServices');
         echo "     + Tweet details.... ";
         if (empty($tweetData)) {
             echo "not found\n";
@@ -109,19 +122,19 @@ class TwitterService extends ScraperServices
                     if (!empty($item->entities->media)) { // if tweet contains media
                         $media = $item->extended_entities->media;
                         foreach ($media as $photo) { // if tweet contains multiple images
-                            $imgSrc = $photo->media_url;
+                            $imgSrc = $photo->media_url.":small";
                             $imgId  = $photo->id;
 
                             if ($photo->type == 'video') {
-                                $arType = 'videos';
+                                $postType = 'videos';
                             } else { // if type == 'photo' or 'animated_gif'
-                                $arType = 'images';
+                                $postType = 'images';
                             }
 
                             // save image to disk
                             $img = $scraper->saveImage('tw', $code, $imgSrc, $imgId);
 
-                            $out[$arType][] = [
+                            $out[$postType][] = [
                                 'postId'    => $imgId,
                                 'postTime'  => $twTime, // DateTime
                                 'postText'  => $item->text,
@@ -187,11 +200,8 @@ class TwitterService extends ScraperServices
             } while ($timeCheck > $timeLimit && $pageCount < 100);
             // while tweet times are more recent than the limit as set above, up to 5000
 
-            $imgCount = array_key_exists('images', $out) ? count($out['images']) : '0';
-            $vidCount = array_key_exists('videos', $out) ? count($out['videos']) : '0';
-            echo "...total ".$out['tweets']." tweets found: ".count($out['posts'])." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed\n";
         }
-
+        $out['timeCheck'] = $timeCheck;
         return $out;
     }
 
