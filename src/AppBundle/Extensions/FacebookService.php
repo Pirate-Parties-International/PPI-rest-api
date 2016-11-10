@@ -536,6 +536,7 @@ class FacebookService extends ScraperServices
                                     $imgBkp = $post->getField('picture');
                                 } else {
                                     $imgSrc = $post->getField('picture');
+                                    $imgBkp = null;
                                 }
                                 $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'), $imgBkp);
                                 break;
