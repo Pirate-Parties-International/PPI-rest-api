@@ -316,7 +316,7 @@ class ScraperCommand extends ContainerAwareCommand
     //
     public function scrapeTwitter($sn, $code, $full, $output, $scraperService)
     {
-        $twitterService  = $this->container->get('TwitterService');
+        $twitterService = $this->container->get('TwitterService');
 
         if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
             $output->writeln("   + Starting Twitter import");
@@ -436,7 +436,7 @@ class ScraperCommand extends ContainerAwareCommand
     //
     public function scrapeGooglePlus($sn, $code, $full, $output, $scraperService)
     {
-        $googleService   = $this->container->get('GoogleService');
+        $googleService = $this->container->get('GoogleService');
 
         if (!empty($sn['googlePlus'])) {
             $output->writeln("   + Starting GooglePlus import");

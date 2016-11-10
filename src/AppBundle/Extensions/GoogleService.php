@@ -61,7 +61,7 @@ class GoogleService extends ScraperServices
 
                 $vidId   = $vid->snippet->resourceId->videoId;
                 $vidInfo = $youtube->getVideoInfo($vidId);
-                $imgSrc  = $vid->snippet->thumbnails->medium->url;
+                $imgSrc  = $vid->snippet->thumbnails->medium->url; // 320x180 (only 16:9 option)
                 // deafult=120x90, medium=320x180, high=480x360, standard=640x480, maxres=1280x720
 
                 // save thumbnail to disk

@@ -191,7 +191,7 @@ class FacebookService extends ScraperServices
             }
 
             $coverId = !empty($graphNode->getField('cover')) ? $graphNode->getField('cover')->getField('cover_id') : null;
-            $out['cover'] = !is_null($coverId) ? $this->getCoverSource($fbPageId, $fb, $coverId) : null;
+            $out['cover'] = !is_null($coverId) ? $this->getImageSource($fbPageId, $fb, $coverId, true) : null;
 
             $out['likes']   = !empty($graphNode->getField('engagement')) ? $graphNode->getField('engagement')->getField('count') : '?';
             $out['talking'] = !empty($graphNode->getField('talking_about_count')) ? $graphNode->getField('talking_about_count') : '?';
@@ -232,10 +232,10 @@ class FacebookService extends ScraperServices
 
 
     //
-    // Second step for cover images
+    // Second step for images
     //
-    public function getCoverSource($fbPageId, $fb, $coverId) {
-        $request = $fb->request('GET', $coverId, ['fields' => 'height,width,album,images']);
+    public function getImageSource($fbPageId, $fb, $imgId, $cover = null) {
+        $request = $fb->request('GET', $imgId, ['fields' => 'height,width,album,images']);
         try {
             $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
@@ -255,14 +255,22 @@ class FacebookService extends ScraperServices
 
         $tmpI = [];
         $tmpA = [];
-        foreach ($images as $key => $img) {
-            if ($img->getField('width') == 851 && $img->getField('height') == 351) {
-                $out['cover'] = $img->getField('source');
-                return $out;
-            } else if ($img->getField('width') > 851 && $img->getField('height') > 351) {
-                $tmpI[$img->getField('width') + $img->getField('height')] = $img->getField('source');
+
+        if ($cover) {
+            foreach ($images as $key => $img) {
+                if ($img->getField('width') == 851 && $img->getField('height') == 351) {
+                    return $img->getField('source');
+                } else if ($img->getField('width') > 851 && $img->getField('height') > 351) {
+                    $tmpI[$img->getField('width') + $img->getField('height')] = $img->getField('source');
+                } else {
+                    $tmpA[$img->getField('width') + $img->getField('height')] = $img->getField('source');
+                }
+            }
+        } else foreach ($images as $key => $img) {
+            if ($img->getField('width') > 481 && $img->getField('height') > 481) {
+                // ignore
             } else {
-                $tmpA[$img->getField('width') + $img->getField('height')] = $img->getField('source');
+                return $img->getField('source');
             }
         }
 
@@ -512,11 +520,28 @@ class FacebookService extends ScraperServices
                     if ($type != 'event') { // get events separately to get all details (location, etc.)
 
                         $img = null;
-                        if ($type == 'photo' || $type == 'video') {
-                            $postType = $type.'s';
-                            $imgSrc = $post->getField('picture'); // 130x130 thumbnail
-                            $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'));
-                        } else $postType = 'posts';
+                        switch ($type) {
+                            case 'photo':
+                                $imgSrc = $this->getImageSource($fbPageId, $fb, $post->getField('object_id')); // ~480x480 (or closest)
+                                $imgBkp = $post->getField('picture'); // 130x130 thumbnail
+                                $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'), $imgBkp);
+                                break;
+                            case 'video':
+                                $temp = $post->getField('link');
+                                if (strpos($temp, 'youtube')) {
+                                    $idPos  = strpos($temp, 'v=')+2;
+                                    $vidId  = substr($temp, $idPos, 11);
+                                    $imgSrc = "https://img.youtube.com/vi/".$vidId."/mqdefault.jpg"; // 320x180 (only 16:9 option)
+                                    // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480, maxresdefault=1280x720
+                                    $imgBkp = $post->getField('picture');
+                                } else {
+                                    $imgSrc = $post->getField('picture');
+                                }
+                                $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'), $imgBkp);
+                                break;
+                            default:
+                                $type = 'post';
+                        }
 
                         $text = !empty($post->getField('message')) ? $post->getField('message') : $post->getField('story');
 
@@ -525,7 +550,7 @@ class FacebookService extends ScraperServices
                         $commentCount  = $this->getStatCount($post->getField('comments'));
                         $shareCount    = !empty($post->getField('shares')) ? json_decode($post->getField('shares')->getField('count'), true) : 0;
 
-                        $out[$postType][] = [
+                        $out[$type.'s'][] = [
                             'postId'    => $post->getField('id'),
                             'postTime'  => $post->getField('updated_time'), // DateTime
                             'postText'  => $text,

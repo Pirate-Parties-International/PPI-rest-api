@@ -226,7 +226,7 @@ class ScraperServices
      * @param  string $imgId
      * @return string
      */
-    public function saveImage($site, $code, $imgSrc, $imgId) {
+    public function saveImage($site, $code, $imgSrc, $imgId, $imgBkp = null) {
 
         $appRoot = $this->container->get('kernel')->getRootDir().'/..';
         $imgRoot = $appRoot.'/web/img/uploads/'.$code.'/'.$site.'/';
@@ -257,6 +257,16 @@ class ScraperServices
             } catch (\Exception $e) {
                 echo $e->getMessage();
                 $out['errors'][] = [$code => $imgPath];
+                if ($imgBkp) { // try backup if available
+                    echo "trying backup... ";
+                    try {
+                        $imgData = file_get_contents($imgBkp, false, $ctx);
+                        echo "successful";
+                    } catch (\Exception $e) {
+                        echo "unsuccessful";
+                    }
+                    echo "\n";
+                }
             }
         }
 
