@@ -96,8 +96,7 @@ class SocialMedia
      * @var array
      *
      * @ORM\Column(name="postData", type="json_array", nullable=true)
-     * @SerializerType("array")
-     * @Exclude
+     * @SerializerType("string")
      */
     private $postData;
 

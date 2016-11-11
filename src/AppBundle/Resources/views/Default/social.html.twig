@@ -88,7 +88,7 @@
                                         {{ sm.postText }}
                                         {% if sm.subType == 'E' %}
                                             </br>{{ sm.postData.details.description }}
-                                        (% elseif sm.type == 'yt' %}
+                                        {% elseif sm.type == 'yt' %}
                                             </br>{{ sm.postData.description }}
                                         {% endif %}
                                         <i class="material-icons tiny">open_in_new</i>
