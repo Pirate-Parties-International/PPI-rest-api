@@ -129,11 +129,16 @@ class FacebookService extends ScraperServices
     }
 
 
+//
+// Getting info
+//
+
     /**
-     * Queries Facebook for stats, posts, images and events
+     * Queries for stats, posts, images and events
      * @param  string $fbPageId
      * @param  string $what     type of data being scraped
      * @param  string $code     party code
+     * @param  bool   $full     if user requested full scrape
      * @return array
      */
     public function getFBData($fbPageId, $what, $code, $full = null) {
@@ -151,7 +156,7 @@ class FacebookService extends ScraperServices
             'vStats'   => 'videos.limit(100){id}',
             'eStats'   => 'events.limit(100){id}',
             'pDetails' => 'posts.limit(50){id,type,permalink_url,message,story,link,name,caption,picture,object_id,created_time,updated_time,shares,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true)}',
-            'iDetails' => 'albums{count,photos{created_time,updated_time,picture,source,link,name,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}',
+            'iDetails' => 'albums{id,name,photo_count,photos{created_time,updated_time,picture,source,link,name,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}',
             'eDetails' => 'events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
         ];
 
@@ -201,27 +206,36 @@ class FacebookService extends ScraperServices
             } else echo "ok";
             echo "\n";
 
-            $out['postCount']  = $this->getPostCount($fbPageId, $fb, $req);
-            $out['photoCount'] = $this->getImageCount($fbPageId, $fb, $req);
-            $out['videoCount'] = $this->getVideoCount($fbPageId, $fb, $req);
-            $out['eventCount'] = $this->getEventCount($fbPageId, $fb, $req);
+            $out['postCount']  = $this->getPostCount($fbPageId, $fb, $req['pStats']);
+            $out['videoCount'] = $this->getVideoCount($fbPageId, $fb, $req['vStats']);
+        }
+
+        if ($what == 'info') {
+            $out['photoCount'] = $this->getImageCount($fbPageId, $fb, $req['iStats']);
+            $out['eventCount'] = $this->getEventCount($fbPageId, $fb, $req['eStats']);
         }
 
         if ($what == null || $what == 'posts') {
-            $temp = $this->getPostDetails($fbPageId, $fb, $req, $code, $what, $full);
+            $temp = $this->getPostDetails($fbPageId, $fb, $req['pDetails'], $code, $full);
             if (isset($temp['posts'])) {
                 $out['posts']  = $temp['posts'];
-            }
-            if (isset($temp['photos'])) {
-                $out['photos'] = $temp['photos'];
             }
             if (isset($temp['videos'])) {
                 $out['videos'] = $temp['videos'];
             }
         }
 
+        if ($what == null || $what == 'images') {
+            $temp = $this->getImageDetails($fbPageId, $fb, $req['iDetails'], $code, $full);
+            $out['photoCount'] = isset($temp['photoCount']) ? $temp['photoCount'] : null;
+            if (isset($temp['photos'])) {
+                $out['photos'] = $temp['photos'];
+            }
+        }
+
         if ($what == null || $what == 'events') {
-            $temp['events'] = $this->getEventDetails($fbPageId, $fb, $req, $code, $what, $full);
+            $temp = $this->getEventDetails($fbPageId, $fb, $req['eDetails'], $code, $full);
+            $out['eventCount'] = isset($temp['eventCount']) ? $temp['eventCount'] : null;
             if (isset($temp['events'])) {
                 $out['events'] = $temp['events'];
             }
@@ -231,10 +245,15 @@ class FacebookService extends ScraperServices
     }
 
 
-    //
-    // Second step for images
-    //
-    public function getImageSource($fbPageId, $fb, $imgId, $cover = null) {
+    /**
+     * Finds best resolution of an image
+     * @param  string $fbPageId
+     * @param  string $fb
+     * @param  string $imgId
+     * @param  bool   $cover
+     * @return string
+     */
+    public function getImageSource($fbPageId, $fb, $imgId, $cover = false) {
         $request = $fb->request('GET', $imgId, ['fields' => 'height,width,album,images']);
         try {
             $response = $fb->getClient()->sendRequest($request);
@@ -286,11 +305,19 @@ class FacebookService extends ScraperServices
     }
 
 
-    //
-    // Post count
-    //
+//
+// Counting stats
+//
+
+    /**
+     * Post count
+     * @param  string $fbPageId
+     * @param  string $fb
+     * @param  string $req
+     * @return int
+     */
     public function getPostCount($fbPageId, $fb, $req) {
-        $request = $fb->request('GET', $fbPageId, ['fields' => $req['pStats']]);
+        $request = $fb->request('GET', $fbPageId, ['fields' => $req]);
         try {
             $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
@@ -337,11 +364,15 @@ class FacebookService extends ScraperServices
     }
 
 
-    //
-    // Image count
-    //
+    /**
+     * Image count
+     * @param  string $fbPageId
+     * @param  string $fb
+     * @param  string $req
+     * @return int
+     */
     public function getImageCount($fbPageId, $fb, $req) {
-        $request = $fb->request('GET', $fbPageId, ['fields' => $req['iStats']]);
+        $request = $fb->request('GET', $fbPageId, ['fields' => $req]);
         try {
             $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
@@ -365,7 +396,7 @@ class FacebookService extends ScraperServices
 
             foreach ($fdAlbums as $key => $album) {
                 echo $pageCount.", ";
-                $photoCount[] = $album->getField('count');
+                $photoCount[] = $album->getField('photo_count');
                 $pageCount++;
             }
 
@@ -382,11 +413,15 @@ class FacebookService extends ScraperServices
     }
 
 
-    //
-    // Video count
-    //
+    /**
+     * Video count
+     * @param  string $fbPageId
+     * @param  string $fb
+     * @param  string $req
+     * @return int
+     */
     public function getVideoCount($fbPageId, $fb, $req) {
-        $request = $fb->request('GET', $fbPageId, ['fields' => $req['vStats']]);
+        $request = $fb->request('GET', $fbPageId, ['fields' => $req]);
         try {
             $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
@@ -433,11 +468,15 @@ class FacebookService extends ScraperServices
     }
 
 
-    //
-    // Event count
-    //
+    /**
+     * Event count
+     * @param  string $fbPageId
+     * @param  string $fb
+     * @param  string $req
+     * @return int
+     */
     public function getEventCount($fbPageId, $fb, $req) {
-        $request = $fb->request('GET', $fbPageId, ['fields' => $req['eStats']]);
+        $request = $fb->request('GET', $fbPageId, ['fields' => $req]);
         try {
             $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
@@ -480,13 +519,23 @@ class FacebookService extends ScraperServices
     }
 
 
-    //
-    // Post, image and video details
-    //
-    public function getPostDetails($fbPageId, $fb, $req, $code, $what, $full) {
+//
+// Getting details
+//
+
+    /**
+     * Gets post details (inc. videos)
+     * @param  string $fbPageId
+     * @param  string $fb
+     * @param  string $req
+     * @param  string $code
+     * @param  bool   $full
+     * @return array
+     */
+    public function getPostDetails($fbPageId, $fb, $req, $code, $full) {
         $scraper = $this->container->get('ScraperServices');
 
-        $request = $fb->request('GET', $fbPageId, ['fields' => $req['pDetails']]);
+        $request = $fb->request('GET', $fbPageId, ['fields' => $req]);
         try {
             $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
@@ -507,7 +556,7 @@ class FacebookService extends ScraperServices
         echo "     + Post details.... ";
         if (!empty($fdPosts)) {
 
-            $timeLimit = $scraper->getTimeLimit('fb', $code, $what, $full);
+            $timeLimit = $scraper->getTimeLimit('fb', 'T', $code, $full);
             echo "page ";
             $pageCount = 0;
 
@@ -517,15 +566,10 @@ class FacebookService extends ScraperServices
                 foreach ($fdPosts as $key => $post) {
 
                     $type = $post->getField('type'); // types = 'status', 'link', 'photo', 'video', 'event'
-                    if ($type != 'event') { // get events separately to get all details (location, etc.)
+                    if ($type != 'photo' && $type != 'event') { // get photos and events separately to get all details
 
                         $img = null;
                         switch ($type) {
-                            case 'photo':
-                                $imgSrc = $this->getImageSource($fbPageId, $fb, $post->getField('object_id')); // ~480x480 (or closest)
-                                $imgBkp = $post->getField('picture'); // 130x130 thumbnail
-                                $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'), $imgBkp);
-                                break;
                             case 'video':
                                 $temp = $post->getField('link');
                                 if (strpos($temp, 'youtube')) {
@@ -533,7 +577,7 @@ class FacebookService extends ScraperServices
                                     $vidId  = substr($temp, $idPos, 11);
                                     $imgSrc = "https://img.youtube.com/vi/".$vidId."/mqdefault.jpg"; // 320x180 (only 16:9 option)
                                     // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480, maxresdefault=1280x720
-                                    $imgBkp = $post->getField('picture');
+                                    $imgBkp = $post->getField('picture'); // 130x130 thumbnail
                                 } else {
                                     $imgSrc = $post->getField('picture');
                                     $imgBkp = null;
@@ -586,9 +630,8 @@ class FacebookService extends ScraperServices
             // while next page is not null and within our time limit
 
             $txtCount = array_key_exists('posts',  $out) ? count($out['posts'])  : 0;
-            $imgCount = array_key_exists('photos', $out) ? count($out['photos']) : 0;
             $vidCount = array_key_exists('videos', $out) ? count($out['videos']) : 0;
-            echo "...".$txtCount." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed";
+            echo "...".$txtCount." text posts and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed";
 
         } else {
             echo "not found";
@@ -598,14 +641,111 @@ class FacebookService extends ScraperServices
     }
 
 
-
-    //
-    // Event details
-    //
-    public function getEventDetails($fbPageId, $fb, $req, $code, $what, $full) {
+    /**
+     * Gets image details
+     * @param  string $fbPageId
+     * @param  string $fb
+     * @param  string $req
+     * @param  string $code
+     * @param  bool   $full
+     * @return array
+     */
+    public function getImageDetails($fbPageId, $fb, $req, $code, $full) {
         $scraper = $this->container->get('ScraperServices');
 
-        $request = $fb->request('GET', $fbPageId, ['fields' => $req['eDetails']]);
+        $request = $fb->request('GET', $fbPageId, ['fields' => $req]);
+        try {
+            $response = $fb->getClient()->sendRequest($request);
+        } catch(Facebook\Exceptions\FacebookResponseException $e) {
+            // When Graph returns an error
+            echo 'Graph returned an error: ' . $e->getMessage();
+            exit;
+        } catch(Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            exit;
+        } catch(\Exception $e) {
+            echo $fbPageId . " - Exception: " . $e->getMessage();
+            return false;
+        }
+        $graphNode = $response->getGraphNode();
+        $fdAlbums  = $graphNode->getField('albums');
+        echo "     + Photo details... ";
+
+        if (!empty($fdAlbums)) {
+            $timeLimit = $scraper->getTimeLimit('fb', 'I', $code, $full);
+            echo "page ";
+            $pageCount = 0;
+            foreach ($fdAlbums as $key => $album) {
+                $photoCount[] = $album->getField('photo_count');
+                $fdPhotos     = $album->getField('photos');
+                if (!empty($fdPhotos)) {
+                    do {
+                        echo $pageCount .', ';
+                        foreach ($fdPhotos as $key => $photo) {
+
+                            $imgSrc = $this->getImageSource($fbPageId, $fb, $photo->getField('id')); // ~480x480 (or closest)
+                            $imgBkp = $photo->getField('picture'); // 130x130 thumbnail
+                            $img = $scraper->saveImage('fb', $code, $imgSrc, $photo->getField('id'), $imgBkp);
+
+                            $likeCount     = $this->getStatCount($photo->getField('likes'));
+                            $reactionCount = $this->getStatCount($photo->getField('reactions'));
+                            $commentCount  = $this->getStatCount($photo->getField('comments'));
+                            $shareCount    = count(json_decode($photo->getField('sharedposts'), true));
+                            $out['photos'][] = [
+                                'postId'    => $photo->getField('id'),
+                                'postTime'  => $photo->getField('updated_time'), // DateTime
+                                'postText'  => $photo->getField('name'),
+                                'postImage' => $img,
+                                'postLikes' => $reactionCount,
+                                'postData'  => [
+                                    'id'        => $photo->getField('id'),
+                                    'posted'    => $photo->getField('created_time')->format('Y-m-d H:i:s'), // string
+                                    'updated'   => $photo->getField('updated_time')->format('Y-m-d H:i:s'), // string
+                                    'caption'   => $photo->getField('name'),
+                                    'source'    => $imgSrc,
+                                    'url'       => $photo->getField('link'),
+                                    'album'     => [
+                                        'name'      => $album->getField('name'),
+                                        'id'        => $album->getField('Id'),
+                                        ],
+                                    'likes'     => $likeCount,
+                                    'reactions' => $reactionCount,
+                                    'comments'  => $commentCount,
+                                    'shares'    => $shareCount
+                                    ]
+                                ];
+                        }
+                        $timeCheck = $photo->getField('updated_time')->getTimestamp(); // check time of last scraped post
+                        $pageCount++;
+                    } while ($timeCheck > $timeLimit && $fdPhotos = $fb->next($fdPhotos));
+                    // while next page is not null and within our time limit
+                }
+            }
+            $out['photoCount'] = array_sum($photoCount);
+            echo "...".$out['photoCount']." found, ".count($out['photos'])." since ".date('d/m/Y', $timeCheck)." processed";
+        } else {
+            $out['photoCount'] = 0;
+            echo "not found";
+        }
+        echo "\n";
+        return $out;
+    }
+
+
+    /**
+     * Gets event details
+     * @param  string $fbPageId
+     * @param  string $fb
+     * @param  string $req
+     * @param  string $code
+     * @param  bool   $full
+     * @return array
+     */
+    public function getEventDetails($fbPageId, $fb, $req, $code, $full) {
+        $scraper = $this->container->get('ScraperServices');
+
+        $request = $fb->request('GET', $fbPageId, ['fields' => $req]);
         try {
             $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
@@ -626,7 +766,7 @@ class FacebookService extends ScraperServices
 
         if (!empty($fdEvents)) {
 
-            $timeLimit = $scraper->getTimeLimit('fb', $code, $what, $full);
+            $timeLimit = $scraper->getTimeLimit('fb', 'E', $code, $full);
             echo "page ";
             $pageCount = 0;
 
@@ -700,14 +840,16 @@ class FacebookService extends ScraperServices
             } while ($timeCheck > $timeLimit && $fdEvents = $fb->next($fdEvents));
             // while next page is not null and within our time limit
 
-            echo "...".count($out['events'])." found and processed";
+            $out['eventCount'] = count($out['events']);
+            echo "...".$out['eventCount']." found and processed";
 
         } else {
             echo "not found";
+            $out['eventCount'] = 0;
         }
 
         echo "\n";
-        return isset($out['events']) ? $out['events'] : null;
+        return $out;
     }
 
 }

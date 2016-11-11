@@ -173,40 +173,47 @@ class ScraperServices
     /**
      * Queries DB for a party's latest social media entry of a specified type
      * @param  string $type
+     * @param  string $subType
      * @param  string $code
-     * @param  string $what
+     * @param  bool   $full
      * @return int
      */
-    public function getTimeLimit($type, $code, $what, $full = null) {
+    public function getTimeLimit($type, $subType, $code, $full = false) {
 
         $limited   = strtotime("-1 year"); // set age limit for fb text posts and tweets
         $unlimited = strtotime("-20 years"); // practically no limit, get all
 
-        if ($what == 'info' || $what == 'stats') { // if only getting stats, not full data
-            $time = $unlimited;
-
-        } else if ($full) { // if user requested a full scrape
+        if ($full) { // if user requested a full scrape
             echo "getting all... ";
-            if ($type == 'fb' || $type == 'tw') {
-                $time = $limited; // age limit for tweets and fb posts
-            } else {
-                $time = $unlimited; // no limit for yt videos, get all
+            switch ($type) {
+                case 'tw':
+                    $time = $limited; // age limit for all tweets
+                    break;
+                case 'fb':
+                    $time = ($subType == 'T') ? $limited : $unlimited; // limit for text posts only
+                    break;
+                default:
+                    $time = $unlimited; // no limit for yt videos, get all
             }
 
         } else {
             echo "checking database...";
-
             $p = $this->container->get('doctrine')
                 ->getRepository('AppBundle:SocialMedia')
-                ->findOneBy(['code' => $code, 'type' => $type],['postTime' => 'DESC']);
+                ->findOneBy(['code' => $code, 'type' => $type, 'subType' => $subType],['postTime' => 'DESC']);
 
             if (empty($p)) { // if there are no entries in the database, populate fully
-                if ($type == 'fb' || $type == 'tw') {
-                    $time = $limited; // age limit for tweets and fb posts
-                } else {
-                    $time = $unlimited; // no limit for yt videos, get all
-                }
                 echo " empty, getting all... ";
+                switch ($type) {
+                    case 'tw':
+                        $time = $limited; // age limit for all tweets
+                        break;
+                    case 'fb':
+                        $time = ($subType == 'T') ? $limited : $unlimited; // limit for text posts only
+                        break;
+                    default:
+                        $time = $unlimited; // no limit for yt videos, get all
+                }
 
             } else { // if there are entries already in the db, only get updates since the latest one
                 echo " !empty, updating... ";
@@ -265,7 +272,7 @@ class ScraperServices
                     } catch (\Exception $e) {
                         echo "unsuccessful";
                     }
-                    echo "\n";
+                    echo ", ";
                 }
             }
         }

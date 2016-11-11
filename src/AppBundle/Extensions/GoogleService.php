@@ -89,14 +89,15 @@ class GoogleService extends ScraperServices
                     'postImage' => $img,
                     'postLikes' => $vidLikes,
                     'postData'  => [
-                        'id'       => $vidId,
-                        'posted'   => $vidTime->format('Y-m-d H:i:s'), // string
-                        'title'    => $vid->snippet->title,
-                        'thumb'    => $imgSrc,
-                        'url'      => 'https://www.youtube.com/watch?v='.$vidId,
-                        'views'    => $vidInfo->statistics->viewCount,
-                        'likes'    => $vidLikes,
-                        'comments' => $vidComments
+                        'id'          => $vidId,
+                        'posted'      => $vidTime->format('Y-m-d H:i:s'), // string
+                        'title'       => $vid->snippet->title,
+                        'description' => $vid->snippet->description,
+                        'thumb'       => $imgSrc,
+                        'url'         => 'https://www.youtube.com/watch?v='.$vidId,
+                        'views'       => $vidInfo->statistics->viewCount,
+                        'likes'       => $vidLikes,
+                        'comments'    => $vidComments
                         ]
                     ];
             }

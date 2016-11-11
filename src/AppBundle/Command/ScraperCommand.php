@@ -39,8 +39,11 @@ class ScraperCommand extends ContainerAwareCommand
             case 'text':
                 $what = 'posts';
                 break;
+            case 'photos':
+                $what = 'images';
             case 'data':
             case 'basic':
+            case 'stats':
                 $what = 'info';
                 break;
         }
@@ -242,6 +245,28 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("       + Text posts added");
                 }
 
+                if (empty($fd['videos'])) {
+                    $output->writeln("     + No videos found");
+                } else {
+                    $output->writeln("     + Adding videos");
+                    foreach ($fd['videos'] as $key => $image) {
+                        $scraperService->addSocial(
+                            $code,
+                            SocialMedia::TYPE_FACEBOOK,
+                            SocialMedia::SUBTYPE_VIDEO,
+                            $image['postId'],
+                            $image['postTime'],
+                            $image['postText'],
+                            $image['postImage'],
+                            $image['postLikes'],
+                            json_encode($image['postData'])
+                        );
+                    }
+                    $output->writeln("       + Videos added");
+                }
+            }
+
+            if ($what == null || $what == 'images') {
                 if (empty($fd['photos'])) {
                     $output->writeln("     + No photos found");
                     $sn['errors'][] = [$code => 'fb photos not found'];
@@ -261,26 +286,6 @@ class ScraperCommand extends ContainerAwareCommand
                         );
                     }
                     $output->writeln("       + Photos added");
-                }
-
-                if (empty($fd['videos'])) {
-                    $output->writeln("     + No videos found");
-                } else {
-                    $output->writeln("     + Adding videos");
-                    foreach ($fd['videos'] as $key => $image) {
-                        $scraperService->addSocial(
-                            $code,
-                            SocialMedia::TYPE_FACEBOOK,
-                            SocialMedia::SUBTYPE_VIDEO,
-                            $image['postId'],
-                            $image['postTime'],
-                            $image['postText'],
-                            $image['postImage'],
-                            $image['postLikes'],
-                            json_encode($image['postData'])
-                        );
-                    }
-                    $output->writeln("       + Videos added");
                 }
             }
 

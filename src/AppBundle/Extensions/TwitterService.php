@@ -71,20 +71,33 @@ class TwitterService extends ScraperServices
         echo "     + Info and stats... ok\n";
 
         $temp = $this->getTweetDetails($settings, $requestMethod, $username, $code, $full);
-        $out['posts']  = $temp['posts'];
-        $out['images'] = $temp['images'];
-        $out['videos'] = $temp['videos'];
+        if (isset($temp['posts'])) {
+            $out['posts']  = $temp['posts'];
+        }
+        if (isset($temp['images'])) {
+            $out['images'] = $temp['images'];
+        }
+        if (isset($temp['videos'])) {
+            $out['videos'] = $temp['videos'];
+        }
 
         $timeCheck = $temp['timeCheck'];
         $imgCount  = array_key_exists('images', $out) ? count($out['images']) : '0';
         $vidCount  = array_key_exists('videos', $out) ? count($out['videos']) : '0';
         echo "...total ".$out['tweets']." tweets found: ".count($out['posts'])." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed\n";
+        return $out;
     }
 
 
-    //
-    // Tweet details
-    //
+    /**
+     * Gets tweet details (inc. images and videos)
+     * @param  array  $settings
+     * @param  string $requetMethod
+     * @param  string $username
+     * @param  string $code
+     * @param  bool   $full
+     * @return int
+     */
     public function getTweetDetails($settings, $requestMethod, $username, $code, $full) {
         $tweetUrl  = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
         $getfield = '?screen_name='.str_replace("@", "", $username);
@@ -106,7 +119,7 @@ class TwitterService extends ScraperServices
             return false;
         } else {
             $tweetData = json_decode($tweetData);
-            $timeLimit = $scraper->getTimeLimit('tw', $code, 'tweets', $full);
+            $timeLimit = $scraper->getTimeLimit('tw', 'T', $code, $full);
             $pageCount = 0;
             echo "page ";
 
