@@ -575,7 +575,7 @@ class FacebookService extends ScraperServices
                                 $idPos  = strpos($temp, 'v=')+2;
                                 $vidId  = substr($temp, $idPos, 11);
                                 $imgSrc = "https://img.youtube.com/vi/".$vidId."/mqdefault.jpg"; // 320x180 (only 16:9 option)
-                                // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480, maxresdefault=1280x720
+                                // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480 (all 4:3 w/ letterbox)
                                 $imgBkp = $post->getField('picture'); // 130x130 thumbnail
                             } else {
                                 $imgSrc = $post->getField('picture');

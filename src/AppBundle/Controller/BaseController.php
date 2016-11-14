@@ -69,19 +69,19 @@ class BaseController extends Controller
         ];
         $out['pageInfo'] = $this->getMeta($code, Metadata::TYPE_FACEBOOK_INFO);
 
-        $posts  = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_TEXT);
+        $posts  = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_TEXT);
         if (!empty($posts)) {
             $out['posts'] = $posts;
         }
-        $photos = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_IMAGE);
+        $photos = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_IMAGE);
         if (!empty($photos)) {
             $out['photos'] = $photos;
         }
-        $videos = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_VIDEO);
+        $videos = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_VIDEO);
         if (!empty($videos)) {
             $out['videos'] = $videos;
         }
-        $events = $this->getSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_EVENT);
+        $events = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_EVENT);
         if (!empty($events)) {
             $out['events'] = $events;
         }
@@ -103,15 +103,15 @@ class BaseController extends Controller
         ];
         $out['pageInfo']['about'] = $this->getMeta($code, Metadata::TYPE_TWITTER_INFO);
 
-        $tweets = $this->getSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_TEXT);
+        $tweets = $this->getOneSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_TEXT);
         if (!empty($tweets)) {
             $out['tweets'] = $tweets;
         }
-        $images = $this->getSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_IMAGE);
+        $images = $this->getOneSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_IMAGE);
         if (!empty($tweets)) {
             $out['images'] = $images;
         }
-        $videos = $this->getSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_VIDEO);
+        $videos = $this->getOneSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_VIDEO);
         if (!empty($videos)) {
             $out['videos'] = $videos;
         }
@@ -131,7 +131,7 @@ class BaseController extends Controller
             'videoCount'  => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_VIDEOS),
         ];
 
-        $videos = $this->getSocial($code, Sm::TYPE_YOUTUBE, Sm::SUBTYPE_VIDEO);
+        $videos = $this->getOneSocial($code, Sm::TYPE_YOUTUBE, Sm::SUBTYPE_VIDEO);
         if (!empty($videos)) {
             $out['videos'] = $videos;
         }
@@ -191,13 +191,13 @@ class BaseController extends Controller
 
 
     /**
-    * Queries for a party's social media posts
+    * Queries for a single type of social media (used on this page)
     * @param  string $code
     * @param  string $type
     * @param  string $subType
     * @return SocialMedia
     */
-    public function getSocial($code, $type, $subType) {
+    public function getOneSocial($code, $type, $subType) {
         $socialMedia = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia')
             ->findBy(['code' => $code, 'type' => $type, 'subType' => $subType]);
@@ -210,24 +210,61 @@ class BaseController extends Controller
     }
 
 
-    public function getAllSocial($code = null, $type = null, $subType = null, $page = 0) {
+    /**
+    * Queries for all social media (used by ApiController and papi_social_show)
+    * @param  string $code
+    * @param  string $type
+    * @param  string $subType
+    * @param  string $orderBy
+    * @param  int    $page
+    * @return array
+    */
+    public function getAllSocial($code = null, $type = null, $subType = null, $orderBy = 'code', $page = 0) {
         $social = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia');
+/*
+        $query = $social->createQueryBuilder('qb')
+            ->select('s')->from('AppBundle:SocialMedia', 's');
 
-        if (!$code && !$type && !$subType) {
-            $socialMedia = $social->findAll();
-        } else {
-            if ($code) {
-                $terms['code'] = $code;
-            }
-            if ($type) {
-                $terms['type'] = $type;
-            }
-            if ($subType) {
-                $terms['subType'] = $subType;
-            }
-            $socialMedia = $social->findBy($terms);
+        if ($code) {
+            $query->where(sprintf("s.code = '%s'", $code));
         }
+        if ($type) {
+            $query->andwhere(sprintf("s.type = '%s'", $type));
+        }
+        if ($subType) {
+            $query->andwhere(sprintf("s.subType = '%s'", $subType));
+        }
+
+        switch ($orderBy) {
+            case 'date':
+                $query->orderBy('s.postTime', 'DESC');
+                break;
+            case 'likes':
+                $query->orderBy('s.postLikes', 'DESC');
+                break;
+            default: // case 'code' or null
+                $query->orderBy('s.code', 'ASC');
+        }
+
+        $query->setFirstResult(20*$page)->setMaxResults(20);
+
+        $socialMedia = $query->getQuery()->getResult();
+*/
+        $terms = [];
+        $direction = ($orderBy == 'code') ? 'ASC' : 'DESC';
+
+        if ($code) {
+            $terms['code'] = $code;
+        }
+        if ($type) {
+            $terms['type'] = $type;
+        }
+        if ($subType) {
+            $terms['subType'] = $subType;
+        }
+
+        $socialMedia = $social->findBy($terms, [$orderBy => $direction]);
 
         $allData = array();
         foreach ($socialMedia as $post) {
@@ -239,6 +276,15 @@ class BaseController extends Controller
     }
 
 
+    /**
+    * Builds a form for social media posts (used by papi_social_show)
+    * @param  string $code
+    * @param  string $type
+    * @param  string $subType
+    * @param  string $orderBy
+    * @param  int    $page
+    * @return array
+    */
     public function getSocialForm($socialMedia) {
         $form = $this->createFormBuilder($socialMedia)
             ->add('display', ChoiceType::class, [
@@ -260,7 +306,7 @@ class BaseController extends Controller
                         'Image tweets only' => 'twi',
                         'Video tweets only' => 'twv',
                         ],
-                    'Youtube' => [
+                    'YouTube' => [
                         'YT videos only' => 'ytv',
                         ],
                     ],

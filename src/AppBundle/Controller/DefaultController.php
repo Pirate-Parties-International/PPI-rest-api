@@ -75,10 +75,7 @@ class DefaultController extends BaseController
      */
     public function socialAction($id = null, Request $request)
     {
-        $social = $this->getDoctrine()
-            ->getRepository('AppBundle:SocialMedia');
-
-        $socialMedia = $id ? $social->findBy(['code' => $id], ['postLikes' => 'DESC']) : $social->findAll();
+        $socialMedia = $this->getAllSocial($id);
 
         $form = $this->getSocialForm($socialMedia);
         $form->handleRequest($request);
