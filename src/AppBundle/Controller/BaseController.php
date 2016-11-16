@@ -5,9 +5,6 @@ namespace AppBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-
 use AppBundle\Entity\Metadata;
 use AppBundle\Entity\Statistic as Stat;
 use AppBundle\Entity\SocialMedia as Sm;
@@ -108,7 +105,7 @@ class BaseController extends Controller
             $out['tweets'] = $tweets;
         }
         $images = $this->getOneSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_IMAGE);
-        if (!empty($tweets)) {
+        if (!empty($images)) {
             $out['images'] = $images;
         }
         $videos = $this->getOneSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_VIDEO);
@@ -211,12 +208,13 @@ class BaseController extends Controller
 
 
     /**
-    * Queries for all social media (used by ApiController and papi_social_show)
+    * Queries for all social media (used by ApiController)
     * @param  string $code
     * @param  string $type
     * @param  string $subType
     * @param  string $orderBy
-    * @param  int    $page
+    * @param  int    $limit
+    * @param  int    $offset
     * @return array
     */
     public function getAllSocial($code = null, $type = null, $subType = null, $orderBy = 'code', $limit = 100, $offset = 0) {
@@ -239,50 +237,6 @@ class BaseController extends Controller
         $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
 
         return $socialMedia;
-    }
-
-
-    /**
-    * Builds a form for social media posts (used by papi_social_show)
-    * @param  string $code
-    * @param  string $type
-    * @param  string $subType
-    * @param  string $orderBy
-    * @param  int    $page
-    * @return array
-    */
-    public function getSocialForm($socialMedia) {
-        $form = $this->createFormBuilder($socialMedia)
-            ->add('display', ChoiceType::class, [
-                'choices' => [
-                    'All data'       => 'xxx',
-                    'All text posts' => 'xxt',
-                    'All images'     => 'xxi',
-                    'All videos'     => 'xxv',
-                    'Facebook' => [
-                        'All FB posts'     => 'fbx',
-                        'FB statuses only' => 'fbt',
-                        'FB images only'   => 'fbi',
-                        'FB videos only'   => 'fbv',
-                        'FB events only'   => 'fbe',
-                        ],
-                    'Twitter' => [
-                        'All tweets'        => 'twx',
-                        'Text tweets only'  => 'twt',
-                        'Image tweets only' => 'twi',
-                        'Video tweets only' => 'twv',
-                        ],
-                    'YouTube' => [
-                        'YT videos only' => 'ytv',
-                        ],
-                    ],
-                'choices_as_values' => true,
-                ]
-            )
-            ->add('submit', SubmitType::class, array('label' => 'Submit'))
-            ->getForm();
-
-        return $form;
     }
 
 }

@@ -4,9 +4,7 @@ namespace AppBundle\Controller;
 
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
-
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Request;
 
 class DefaultController extends BaseController
 {
@@ -41,6 +39,7 @@ class DefaultController extends BaseController
         return array("parties" => $parties);
     }
 
+
     /**
      * @Route("party/{id}", name="papi_party_show")
      * @Template()
@@ -69,48 +68,6 @@ class DefaultController extends BaseController
         );
     }
 
-    /**
-     * @Route("social/{id}", name="papi_social_show")
-     * @Template()
-     */
-    public function socialAction($id = null, Request $request)
-    {
-        $socialMedia = $this->getAllSocial($id);
-
-        $form = $this->getSocialForm($socialMedia);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted()) {
-            $data = $form['display']->getData();
-
-            $social = $this->getDoctrine()
-                ->getRepository('AppBundle:SocialMedia');
-
-            $type = substr($data, 0, 2) == 'xx' ? null : substr($data, 0, 2);
-            $subType = substr($data, -1) == 'x' ? null : strtoupper(substr($data, -1));
-
-            if ($id) {
-                $terms['code'] = $id;
-            }
-            if ($type) {
-                $terms['type'] = $type;
-            }
-            if ($subType) {
-                $terms['subType'] = $subType;
-            }
-
-            $socialMedia = $social->findBy($terms, ['postLikes' => 'DESC']);
-        }
-
-        return $this->render(
-            'AppBundle:Default:social.html.twig',
-            array(
-                'social_media' => $socialMedia,
-                'empty' => empty($socialMedia),
-                'form' => $form->createView()
-            )
-        );
-    }
 
     /**
      * @Route("/{id}", name="papi_page_show")
