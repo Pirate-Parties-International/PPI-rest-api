@@ -219,38 +219,10 @@ class BaseController extends Controller
     * @param  int    $page
     * @return array
     */
-    public function getAllSocial($code = null, $type = null, $subType = null, $orderBy = 'code', $page = 0) {
+    public function getAllSocial($code = null, $type = null, $subType = null, $orderBy = 'code', $limit = 100, $offset = 0) {
         $social = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia');
-/*
-        $query = $social->createQueryBuilder('qb')
-            ->select('s')->from('AppBundle:SocialMedia', 's');
 
-        if ($code) {
-            $query->where(sprintf("s.code = '%s'", $code));
-        }
-        if ($type) {
-            $query->andwhere(sprintf("s.type = '%s'", $type));
-        }
-        if ($subType) {
-            $query->andwhere(sprintf("s.subType = '%s'", $subType));
-        }
-
-        switch ($orderBy) {
-            case 'date':
-                $query->orderBy('s.postTime', 'DESC');
-                break;
-            case 'likes':
-                $query->orderBy('s.postLikes', 'DESC');
-                break;
-            default: // case 'code' or null
-                $query->orderBy('s.code', 'ASC');
-        }
-
-        $query->setFirstResult(20*$page)->setMaxResults(20);
-
-        $socialMedia = $query->getQuery()->getResult();
-*/
         $terms = [];
         $direction = ($orderBy == 'code') ? 'ASC' : 'DESC';
 
@@ -264,15 +236,9 @@ class BaseController extends Controller
             $terms['subType'] = $subType;
         }
 
-        $socialMedia = $social->findBy($terms, [$orderBy => $direction]);
+        $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
 
-        $allData = array();
-        foreach ($socialMedia as $post) {
-            $allData[] = $post;
-        }
-        $allData = array_slice($allData, ($page*100), 100);
-
-        return $allData;
+        return $socialMedia;
     }
 
 

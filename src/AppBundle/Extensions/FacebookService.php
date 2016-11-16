@@ -286,7 +286,7 @@ class FacebookService extends ScraperServices
                 }
             }
         } else foreach ($images as $key => $img) {
-            if ($img->getField('width') > 481 && $img->getField('height') > 481) {
+            if ($img->getField('width') > 481 || $img->getField('height') > 481) {
                 // ignore
             } else {
                 return $img->getField('source');
