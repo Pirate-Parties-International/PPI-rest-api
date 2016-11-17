@@ -1,0 +1,24 @@
+{% extends "::base.html.twig" %}
+{% block javascripts_extra %}
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+	<script src="/js/pictureList.js"></script>
+{% endblock javascripts_extra %}
+{% block title %}AppBundle:Template:listPictures{% endblock %}
+
+{% block body %}
+{% block content %}
+{% verbatim %}
+    <div class="container"  ng-app="app" ng-controller="pictureController">
+        <div class="section valign-wrapper">
+            <div class="row singlePage valign">
+
+            	I LIKE POTATOE
+                {{greeting}}
+            </div>
+        </div>
+        <br><br>
+
+    </div>
+{% endverbatim %}
+{% endblock content%}
+{% endblock %}
