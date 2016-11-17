@@ -275,7 +275,15 @@ class FacebookService extends ScraperServices
         $tmpI = [];
         $tmpA = [];
 
-        if ($cover) {
+        if (!$cover) {
+            foreach ($images as $key => $img) {
+                if ($img->getField('width') < 481 && $img->getField('height') < 481) {
+                    return $img->getField('source'); // get biggest available up to 480x480
+                }
+            }
+            return $img->getField('source'); // if above fails, just get whatever's available
+
+        } else {
             foreach ($images as $key => $img) {
                 if ($img->getField('width') == 851 && $img->getField('height') == 351) {
                     return $img->getField('source');
@@ -285,23 +293,18 @@ class FacebookService extends ScraperServices
                     $tmpA[$img->getField('width') + $img->getField('height')] = $img->getField('source');
                 }
             }
-        } else foreach ($images as $key => $img) {
-            if ($img->getField('width') > 481 || $img->getField('height') > 481) {
-                // ignore
+
+            if (!empty($tmpI)) {
+                $t   = max(array_keys($tmpI));
+                $img = $tmpI[$t];
             } else {
-                return $img->getField('source');
+                $t   = max(array_keys($tmpA));
+                $img = $tmpA[$t];
             }
+
+            return $img;
         }
 
-        if (!empty($tmpI)) {
-            $t   = max(array_keys($tmpI));
-            $img = $tmpI[$t];
-        } else {
-            $t   = max(array_keys($tmpA));
-            $img = $tmpA[$t];
-        }
-
-        return $img;
     }
 
 
@@ -721,6 +724,7 @@ class FacebookService extends ScraperServices
                 }
             }
             $out['photoCount'] = array_sum($photoCount);
+
             echo "...".$out['photoCount']." found, ".count($out['photos'])." since ".date('d/m/Y', $timeCheck)." processed";
         } else {
             $out['photoCount'] = 0;
@@ -774,12 +778,12 @@ class FacebookService extends ScraperServices
                     foreach ($fdEvents as $key => $event) {
 
                         $place = $event->getField('place');
-                        if (!empty($place)) { // must be checked in advance, will break if null
+                        if (!empty($place)) { // must be checked in advance, else will break if null
                             $placeName = $place->getField('name');
                             $location  = $place->getField('location');
                         } else $placeName = null;
 
-                        if (!empty($location)) { // must be checked in advance, will break if null
+                        if (!empty($location)) { // must be checked in advance, else will break if null
                             $placeAddress = [
                                 'street'    => $location->getField('street'),
                                 'city'      => $location->getField('city'),

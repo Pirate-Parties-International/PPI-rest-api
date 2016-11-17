@@ -231,6 +231,7 @@ class ScraperServices
      * @param  string $code
      * @param  string $imgSrc
      * @param  string $imgId
+     * @param  string $imgBkp
      * @return string
      */
     public function saveImage($site, $code, $imgSrc, $imgId, $imgBkp = null) {
@@ -265,7 +266,7 @@ class ScraperServices
                 echo $e->getMessage();
                 $out['errors'][] = [$code => $imgPath];
                 if ($imgBkp) { // try backup if available
-                    echo "trying backup... ";
+                    echo " trying backup... ";
                     try {
                         $imgData = file_get_contents($imgBkp, false, $ctx);
                         echo "successful";
