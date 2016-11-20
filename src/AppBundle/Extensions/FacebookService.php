@@ -575,7 +575,7 @@ class FacebookService extends ScraperServices
                         if ($type == 'video') {
                             $temp = $post->getField('link');
                             if (strpos($temp, 'youtube')) {
-                                $idPos  = strpos($temp, 'v=')+2;
+                                $idPos  = strpos($temp, 'v=') ? strpos($temp, 'v=')+2 : strpos($temp, 'v%3')+3;
                                 $vidId  = substr($temp, $idPos, 11);
                                 $imgSrc = "https://img.youtube.com/vi/".$vidId."/mqdefault.jpg"; // 320x180 (only 16:9 option)
                                 // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480 (all 4:3 w/ letterbox)
@@ -638,7 +638,7 @@ class FacebookService extends ScraperServices
             echo "not found";
         }
         echo "\n";
-        return $out;
+        return (isset($out)) ? $out : null;
     }
 
 
