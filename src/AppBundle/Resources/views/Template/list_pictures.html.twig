@@ -1,6 +1,7 @@
-{% extends "::base.html.twig" %}
+{% extends 'base.html.twig' %}
 {% block javascripts_extra %}
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+    <script src="/js/ng-infinite-scroll.min.js"></script>
 	<script src="/js/pictureList.js"></script>
 {% endblock javascripts_extra %}
 {% block title %}AppBundle:Template:listPictures{% endblock %}
@@ -10,11 +11,21 @@
 {% verbatim %}
     <div class="container"  ng-app="app" ng-controller="pictureController">
         <div class="section valign-wrapper">
-            <div class="row singlePage valign">
-
-            	I LIKE POTATOE
-                {{greeting}}
+            <div class="singlePage valign" infinite-scroll='loadMore()' infinite-scroll-distance='1'>
+                <div class="col s3 placement-class" ng-repeat="items in data track by $index">
+                     <div class="card">
+                        <div class="card-image">
+                            LOL
+                        <!--  <img ng-attr-data-src='{{items.url}}' src="img/ajax-loader.gif"> -->
+                          <span class="card-title">Card Title</span>
+                        </div>
+                        <div class="card-content">
+                          {{items.likes}}
+                        </div>
+                    </div>
+                </div>
             </div>
+            <div ng-init="fireEvent()"></div>
         </div>
         <br><br>
 
