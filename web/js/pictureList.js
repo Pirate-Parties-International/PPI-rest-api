@@ -1,9 +1,23 @@
 (function($) {
     var app = angular.module('app', ['infinite-scroll']); 
+    //directive that cheks if an image is loaded
+    /*app.directive('imageonload', function() {
+        return {
+            restrict: 'A',
+            link: function(scope, element, attrs) {
+                element.bind('load', function() {
+                    return true;
+                });
+                element.bind('error', function(){
+                    return false;
+                });
+            }
+        };
+    });*/
 
-       
     app.controller('pictureController', ['$scope', '$timeout', function($scope, $timeout) {
-        $scope.greeting = 'Hola!';
+        $scope.data =[];
+        $scope.tempData =[]
         //temporary function that creates fake data in the same format as I expect to get the data though an API
         var getFakeData = function(){
             var data = {};           
@@ -21,34 +35,31 @@
             return data;
     	};
         //this functions loads more data for the infinite scroll
+        // it constantily updates the array from which ng-rpeat gets its data
         $scope.loadMore = function() {
-            var last = $scope.data[$scope.data.length - 1];
-            for(var i = 1; i <= 20; i++) {
-              $scope.data.push($scope.tempData[last + i]);
+            var last = [];
+            var x
+            if ( $scope.data.length == 0){
+                x = 0
             }
-            $scope.fireEvent()
+            else {
+                x = $scope.data.length - 1;
+            }
+            for(var i = 1; i <= 20; i++) {
+                var currentValue = $scope.tempData[x+i];        
+                $scope.data.push(currentValue);
+            }
         };
-        // This will only run after the ng-repeat has rendered its things to the DOM
-        // there is a slighly timeout, because ng-repeat doesn't render fast enough
-        //this function wraps every 4 images into its own row
-        $scope.fireEvent = function(){
-            $timeout(function(){
-                var classes = $(".s3.placement-class");
-                console.log(classes)
-                for(var i = 0; i < classes.length; i+=4) {
-                classes.slice(i, i+4).wrapAll("<div class='row'></div>");
-                }
-            }, 50)
-        };  
 
         //Function that runs after data is acquired
+        //it transforms the object into an array and runs 
         $.when(getFakeData()).done(function(data){ 
-            $scope.tempData =[];
-            $scope.data =[];
             for (var x in data){
-                $scope.tempData.push(data[x]);
+                $scope.tempData.push(data[x]); 
             };
-            $scope.loadMore();   
+            console.log($scope.tempData);
+            $scope.loadMore(); 
+
         });
 
 
