@@ -273,6 +273,13 @@ dd {
 	padding: 0;
 }
 
+.social-media-graph-card-action{
+	padding-bottom: 10px !important;
+}
+.social-media-graph-card-content {
+	padding-top: 0px !important;
+}
+
 .youtube .social-text-item {
 	padding-left: 30px;
     padding-right: 30px;
@@ -371,9 +378,31 @@ Sorting
     user-select: none;
 }
 
-.social-media-graph-card-action{
-	padding-bottom: 10px !important;
+/* Picture list page
+*/
+
+.card .card-image .card-title-top {
+  color: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0px;
 }
-.social-media-graph-card-content {
-	padding-top: 0px !important;
+
+.card .card-image .card-title-bottom {
+  color: #fff;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 15px;
+}
+
+.card-belt {
+	background: rgba(41, 182, 246, 0.8);
+	width: 100%;
+}
+
+.card-belt-font {
+	font-weight: bold;
+	margin-left: 10px;
 }

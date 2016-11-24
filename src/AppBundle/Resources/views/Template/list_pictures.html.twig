@@ -6,21 +6,24 @@
 {% endblock javascripts_extra %}
 {% block title %}AppBundle:Template:listPictures{% endblock %}
 
-{% block body %}
+
 {% block content %}
 {% verbatim %}
     <div class="container"  ng-app="app" ng-controller="pictureController">
         <div class="section valign-wrapper">
             <div class="singlePage valign" infinite-scroll='loadMore()' infinite-scroll-distance='1'>
+                <a class="waves-effect waves-light btn" ng-click="sortByViews()" id="asc-desc-views">ASC-DESC VIEWS</a>
+                <a class="waves-effect waves-light btn" ng-click="defaultSort()">deault</a>
                 <div class="row">
                     <div class="col m3 s6 placement-class" ng-repeat="items in data track by $index">
                          <div class="card">
                             <div class="card-image">
                                 <img ng-src="{{items.url}}">
-                              <span class="card-title"><img ng-src="/img/{{items.socialPlatform}}.png" style="width:29px;height:29px;"></span>
+                            <span class="card-title-top card-belt"><p class="card-belt-font">{{items.party}}</p></span>
+                              <span class="card-title-bottom  card-belt"><img ng-src="/img/{{items.socialPlatform}}.png" style="width:29px;height:29px;"></span>
                             </div>
                             <div class="card-content right-align">
-                              <p><b>Viewed:</b> {{items.likes}} times</p>
+                              <p><b>Reach:</b> {{items.likes}} people</p>
                             </div>
                         </div>
                     </div>
@@ -33,4 +36,4 @@
     </div>
 {% endverbatim %}
 {% endblock content%}
-{% endblock %}
+
