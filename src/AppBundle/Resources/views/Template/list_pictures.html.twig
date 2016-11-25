@@ -12,8 +12,25 @@
     <div class="container"  ng-app="app" ng-controller="pictureController">
         <div class="section valign-wrapper">
             <div class="singlePage valign" infinite-scroll='loadMore()' infinite-scroll-distance='1'>
-                <a class="waves-effect waves-light btn" ng-click="sortByViews()" id="asc-desc-views">ASC-DESC VIEWS</a>
-                <a class="waves-effect waves-light btn" ng-click="defaultSort()">deault</a>
+                <div class="row">
+                    <div class="col s6">
+                        <a class="waves-effect waves-light btn filter-button" ng-click="defaultSort()">deafult</a>
+                        <a class="waves-effect waves-light dropdown-button btn filter-button" data-activates="platform-selection" data-beloworigin="true">platform selection ▼</a>
+                            <ul id="platform-selection" class="dropdown-content arrow-color">
+                                <li><input type="checkbox" id="FB-platform"/>
+                                    <label for="FB-platform">Facebook</label>
+                                </li>
+                                <li><input type="checkbox" id="TW-platform"/>
+                                    <label for="TW-platform">Twitter</label></li>
+                                <li><input type="checkbox" id="G+-platform"/>
+                                    <label for="G+-platform">Google+</label></li>
+                                <li>
+                                    <a class="waves-effect btn filter-button dropdown-font-button z-depth-0" ng-click="">filter</a>
+                                </li>
+                            </ul>
+                        <a class="waves-effect waves-light btn filter-button" ng-click="sortByViews()" id="asc-desc-views">reach <span class="down">▼</span><span class="up">▲</span></a>
+                     </div>
+                </div>
                 <div class="row">
                     <div class="col m3 s6 placement-class" ng-repeat="items in data track by $index">
                          <div class="card">

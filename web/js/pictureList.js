@@ -91,20 +91,28 @@
         $scope.masterArray = $scope.originalArray.slice(); 
         $scope.data = [];
         $scope.loadMore(); 
+        $(".up").removeClass("arrow-color")
+        $(".down").removeClass("arrow-color")
         }
 
         //function that toggles between ascending and descending amount of reach
         $scope.sortByViews = function(){
             if ( $("#asc-desc-views").hasClass("toggled") ) {
                 $("#asc-desc-views").removeClass("toggled")
+                $(".up").removeClass("arrow-color")
+                $(".down").addClass("arrow-color")
                 $scope.sortAscViews()
             }
             else {
                 $("#asc-desc-views").addClass("toggled")
+                $(".up").addClass("arrow-color")
+                $(".down").removeClass("arrow-color")
                 $scope.sortDescViews();
             };
 
         } 
+
+        $('#platform-selection').bind('click', function (e) { e.stopPropagation() })
 
     }]);
 })(jQuery); // end of jQuery name space

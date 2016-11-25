@@ -398,11 +398,23 @@ Sorting
 }
 
 .card-belt {
-	background: rgba(41, 182, 246, 0.8);
+	background: rgba(41, 182, 246, 0.4);
 	width: 100%;
 }
 
 .card-belt-font {
 	font-weight: bold;
 	margin-left: 10px;
+}
+
+.filter-button{
+	background: rgb(41, 182, 246);
+}
+
+.arrow-color{
+	color: #B1E4FC;
+}
+
+.dropdown-font-button {
+	color: #fff !important;
 }
