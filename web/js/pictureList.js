@@ -23,7 +23,19 @@
         var getFakeData = function(){
             var data = {};           
             for (var i = 0; i < 1000; i++){
-                data[i] = { url: "/img/200.jpeg" }; //"http://loremflickr.com/200/200?random="+i
+                if ((i%4) == 0){
+                   data[i] = { url: "/img/200.jpeg" }; //"http://loremflickr.com/200/200?random="+i 
+                }
+                else if ((i%2) == 0){
+                    data[i] = { url: "/img/350.png" };
+                }
+                else if ((i%3) == 0){
+                    data[i] = { url: "/img/1000.png" };
+                }
+                else {
+                    data[i] = { url: "/img/2000.jpeg" };
+                }
+                
                 if ((i%2)==0){
                     data[i]["socialPlatform"] = "FB"
                     data[i]["likes"] = 10000 + (i)*2

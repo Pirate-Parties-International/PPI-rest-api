@@ -14,9 +14,9 @@
             <div class="singlePage valign" infinite-scroll='loadMore()' infinite-scroll-distance='1'>
                 <div class="row">
                     <div class="col s6">
-                        <a class="waves-effect waves-light btn filter-button" ng-click="defaultSort()">deafult</a>
-                        <a class="waves-effect waves-light dropdown-button btn filter-button" data-activates="platform-selection" data-beloworigin="true">platform selection ▼</a>
-                            <ul id="platform-selection" class="dropdown-content arrow-color">
+                        <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">deafult</a>
+                        <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0" data-activates="platform-selection" data-beloworigin="true">platform selection ▼</a>
+                            <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0">
                                 <li><input type="checkbox" id="FB-platform"/>
                                     <label for="FB-platform">Facebook</label>
                                 </li>
@@ -28,14 +28,14 @@
                                     <a class="waves-effect btn filter-button dropdown-font-button z-depth-0" ng-click="">filter</a>
                                 </li>
                             </ul>
-                        <a class="waves-effect waves-light btn filter-button" ng-click="sortByViews()" id="asc-desc-views">reach <span class="down">▼</span><span class="up">▲</span></a>
+                        <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="sortByViews()" id="asc-desc-views">reach <span class="down">▼</span><span class="up">▲</span></a>
                      </div>
                 </div>
                 <div class="row">
                     <div class="col m3 s6 placement-class" ng-repeat="items in data track by $index">
                          <div class="card">
                             <div class="card-image">
-                                <img ng-src="{{items.url}}">
+                                <img class="card-image-img center" ng-src="{{items.url}}">
                             <span class="card-title-top card-belt"><p class="card-belt-font">{{items.party}}</p></span>
                               <span class="card-title-bottom  card-belt"><img ng-src="/img/{{items.socialPlatform}}.png" style="width:29px;height:29px;"></span>
                             </div>

@@ -383,6 +383,7 @@ Sorting
 
 .card .card-image .card-title-top {
   color: #fff;
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
   position: absolute;
   top: 0;
   left: 0;
@@ -391,14 +392,25 @@ Sorting
 
 .card .card-image .card-title-bottom {
   color: #fff;
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
   position: absolute;
   bottom: 0;
   left: 0;
   padding: 15px;
 }
 
+.card-image-img {
+	height: 200px;
+	object-fit: scale-down;
+	object-position: center;
+	max-width: 100%;
+	overflow: hidden;
+	margin-left: auto;
+    margin-right: auto
+}
+
 .card-belt {
-	background: rgba(41, 182, 246, 0.4);
+	background: rgba(41, 182, 246, 0.6);
 	width: 100%;
 }
 
