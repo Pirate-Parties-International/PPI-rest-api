@@ -39,12 +39,14 @@
                 if ((i%2)==0){
                     data[i]["socialPlatform"] = "FB"
                     data[i]["likes"] = 10000 + (i)*2
-                    data[i]["party"] = "Pirate party of Slovenia"
+                    data[i]["party"] = "PPSI"
+                    data[i]["code"] = "si"
                 }
                 else {
                     data[i]["socialPlatform"] = "TW"
                     data[i]["likes"] = 10000 + (-i)*2
-                    data[i]["party"] = "Pirate party of Austria"
+                    data[i]["party"] = "PPAT-NOE"
+                    data[i]["code"] = "at"
                 };
             };
             return data;

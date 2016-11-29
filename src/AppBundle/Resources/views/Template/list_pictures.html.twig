@@ -13,33 +13,34 @@
         <div class="section valign-wrapper">
             <div class="singlePage valign" infinite-scroll='loadMore()' infinite-scroll-distance='1'>
                 <div class="row">
-                    <div class="col s6">
+                    <div class="col m12 s6">
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">deafult</a>
                         <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0" data-activates="platform-selection" data-beloworigin="true">platform selection ▼</a>
-                            <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0">
-                                <li><input type="checkbox" id="FB-platform"/>
+                            <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
+                                <li class="filter-menu-items"><input type="checkbox" id="FB-platform"/>
                                     <label for="FB-platform">Facebook</label>
                                 </li>
-                                <li><input type="checkbox" id="TW-platform"/>
+                                <li class="filter-menu-items"><input type="checkbox" id="TW-platform"/>
                                     <label for="TW-platform">Twitter</label></li>
-                                <li><input type="checkbox" id="G+-platform"/>
+                                <li class="filter-menu-items"><input type="checkbox" id="G+-platform"/>
                                     <label for="G+-platform">Google+</label></li>
-                                <li>
-                                    <a class="waves-effect btn filter-button dropdown-font-button z-depth-0" ng-click="">filter</a>
-                                </li>
+                                
+                                    <a class="waves-effect btn filter-button dropdown-font-button z-depth-0 filter-menu-buttons" ng-click="">filter</a>
+                                
                             </ul>
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="sortByViews()" id="asc-desc-views">reach <span class="down">▼</span><span class="up">▲</span></a>
                      </div>
                 </div>
                 <div class="row">
-                    <div class="col m3 s6 placement-class" ng-repeat="items in data track by $index">
+                    <div class="col l3 m6 placement-class" ng-repeat="items in data track by $index">
                          <div class="card">
-                            <div class="card-image">
-                                <img class="card-image-img center" ng-src="{{items.url}}">
-                            <span class="card-title-top card-belt"><p class="card-belt-font">{{items.party}}</p></span>
-                              <span class="card-title-bottom  card-belt"><img ng-src="/img/{{items.socialPlatform}}.png" style="width:29px;height:29px;"></span>
+                            <div class="card-image card-image-img" ng-style="{'background-image':'url({{items.url}})'}">
+                                <span class="card-title-bottom  card-belt">
+                                    <p class="card-belt-font display-inline ">{{items.party}}</p>
+                                    <img class="card-belt-social-img" ng-src="/img/{{items.socialPlatform}}.png" style="width:29px;height:29px;">
+                                </span>
                             </div>
-                            <div class="card-content right-align">
+                            <div class="card-content right-align card-content-additions">
                               <p><b>Reach:</b> {{items.likes}} people</p>
                             </div>
                         </div>

@@ -401,27 +401,52 @@ Sorting
 
 .card-image-img {
 	height: 200px;
-	object-fit: scale-down;
-	object-position: center;
+	background-size: contain !important;
+	background-repeat: no-repeat !important;
+  	background-position: 50% 50% !important;
+  	background-color: #d3d3d3;
 	max-width: 100%;
 	overflow: hidden;
 	margin-left: auto;
-    margin-right: auto
-}
+    margin-right: auto;
+ }
 
 .card-belt {
-	background: rgba(41, 182, 246, 0.6);
 	width: 100%;
+	padding-left: 0px !important;
+	padding-bottom: 0px !important;
 }
 
 .card-belt-font {
 	font-weight: bold;
-	margin-left: 10px;
+	background-color: black;
+  	color: #fff;
+  	padding: 0.6rem;
+  	padding-right: 50px;
+
+	
+}
+
+.card-belt-social-img {
+	display: inline !important;
+	float: right;
+}
+.display-inline {
+	display: inline !important;
 }
 
 .filter-button{
 	background: rgb(41, 182, 246);
 }
+
+
+
+.filter-menu-buttons {
+	width: 100%;
+}
+
+
+
 
 .arrow-color{
 	color: #B1E4FC;
