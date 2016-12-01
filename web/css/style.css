@@ -368,6 +368,41 @@ Sorting
   right:-5px;
 }
 
+.sort-white:after {
+  display:inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  content:"";
+  position: relative;
+  top:-10px;
+  right:-5px;
+}
+.sort-white.asc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid white;
+  content:"";
+  position: relative;
+  top:4px;
+  right:-5px;
+}
+.sort-white.desc:after {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 5px solid white;
+  content:"";
+  position: relative;
+  top:-4px;
+  right:-5px;
+}
+
 .SocialMediaStatsButton {
 	cursor: pointer;
 	-webkit-touch-callout: none;
@@ -397,6 +432,8 @@ Sorting
   bottom: 0;
   left: 0;
   padding: 15px;
+  padding-right: 0px;
+
 }
 
 .card-image-img {

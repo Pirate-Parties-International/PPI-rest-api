@@ -40,12 +40,14 @@
                     data[i]["socialPlatform"] = "FB"
                     data[i]["likes"] = 10000 + (i)*2
                     data[i]["party"] = "PPSI"
+                    data[i]["partyName"] = "Pirate party of Slovenia"
                     data[i]["code"] = "si"
                 }
                 else {
                     data[i]["socialPlatform"] = "TW"
                     data[i]["likes"] = 10000 + (-i)*2
                     data[i]["party"] = "PPAT-NOE"
+                    data[i]["partyName"] = "Pirate party of Austria"
                     data[i]["code"] = "at"
                 };
             };
@@ -111,16 +113,15 @@
 
         //function that toggles between ascending and descending amount of reach
         $scope.sortByViews = function(){
-            if ( $("#asc-desc-views").hasClass("toggled") ) {
-                $("#asc-desc-views").removeClass("toggled")
-                $(".up").removeClass("arrow-color")
-                $(".down").addClass("arrow-color")
+            if ( $("#asc-desc-views").hasClass("desc") ) {
+                $("#asc-desc-views").removeClass("desc")
+                $("#asc-desc-views").addClass("asc")
                 $scope.sortAscViews()
             }
             else {
                 $("#asc-desc-views").addClass("toggled")
-                $(".up").addClass("arrow-color")
-                $(".down").removeClass("arrow-color")
+                $("#asc-desc-views").addClass("desc")
+                $("#asc-desc-views").removeClass("asc")
                 $scope.sortDescViews();
             };
 
