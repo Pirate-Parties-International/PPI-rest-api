@@ -360,3 +360,20 @@ Sorting
   top:-4px;
   right:-5px;
 }
+
+.SocialMediaStatsButton {
+	cursor: pointer;
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.social-media-graph-card-action{
+	padding-bottom: 10px !important;
+}
+.social-media-graph-card-content {
+	padding-top: 0px !important;
+}
