@@ -1,5 +1,6 @@
 (function($) {
     $(function() {
+        sessionStorage.clear();
         // address of the api 
         var partyApiAddress = "/api/v1/history/party/" + partyCode;
         //get data through the api
