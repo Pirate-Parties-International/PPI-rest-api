@@ -18,7 +18,7 @@ class TemplateController extends Controller
     }
 
     /**
-     * @Route("/listPosts")
+     * @Route("template/listPosts")
      */
     public function listPostsAction()
     {
