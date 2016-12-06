@@ -53,7 +53,9 @@
             };
             return data;
     	};
-
+        //fake data with solely the party names
+       $scope.partyList = {};
+        $scope.partyList = {0:{partyName:"Pirate Party of Slovenia", party:"PPSI"},1:{partyName:"Pirate Party of Austria", party:"PPAT-NOE"}};
 
         //this functions loads more data for the infinite scroll
         // it constantily updates the array from which ng-rpeat gets its data
