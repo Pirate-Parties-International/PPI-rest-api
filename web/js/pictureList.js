@@ -15,7 +15,7 @@
         };
     });*/
 
-    app.controller('pictureController', ['$scope', function($scope) {
+    app.controller('pictureController', ['$scope', 'pictureAndPostFactory', function($scope, pictureAndPostFactory) {
         $scope.data =[];
         $scope.masterArray =[];
         $scope.orginalArray =[]; // The purpose of this array is to store the original ayout ofthe masterArray
@@ -54,8 +54,6 @@
             return data;
     	};
         //fake data with solely the party names
-       $scope.partyList = {};
-        $scope.partyList = {0:{partyName:"Pirate Party of Slovenia", party:"PPSI"},1:{partyName:"Pirate Party of Austria", party:"PPAT-NOE"}};
 
         //this functions loads more data for the infinite scroll
         // it constantily updates the array from which ng-rpeat gets its data
@@ -73,7 +71,8 @@
                 $scope.data.push(currentValue);
             }
         };
-
+        //Function that runs after data is acquired
+        //it transforms the object into an array and runs 
         $.when(getFakeData()).done(function(data){ 
             for (var x in data){
                 $scope.masterArray.push(data[x]); 
@@ -82,12 +81,12 @@
             $scope.loadMore(); 
 
         });
+        //using a factory gets a list of all pirate parties using $http.get
+        pictureAndPostFactory.then(function(successResponse){
+            $scope.partyList = successResponse;
+            console.log($scope.partyList);
+        });
 
-        //Function that runs after data is acquired
-        //it transforms the object into an array and runs 
-
-
-        
         //function that sorts entries by reach in ascending order
         $scope.sortAscViews = function(){ 
             $scope.masterArray.sort(function(a, b){

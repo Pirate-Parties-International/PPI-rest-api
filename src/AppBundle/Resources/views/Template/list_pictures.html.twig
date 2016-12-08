@@ -3,6 +3,7 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
     <script src="/js/ng-infinite-scroll.min.js"></script>
 	<script src="/js/pictureList.js"></script>
+    <script src="/js/pictureAndPostFactory.js"></script>
 {% endblock javascripts_extra %}
 {% block title %}AppBundle:Template:listPictures{% endblock %}
 
@@ -30,7 +31,7 @@
                             <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="party-selection" data-beloworigin="true">Party selection</a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
                                 <li class="filter-menu-items"  ng-repeat="items in partyList"><input name="party" type="radio" ng-attr-id="{{items.party}}">
-                                    <label ng-attr-for="{{items.party}}">{{items.partyName}}</label>
+                                    <label ng-attr-for="{{items}}">{{items.name.en}}</label>
                                 </li>
                             </ul>
                         <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortByViews()" id="asc-desc-views">reach</a>
