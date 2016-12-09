@@ -87,6 +87,11 @@
             console.log($scope.partyList);
         });
 
+        //ensure that you ca click anywhere inside the li to check the dropdown radio button
+        $(".party-dropdown").click(function(){
+            $("this > input").attr("checked", "checked")
+        })
+
         //function that sorts entries by reach in ascending order
         $scope.sortAscViews = function(){ 
             $scope.masterArray.sort(function(a, b){

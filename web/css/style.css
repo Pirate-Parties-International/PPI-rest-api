@@ -482,13 +482,11 @@ Sorting
 	width: 100%;
 }
 
-
-
-
-.arrow-color{
-	color: #B1E4FC;
-}
-
 .dropdown-font-button {
 	color: #fff !important;
+}
+
+.dropdown-menu-parties{
+max-height: 300px;
+border-bottom: 1px black inset;
 }

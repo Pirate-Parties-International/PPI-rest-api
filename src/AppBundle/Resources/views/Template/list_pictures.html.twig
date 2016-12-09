@@ -29,12 +29,12 @@
                                     <a class="waves-effect btn filter-button dropdown-font-button z-depth-0 filter-menu-buttons" ng-click="">filter</a>
                             </ul>
                             <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="party-selection" data-beloworigin="true">Party selection</a>
-                            <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
-                                <li class="filter-menu-items">
+                            <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-menu-parties">
+                                <li class="filter-menu-items party-dropdown">
                                     <input class="with-gap" name="party" type="radio" id="all-parties" checked="checked">
                                     <label for="all-parties">Select all</label>
                                 </li>
-                                <li class="filter-menu-items"  ng-repeat="items in partyList">
+                                <li class="filter-menu-items party-dropdown"  ng-repeat="items in partyList">
                                     <input class="with-gap" name="party" type="radio" ng-attr-id="{{items.code}}">
                                     <label ng-attr-for="{{items.code}}">{{items.name.en}}</label>
                                 </li>
