@@ -30,8 +30,13 @@
                             </ul>
                             <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="party-selection" data-beloworigin="true">Party selection</a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
-                                <li class="filter-menu-items"  ng-repeat="items in partyList"><input name="party" type="radio" ng-attr-id="{{items.party}}">
-                                    <label ng-attr-for="{{items}}">{{items.name.en}}</label>
+                                <li class="filter-menu-items">
+                                    <input class="with-gap" name="party" type="radio" id="all-parties" checked="checked">
+                                    <label for="all-parties">Select all</label>
+                                </li>
+                                <li class="filter-menu-items"  ng-repeat="items in partyList">
+                                    <input class="with-gap" name="party" type="radio" ng-attr-id="{{items.code}}">
+                                    <label ng-attr-for="{{items.code}}">{{items.name.en}}</label>
                                 </li>
                             </ul>
                         <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortByViews()" id="asc-desc-views">reach</a>
