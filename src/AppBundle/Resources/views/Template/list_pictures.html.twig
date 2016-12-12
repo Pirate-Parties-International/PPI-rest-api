@@ -18,25 +18,21 @@
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">deafult</a>
                         <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="platform-selection" data-beloworigin="true">platform selection</a>
                             <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
-                                <li class="filter-menu-items"><input type="checkbox" id="FB-platform"/>
+                                <li class="filter-menu-items"><input type="checkbox" id="FB-platform" checked="checked">
                                     <label for="FB-platform">Facebook</label>
                                 </li>
-                                <li class="filter-menu-items"><input type="checkbox" id="TW-platform"/>
+                                <li class="filter-menu-items"><input type="checkbox" id="TW-platform" checked="checked">
                                     <label for="TW-platform">Twitter</label></li>
-                                <li class="filter-menu-items"><input type="checkbox" id="G+-platform"/>
+                                <li class="filter-menu-items"><input type="checkbox" id="G+-platform" checked="checked">
                                     <label for="G+-platform">Google+</label></li>
                                 
                                     <a class="waves-effect btn filter-button dropdown-font-button z-depth-0 filter-menu-buttons" ng-click="">filter</a>
                             </ul>
                             <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="party-selection" data-beloworigin="true">Party selection</a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-menu-parties">
-                                <li class="filter-menu-items party-dropdown">
-                                    <input class="with-gap" name="party" type="radio" id="all-parties" checked="checked">
-                                    <label for="all-parties">Select all</label>
-                                </li>
-                                <li class="filter-menu-items party-dropdown"  ng-repeat="items in partyList">
-                                    <input class="with-gap" name="party" type="radio" ng-attr-id="{{items.code}}">
-                                    <label ng-attr-for="{{items.code}}">{{items.name.en}}</label>
+                                <li><input  name="party" type="text" ng-model="partySelection" id="party-selection"></li>             
+                                <li class="filter-menu-items party-dropdown"  ng-repeat="items in partyList | filter:partySelection:items.name.en track by $index">
+                                    <label ng-attr-id="{{items.code}}">{{items.name.en}}</label>
                                 </li>
                             </ul>
                         <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortByViews()" id="asc-desc-views">reach</a>

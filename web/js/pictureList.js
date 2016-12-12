@@ -81,13 +81,13 @@
             $scope.loadMore(); 
 
         });
-        //using a factory gets a list of all pirate parties using $http.get
+        //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
         pictureAndPostFactory.then(function(successResponse){
-            $scope.partyList = successResponse;
+            $scope.partyList = Object.values(successResponse)
             console.log($scope.partyList);
         });
 
-        //ensure that you ca click anywhere inside the li to check the dropdown radio button
+        //ensure that you can click anywhere inside the li to check the dropdown radio button
         $(".party-dropdown").click(function(){
             $("this > input").attr("checked", "checked")
         })
@@ -132,8 +132,9 @@
             };
 
         } 
-
+        //stops dropdown from closing
         $('#platform-selection').bind('click', function (e) { e.stopPropagation() })
+        $('#party-selection').bind('click', function (e) { e.stopPropagation() })
 
     }]);
 })(jQuery); // end of jQuery name space
