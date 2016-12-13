@@ -5,7 +5,7 @@
 	<script src="/js/pictureList.js"></script>
     <script src="/js/pictureAndPostFactory.js"></script>
 {% endblock javascripts_extra %}
-{% block title %}AppBundle:Template:listPictures{% endblock %}
+{% block title %}Pirate Party Registry Social Media Pictures{% endblock %}
 
 
 {% block content %}
@@ -19,20 +19,20 @@
                         <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="platform-selection" data-beloworigin="true">platform selection</a>
                             <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
                                 <li class="filter-menu-items"><input type="checkbox" id="FB-platform" checked="checked">
-                                    <label for="FB-platform">Facebook</label>
+                                    <label for="FB-platform" class="dropdown-font-text">Facebook</label>
                                 </li>
                                 <li class="filter-menu-items"><input type="checkbox" id="TW-platform" checked="checked">
-                                    <label for="TW-platform">Twitter</label></li>
+                                    <label for="TW-platform" class="dropdown-font-text">Twitter</label></li>
                                 <li class="filter-menu-items"><input type="checkbox" id="G+-platform" checked="checked">
-                                    <label for="G+-platform">Google+</label></li>
+                                    <label for="G+-platform" class="dropdown-font-text">Google+</label></li>
                                 
                                     <a class="waves-effect btn filter-button dropdown-font-button z-depth-0 filter-menu-buttons" ng-click="">filter</a>
                             </ul>
                             <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="party-selection" data-beloworigin="true">Party selection</a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-menu-parties">
-                                <li><input  name="party" type="text" ng-model="partySelection" id="party-selection"></li>             
-                                <li class="filter-menu-items party-dropdown"  ng-repeat="items in partyList | filter:partySelection:items.name.en track by $index">
-                                    <label ng-attr-id="{{items.code}}">{{items.name.en}}</label>
+                                <li><input class="dropdown-text-input" name="party" type="text" ng-model="partySelection" id="party-selection"></li>             
+                                <li class="filter-menu-items party-dropdown waves-effect valign"  ng-repeat="items in partyList | filter:partySelection:items.name.en track by $index">
+                                    <label class="dropdown-font-text valign"ng-attr-id="{{items.code}}" class="dropdown-font-text">{{items.name.en}}</label>
                                 </li>
                             </ul>
                         <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortByViews()" id="asc-desc-views">reach</a>

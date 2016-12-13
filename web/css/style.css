@@ -476,7 +476,9 @@ Sorting
 	background: rgb(41, 182, 246);
 }
 
-
+.filter-menu-items{
+  height: 100%;
+}
 
 .filter-menu-buttons {
 	width: 100%;
@@ -486,7 +488,16 @@ Sorting
 	color: #fff !important;
 }
 
+.dropdown-font-text{
+  color: #3f3f3f !important;
+}
+
 .dropdown-menu-parties{
 max-height: 300px;
 border-bottom: 1px black inset;
+}
+
+.dropdown-text-input {
+  border-bottom: 1px, #29b6f6, solid !important;
+  margin-bottom: 0px !important;
 }
