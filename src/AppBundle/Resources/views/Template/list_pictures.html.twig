@@ -30,9 +30,11 @@
                             </ul>
                             <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="party-selection" data-beloworigin="true">Party selection</a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-menu-parties">
-                                <li><input class="dropdown-text-input" name="party" type="text" ng-model="partySelection" id="party-selection"></li>             
+                                <li class="dropdown-text-input-li">
+                                    <input placeholder="SEARCH" class="dropdown-text-input" name="party" type="text" ng-model="partySelection" id="party-selection">
+                                </li>             
                                 <li class="filter-menu-items party-dropdown waves-effect valign"  ng-repeat="items in partyList | filter:partySelection:items.name.en track by $index">
-                                    <label class="dropdown-font-text valign"ng-attr-id="{{items.code}}" class="dropdown-font-text">{{items.name.en}}</label>
+                                    <span class="dropdown-font-text valign"ng-attr-id="{{items.code}}">{{items.name.en}}</span>
                                 </li>
                             </ul>
                         <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortByViews()" id="asc-desc-views">reach</a>

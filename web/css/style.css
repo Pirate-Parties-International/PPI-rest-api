@@ -490,14 +490,24 @@ Sorting
 
 .dropdown-font-text{
   color: #3f3f3f !important;
+  font-size: 0.8em;
 }
 
 .dropdown-menu-parties{
 max-height: 300px;
 border-bottom: 1px black inset;
+overflow-x:hidden;
+}
+
+.dropdown-text-input-li {
+  border-bottom: 1px #29b6f6 solid !important;
+  margin-bottom: 0px !important;
 }
 
 .dropdown-text-input {
-  border-bottom: 1px, #29b6f6, solid !important;
+  border-bottom: none !important;
   margin-bottom: 0px !important;
+  box-shadow: none !important;
+  margin-left:15px !important;
 }
+
