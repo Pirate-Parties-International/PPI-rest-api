@@ -511,3 +511,19 @@ overflow-x:hidden;
   margin-left:15px !important;
 }
 
+.hide-bellow-1250{
+}
+
+@media (max-width: 1250px){
+.hide-bellow-1250{
+display: none;
+}}
+
+
+.hide-above-1250{
+}
+
+@media (min-width: 1250px){
+.hide-above-1250{
+  display: none;
+}}
