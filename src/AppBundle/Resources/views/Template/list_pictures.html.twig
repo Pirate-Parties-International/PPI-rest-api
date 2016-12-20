@@ -16,19 +16,19 @@
                 <div class="row">
                     <div class="col m12 s6">
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">deafult</a>
-                        <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="platform-selection" data-beloworigin="true">platform selection</a>
+                        <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="platform-selection" data-beloworigin="true">platform <span class="hide-bellow-520">selection</span></a>
                             <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
-                                <li class="filter-menu-items"><input type="checkbox" id="FB-platform" checked="checked">
+                                <li class="filter-menu-items dropdown-menu-social-filter"><input type="checkbox" id="FB-platform" checked="checked">
                                     <label for="FB-platform" class="dropdown-font-text">Facebook</label>
                                 </li>
-                                <li class="filter-menu-items"><input type="checkbox" id="TW-platform" checked="checked">
+                                <li class="filter-menu-items dropdown-menu-social-filter"><input type="checkbox" id="TW-platform" checked="checked">
                                     <label for="TW-platform" class="dropdown-font-text">Twitter</label></li>
-                                <li class="filter-menu-items"><input type="checkbox" id="G+-platform" checked="checked">
+                                <li class="filter-menu-items dropdown-menu-social-filter"><input type="checkbox" id="G+-platform" checked="checked">
                                     <label for="G+-platform" class="dropdown-font-text">Google+</label></li>
                                 
                                     <a class="waves-effect btn filter-button dropdown-font-button z-depth-0 filter-menu-buttons" ng-click="">filter</a>
                             </ul>
-                            <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" ng-click="emptyInput()"data-activates="party-selection" data-beloworigin="true">Party selection</a>
+                            <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" ng-click="emptyInput()"data-activates="party-selection" data-beloworigin="true">Party <span class="hide-bellow-520">selection</span></a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-menu-parties">
                                 <li class="dropdown-text-input-li">
                                     <input placeholder="SEARCH" class="dropdown-text-input" name="party" type="text" ng-model="partySelection" id="party-selection">

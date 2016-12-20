@@ -490,7 +490,7 @@ Sorting
 
 .dropdown-font-text{
   color: #3f3f3f !important;
-  font-size: 0.8em;
+  font-size: 0.8em !important;
 }
 
 .dropdown-menu-parties{
@@ -511,6 +511,10 @@ overflow-x:hidden;
   margin-left:15px !important;
 }
 
+.dropdown-menu-social-filter{
+  padding-left: 15px; 
+}
+
 .hide-bellow-1250{
 }
 
@@ -519,11 +523,10 @@ overflow-x:hidden;
 display: none;
 }}
 
-
-.hide-above-1250{
+.hide-bellow-520{
 }
 
-@media (min-width: 1250px){
-.hide-above-1250{
-  display: none;
+@media (max-width: 520px){
+  .hide-bellow-520{
+    display: none;
 }}
