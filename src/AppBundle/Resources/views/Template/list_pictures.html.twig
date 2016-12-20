@@ -28,7 +28,7 @@
                                 
                                     <a class="waves-effect btn filter-button dropdown-font-button z-depth-0 filter-menu-buttons" ng-click="">filter</a>
                             </ul>
-                            <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="party-selection" data-beloworigin="true">Party selection</a>
+                            <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" ng-click="emptyInput()"data-activates="party-selection" data-beloworigin="true">Party selection</a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-menu-parties">
                                 <li class="dropdown-text-input-li">
                                     <input placeholder="SEARCH" class="dropdown-text-input" name="party" type="text" ng-model="partySelection" id="party-selection">

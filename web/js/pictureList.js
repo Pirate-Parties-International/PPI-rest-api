@@ -92,6 +92,10 @@
             $("this > input").attr("checked", "checked")
         })
 
+        $scope.emptyInput = function(){
+            $scope.partySelection = "";
+        }
+
         //function that sorts entries by reach in ascending order
         $scope.sortAscViews = function(){ 
             $scope.masterArray.sort(function(a, b){
