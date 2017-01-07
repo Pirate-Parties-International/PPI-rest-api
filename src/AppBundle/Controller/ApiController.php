@@ -119,157 +119,60 @@ class ApiController extends BaseController
     }
 
     /**
-     * Shows history accross all social networks for one party. Supports JSON and CSV
+     * List data about social media
      *
-     * Meaning of codes:<br />
-     * - fb-L: Facebook likes<br />
-     * - tw-F: Twitter followers<br />
-     * - tw-T: Twitter tweets<br />
-     * - g+-F: Google Plus Followers<br />
-     * - yt-S: Youtube Subscribers<br />
-     * - yt-V: Youtube Views<br />
-     * - yt-M: Youtube Videos
-     * 
-     * @Route("history/party/{id}", name="ppi_api_history_party")
+     * @Route("social/", name="ppi_api_social")
      * @Method({"GET"})
      *
      * @ApiDoc(
-     *  resource=true,
-     *  section="History",
-     *  requirements={
-     *      {"name"="id", "dataType"="string", "required"=true, "description"="Party code (i.e. 'ppsi')."}
+     *  resource=false,
+     *  section="Social",
+     *  filters={
+     *      {"name"="code", "dataType"="string", "required"="false", "description"="Get only posts from one party (by code, i.e. ppsi, ppse)"},
+     *      {"name"="type", "dataType"="string", "required"="false", "description"="Get only Facebook, Twitter or YouTube posts", "pattern"="fb | tw | yt"},
+     *      {"name"="sub_type", "dataType"="string", "required"="false", "description"="Get only text posts, images, videos or events", "pattern"="t | i | v | e"},
+     *      {"name"="order_by", "dataType"="string", "required"="false", "description"="Order to return results", "pattern"="code | likes | date"},
+     *      {"name"="limit", "dataType"="int", "required"="false", "description"="Number of results to return (default 100)"},
+     *      {"name"="offset", "dataType"="int", "required"="false", "description"="Start point of results"}
      *  },
      *  statusCodes={
-     *         200="Returned when successful.",
-     *         404="Returned when not found."
-     *     }
+     *          200="Returned when successful.",
+     *          404="Returned when not found."
+     *  }
      * )
      */
-    public function showHistoryPartyViewAction($id) {
-        
-        $request = $this->getRequest();
-        $format  = $request->query->get('_format');
+    public function socialAction() {
 
-        $stats = $this->getDoctrine()
-        ->getRepository('AppBundle:Statistic')
-        ->findByCode($id);
+        $code    = isset($_GET['code'])     ? $_GET['code']     : null;
+        $type    = isset($_GET['type'])     ? $_GET['type']     : null;
+        $subType = isset($_GET['sub_type']) ? $_GET['sub_type'] : null;
+        $limit   = isset($_GET['limit'])    ? $_GET['limit']    : 100;
+        $offset  = isset($_GET['offset'])   ? $_GET['offset']   : 0;
 
-        if ($stats === null) {
-            return new JsonResponse(array("error"=>"No stats found for this party ID"), 404);
-        }
-
-        $payload = [];
-        foreach ($stats as $stat) {
-            $date = $stat->getTimestamp()->format('Y-m-d');
-            $payload[$date][$stat->getType() . "-" . $stat->getSubType()] = $stat->getValue();
-            $payload[$date]['date'] = $date;
-        }
-
-        switch ($format) {
-            case 'csv':
-                $out = "Date;fb-L;tw-F;tw-T;g+-F;yt-S;yt-V;yt-M" . PHP_EOL;
-                foreach ($payload as $date => $s) {
-                    $out .= sprintf('%s;%s;%s;%s;%s;%s;%s;%s',
-                        $date,
-                        $s['fb-L'],
-                        $s['tw-F'],
-                        $s['tw-T'],
-                        $s['g+-F'],
-                        $s['yt-S'],
-                        $s['yt-V'],
-                        $s['yt-M']
-                    ) . PHP_EOL;
-                }
-                $format = "text/csv";
-                break;
-            
-            default:
-                $out = json_encode($payload);
-                $format = "application/json";
-                break;
-        }
-
-        return new Response($out, Response::HTTP_OK, array('content-type' => $format));
-    }
-
-    /**
-     * Shows history accross of one dimension for all parties. Supports JSON and CSV
-     *
-     * Meaning of codes:<br />
-     * - fb-L: Facebook likes<br />
-     * - tw-F: Twitter followers<br />
-     * - tw-T: Twitter tweets<br />
-     * - g+-F: Google Plus Followers<br />
-     * - yt-S: Youtube Subscribers<br />
-     * - yt-V: Youtube Views<br />
-     * - yt-M: Youtube Videos
-     * 
-     * @Route("history/dimension/{view}", name="ppi_api_history_dimension")
-     * @Method({"GET"})
-     *
-     * @ApiDoc(
-     *  resource=true,
-     *  section="History",
-     *  requirements={
-     *      {"name"="view", "dataType"="string", "required"=true, "pattern"="fb-L|tw-F|tw-T|g+-F|yt-S|yt-V|yt-M", "description"="Dimension of interest"}
-     *  },
-     *  statusCodes={
-     *         200="Returned when successful.",
-     *         404="Returned when not found."
-     *     }
-     * )
-     */
-    public function showHistoryDimensionViewAction($view) {
-        
-        $request = $this->getRequest();
-        $format  = $request->query->get('_format');
-
-        list($type, $subType) = explode("-", $view);
-
-        $stats = $this->getDoctrine()
-        ->getRepository('AppBundle:Statistic')
-        ->findBy(["type" =>$type, "subType" => $subType]);
-
-        if ($stats === null) {
-            return new JsonResponse(array("error"=>"No stats found for this dimension"), 404);
-        }
-
-        $payload = [];
-        $partyList = [];
-        $i = 0;
-        foreach ($stats as $stat) {
-            $date = $stat->getTimestamp()->format('Y-m-d');
-            $payload[$date][$stat->getCode()] = $stat->getValue();
-            
-            if (!isset($partyList[$stat->getCode()])) {
-                $partyList[$stat->getCode()] = $i;
-                $i++;
+        if (isset($_GET['order_by'])) {
+            switch ($_GET['order_by']) {
+                case 'time':
+                case 'date':
+                    $orderBy = 'postTime';
+                    break;
+                case 'likes':
+                    $orderBy = 'postLikes';
+                    break;
+                default: // case 'code' or null
+                    $orderBy = 'code';
             }
-        }
-        $partyList = array_flip($partyList);
+        } else $orderBy = 'code';
 
-        switch ($format) {
-            case 'csv':
-                $out = "Date;" . implode(";", $partyList) . PHP_EOL;
-                foreach ($payload as $date => $s) {
-                    $line = $date;
-                    foreach ($partyList as $code) {
-                        $line .= ";" . $s[$code];
-                    }
-                    $out .= $line . PHP_EOL;
-                }
-                $format = "text/csv";
-                break;
-            
-            default:
-                $out = json_encode($payload);
-                $format = "application/json";
-                break;
+        $data = $this->getAllSocial($code, $type, $subType, $orderBy, $limit, $offset);
+
+        if (empty($data)) {
+            return new JsonResponse(array("error"=>"No data found"), 404);
         }
 
-        return new Response($out, Response::HTTP_OK, array('content-type' => $format));
+        $serializer = $this->get('jms_serializer');
+        $data = $serializer->serialize($data, 'json');
+
+        return new Response($data, 200);
     }
-
-
 
 }

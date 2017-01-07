@@ -18,12 +18,15 @@ class Statistic
     const TYPE_YOUTUBE    = 'yt';
 
     const SUBTYPE_LIKES       = 'L';
+    const SUBTYPE_TALKING     = 'T';
+    const SUBTYPE_POSTS       = 'P';
+    const SUBTYPE_IMAGES      = 'I';
+    const SUBTYPE_EVENTS      = 'E';
     const SUBTYPE_FOLLOWERS   = 'F';
-    const SUBTYPE_TWEETS      = 'T';
+    const SUBTYPE_FOLLOWING   = 'G';
     const SUBTYPE_VIEWS       = 'V';
     const SUBTYPE_VIDEOS      = 'M';
     const SUBTYPE_SUBSCRIBERS = 'S';
-    
 
     /**
      * @var int

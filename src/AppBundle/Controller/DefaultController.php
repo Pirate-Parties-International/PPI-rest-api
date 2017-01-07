@@ -3,9 +3,8 @@
 namespace AppBundle\Controller;
 
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Symfony\Component\HttpFoundation\Request;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
 class DefaultController extends BaseController
 {
@@ -40,6 +39,7 @@ class DefaultController extends BaseController
         return array("parties" => $parties);
     }
 
+
     /**
      * @Route("party/{id}", name="papi_party_show")
      * @Template()
@@ -56,24 +56,27 @@ class DefaultController extends BaseController
         }
 
         return array(
-            "party"               => $party,
-            "parentOrg"           => $parentOrg,
-            "facebookLikes"       => $this->getFacebookLikes($party->getCode()),
-            "googlePlusFollowers" => $this->getGooglePlusFollowers($party->getCode()),
-            "twitterFollowers"    => $this->getTwitterFollowers($party->getCode()),
-            "cover"               => $this->getCoverImage($party->getCode()),
-            "youtube"             => $this->getYoutubeStatistics($party->getCode())
+            "party"      => $party,
+            "parentOrg"  => $parentOrg,
+            "cover"      => $this->getCoverImage($party->getCode()),
+            "facebook"   => $this->getFacebookData($party->getCode()),
+            "twitter"    => $this->getTwitterData($party->getCode()),
+            "youtube"    => $this->getYoutubeData($party->getCode()),
+            "googlePlus" => [
+                'followers' => $this->getGooglePlusFollowers($party->getCode())
+            ]
         );
     }
+
 
     /**
      * @Route("/{id}", name="papi_page_show")
      * @Template()
      */
     public function pageAction($id)
-    {   
+    {
         $pagesPath = __DIR__ . '/../Resources/staticContent';
-        
+
         $data = @file_get_contents(sprintf('%s/%s.md', $pagesPath, $id));
 
         if ($data === false) {
@@ -83,6 +86,6 @@ class DefaultController extends BaseController
         }
 
         return ['page' => $data];
-    } 
+    }
 
 }
