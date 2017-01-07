@@ -83,11 +83,9 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         foreach ($parties as $code => $party) {
-
             if (!empty($when) && $code < $when) {
                 echo " - ".$code." skipped...\n";
             } else {
-
                 $output->writeln(" - Processing " . $code);
                 $sn = $party->getSocialNetworks();
                 $midTime = new \DateTime('now');
@@ -103,7 +101,6 @@ class ScraperCommand extends ContainerAwareCommand
                 if ($where == null || $where == 'tw') {
                     $this->scrapeTwitter($sn, $code, $full, $output, $scraperService);
                 }
-
                 if ($where == null || $where == 'g+') {
                     $this->scrapeGooglePlus($sn, $code, $full, $output, $scraperService);
                 }
@@ -432,7 +429,6 @@ class ScraperCommand extends ContainerAwareCommand
                 $output->writeln("   + All Twitter data added");
             }
         }
-
     }
 
 

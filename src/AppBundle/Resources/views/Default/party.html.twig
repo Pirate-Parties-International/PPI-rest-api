@@ -2,20 +2,20 @@
 
 {% block social_meta %}
 <!-- Search engines -->
-<meta name="description" content="Party profile on the Pirate Piraty Registry.">
+<meta name="description" content="Party profile on the Pirate Party Registry.">
 <meta itemprop="name" content="{{ party.name.en }}">
-<meta itemprop="description" content="Party profile on the Pirate Piraty Registry.">
+<meta itemprop="description" content="Party profile on the Pirate Party Registry.">
 <meta itemprop="image" content="{{app.request.schemeAndHttpHost}}{{ party.logo }}">
 <!-- Twitter -->
 <meta name="twitter:card" content="summary">
 <meta name="twitter:site" content="@piratetimes">
 <meta name="twitter:title" content="{{ party.name.en }}">
-<meta name="twitter:description" content="Party profile on the Pirate Piraty Registry.">
+<meta name="twitter:description" content="Party profile on the Pirate Party Registry.">
 <meta name="twitter:image" content="{{app.request.schemeAndHttpHost}}{{ party.logo }}">
 <!-- Open Graph General (Facebook & Pinterest) -->
 <meta property="og:url" content="{{ app.request.schemeAndHttpHost ~ app.request.requestUri }}">
 <meta property="og:title" content="{{ party.name.en }}">
-<meta property="og:description" content="Party profile on the Pirate Piraty Registry.">
+<meta property="og:description" content="Party profile on the Pirate Party Registry.">
 <meta property="og:site_name" content="Pirate Party Registry">
 <meta property="og:image" content="{{app.request.schemeAndHttpHost}}{{ party.logo }}">
 <meta property="og:type" content="website">
@@ -46,6 +46,11 @@
 					<div class="logo">
 						<img src="{{ party.logo }}" itemprop="logo">
 					</div>
+					{% if party.defunct %}
+						<div class="defunct hide-on-small-only">
+							DEFUNCT
+						</div>
+					{% endif %}
 				</div>
 			</div>
         </div>
@@ -94,6 +99,11 @@
 		  					<div class="flag hide-on-small-only">
 								<img src="{{ party.countryFlag }}">
 							</div>
+							{% if party.defunct %}
+							  <div class="defunct hide-on-med-and-up">
+								DEFUNCT
+							  </div>
+							{% endif %}
 						</div>
 					</div>
 				</div>
@@ -182,7 +192,7 @@
 								
 							<div class="org-body">
 								<img src="{{ parentOrg.logo }}" class="left">
-								{{ parentOrg.name.en }}
+								<a href="{{ path('papi_party_show', {'id': parentOrg.code}) | lower }}">{{ parentOrg.name.en }}</a>
 								<div class="clearfix"></div>
 							</div>
 						</div>
@@ -229,7 +239,7 @@
             {% if party.socialNetworks %}
             	{% if party.socialNetworks.facebook is defined and party.socialNetworks.facebook %}
 				<div class="col s12 m6 l4">
-					<div class="card social facebook">
+					<div class="card social facebook" id="fb-L">
 						<a href="https://facebook.com/{{party.socialNetworks.facebook.username}}">
 							<div class="card-content clearfix blue white-text valign-wrapper">
 								<div class="blue darken-1 icon-wrapper"><i class="icon-facebook small darken-1"></i></div>
@@ -242,7 +252,7 @@
 
 				{% if party.socialNetworks.twitter is defined and party.socialNetworks.twitter %}
 				<div class="col s12 m6 l4">
-					<div class="card social twitter">
+					<div class="card social twitter" id="tw-F">
 						<a href="https://twitter.com/{{party.socialNetworks.twitter.username}}">
 							<div class="card-content clearfix cyan white-text valign-wrapper">
 								<div class="cyan darken-1 icon-wrapper"><i class="icon-twitter small darken-1"></i></div>
@@ -255,7 +265,7 @@
 
 				{% if party.socialNetworks.googlePlus is defined and party.socialNetworks.googlePlus %}
 				<div class="col s12 m6 l4">
-					<div class="card social facebook">
+					<div class="card social facebook" id="g+-F">
 						<a href="https://plus.google.com/{{party.socialNetworks.googlePlus}}">
 							<div class="card-content clearfix red white-text valign-wrapper">
 								<div class="red darken-1 icon-wrapper"><i class="icon-gplus small darken-1"></i></div>
@@ -267,7 +277,26 @@
 				{% endif %}
 			{% endif %}
 			</div>
-
+			<div class="row hide-on-med-and-down hide" id="scm-graph-area">
+				<div class="col s12 m12 l12 center-align">
+					<div class="card">
+						<div class="card-action social-media-graph-card-action">					
+							{% if party.socialNetworks.facebook is defined and party.socialNetworks.facebook %}
+								<a class="SocialMediaStatsButton btn white grey-text lighten-3 z-depth-0" id="fb-L-stat">Facebook likes</a>
+							{% endif %}
+							{% if party.socialNetworks.twitter is defined and party.socialNetworks.twitter %}
+								<a class="SocialMediaStatsButton btn white grey-text z-depth-0" id="tw-F-stat">Twitter followers</a>
+							{% endif %}
+							{% if party.socialNetworks.youtube is defined and  party.socialNetworks.youtube %}
+								<a class="SocialMediaStatsButton btn white grey-text z-depth-0" id="yt-S-stat">Youtube subscribers</a>
+							{% endif %}
+						</div>
+						<div class="card-content social-media-graph-card-content">
+							<div id="chart_div" style="width: 100%;"></div> <!-- this is where the chart is inserted. Width is set becuase the graph isn't responsive-->
+						</div>
+					</div>
+				</div>
+			</div>
 			<div class="row">
             {% if party.socialNetworks %}
             	{% if party.socialNetworks.youtube is defined and party.socialNetworks.youtube %}
@@ -293,8 +322,6 @@
 				</div>
 				{% endif %}
 			{% endif %}
-			</div>
-
 			{% if youtube.videos is defined %}
 			<div class="row youtube-videos">
 				<h3>Latest videos</h3>
@@ -339,6 +366,10 @@
 
 
 {% block javascripts_extra %}
+
+	<script type="text/javascript">
+		var partyCode = '{{party.code}}';
+	</script>
 
 	{% if party.headquarters %}
 		<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>

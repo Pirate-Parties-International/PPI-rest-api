@@ -66,7 +66,15 @@ swiftmailer:
     password:  "%mailer_password%"
     spool:     { type: memory }
 
-nelmio_api_doc: ~
+nelmio_api_doc:
+    name:                 'API documentation'
+    sandbox:
+        request_format:
+            formats:
+                # Defaults:
+                json:                application/json
+                xml:                 application/xml
+                csv:                 text/csv
 
 doctrine_migrations:
     dir_name: "%kernel.root_dir%/DoctrineMigrations"

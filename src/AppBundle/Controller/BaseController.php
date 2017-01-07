@@ -22,10 +22,12 @@ class BaseController extends Controller
         } else {
             $parties = $parties->findAll();
         }
-    	
+
+        $parties = $query->getQuery()->getResult();
     	$allData = array();
+
     	foreach ($parties as $party) {
-    		$allData[strtolower($party->getCode())] = $party;
+            $allData[strtolower($party->getCode())] = $party;
     	}
 
     	return $allData;
