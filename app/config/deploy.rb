@@ -30,11 +30,12 @@ set :permission_method,   :acl
 set :use_set_permissions, true
 
 set :shared_files,      ["app/config/parameters.yml"]
-set :shared_children,   [app_path + "/logs", web_path + "/uploads", "vendor", 
+set :shared_children,   [app_path + "/logs", "vendor", 
 	"app/Resources/java", "etc", 
 	web_path + "/img/pp-flag",
 	web_path + "/img/pp-logo",
-	web_path + "/img/fb-covers"]
+	web_path + "/img/fb-covers",
+  web_path + "/img/uploads"]
 
 set :stages,        %w(production dev)
 set :default_stage, "dev"
