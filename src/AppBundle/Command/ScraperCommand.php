@@ -41,6 +41,7 @@ class ScraperCommand extends ContainerAwareCommand
                 break;
             case 'photos':
                 $what = 'images';
+                break;
             case 'data':
             case 'basic':
             case 'stats':
