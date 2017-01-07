@@ -23,7 +23,6 @@ class BaseController extends Controller
             $parties = $parties->findAll();
         }
 
-        $parties = $query->getQuery()->getResult();
     	$allData = array();
 
     	foreach ($parties as $party) {
