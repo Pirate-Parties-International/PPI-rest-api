@@ -16,9 +16,10 @@
     });*/
 
     app.controller('pictureController', ['$scope', 'pictureAndPostFactory', function($scope, pictureAndPostFactory) {
+        //URL that gets all socialmedia posts that are (primarily) pictures
         $scope.data =[];
         $scope.masterArray =[];
-        $scope.orginalArray =[]; // The purpose of this array is to store the original ayout ofthe masterArray
+        $scope.orginalArray =[]; // The purpose of this array is to store the original layout of the masterArray
         //temporary function that creates fake data in the same format as I expect to get the data though an API
         var getFakeData = function(){
             var data = {};           
@@ -82,10 +83,11 @@
 
         });
         //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
-        pictureAndPostFactory.then(function(successResponse){
-            $scope.partyList = Object.values(successResponse)
+            $scope.partyList = pictureAndPostFactory.partyList
+            
             console.log($scope.partyList);
-        });
+            console.log($scope.partyImages);
+
 
         //ensure that you can click anywhere inside the li to check the dropdown radio button
         $(".party-dropdown").click(function(){
