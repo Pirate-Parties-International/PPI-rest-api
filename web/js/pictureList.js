@@ -83,11 +83,15 @@
 
         });
         //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
-            $scope.partyList = pictureAndPostFactory.partyList
-            
-            console.log($scope.partyList);
-            console.log($scope.partyImages);
 
+        pictureAndPostFactory.partyList().then(function(successResponse){
+            $scope.partyList = Object.values(successResponse)
+            console.log($scope.partyList);
+        });
+        pictureAndPostFactory.imageList().then(function(successResponse){
+            $scope.imageList = Object.values(successResponse)
+            console.log($scope.imageList);
+        });
 
         //ensure that you can click anywhere inside the li to check the dropdown radio button
         $(".party-dropdown").click(function(){
