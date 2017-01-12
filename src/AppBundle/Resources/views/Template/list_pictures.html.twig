@@ -12,10 +12,10 @@
 {% verbatim %}
     <div class="container"  ng-app="app" ng-controller="pictureController">
         <div class="section valign-wrapper">
-            <div class="singlePage valign" infinite-scroll="loadMore()" infinite-scroll-distance="2">
+            <div class="singlePage valign" infinite-scroll="loadMore('')" infinite-scroll-distance="2">
                 <div class="row">
                     <div class="col m12 s6">
-                        <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">deafult</a>
+                        <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="loadMore('')">deafult</a>
                         <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="platform-selection" data-beloworigin="true">platform <span class="hide-bellow-520">selection</span></a>
                             <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
                                 <li class="filter-menu-items dropdown-menu-social-filter"><input type="checkbox" id="FB-platform" checked="checked">
@@ -46,7 +46,7 @@
                             <div class="card-image card-image-img" ng-style="{'background-image':'url({{items.url}})'}">
                                 <span class="card-title-bottom  card-belt">
                                     <p class="card-belt-font display-inline ">{{items.code}}</p>
-                                    <img class="card-belt-social-img" ng-src="/img/{{items.socialPlatform}}.png" style="width:29px;height:29px;">
+                                    <img class="card-belt-social-img" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
                                 </span>
                             </div>
                             <div class="card-content right-align card-content-additions">

@@ -23,37 +23,40 @@
         
         //this functions loads more data for the infinite scroll
         // it constantily updates the array from which ng-rpeat gets its data
-        $scope.loadMore = function() {
-
+        $scope.loadMore = function(x) {
             //Function that gets the data 
             //it transforms the object into an array and runs 
-            pictureAndPostFactory.imageList().then(function(successResponse){
+            pictureAndPostFactory.imageList(x).then(function(successResponse){
                 $scope.masterArray = Object.values(successResponse)
                 console.log($scope.masterArray);
                 $scope.originalArray = $scope.masterArray.slice();
-                var last = [];
-                var x
-                if ( $scope.data.length == 0){
-                    x = 0
-                }
-                else {
-                    x = $scope.data.length - 1;
-                }
-                for(var i = 1; i <= 20; i++) {
-                    if ($scope.masterArray.length-1 < $scope.data.length)
-                    {      
-                        return
-                    } else {
-                        var currentValue = $scope.masterArray[x+i]; 
-                        console.log($scope.data.length);
-                        console.log($scope.masterArray.length);       
-                        $scope.data.push(currentValue);
-                    }
-                };
-            });
-
-            
+                loadData();
+            });   
         };
+
+        var loadData = function(){
+            var last = [];
+                    var x
+                    if ( $scope.data.length == 0){
+                        x = 0
+                    }
+                    else {
+                        x = $scope.data.length - 1;
+                    }
+                    for(var i = 1; i <= 20; i++) {
+                        if ($scope.masterArray.length-1 < $scope.data.length)
+                        {      
+                            return
+                        } else {
+                            var currentValue = $scope.masterArray[x+i]; 
+                            console.log($scope.data.length);
+                            console.log($scope.masterArray.length);       
+                            $scope.data.push(currentValue);
+                        }
+                    };
+            };
+
+
 
         //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
 
@@ -75,18 +78,15 @@
         //function that sorts entries by reach in ascending order
         $scope.sortAscViews = function(){ 
             $scope.masterArray.sort(function(a, b){
-            return a.likes > b.likes;
+            return a.post_likes > b.post_likes;
         });
         $scope.data = [];
-        $scope.loadMore();
+        loadData();
         };
         //function that sorts entries by reach in descending order
         $scope.sortDescViews = function(){
-            $scope.masterArray.sort(function(a, b){
-            return a.likes < b.likes;
-        });
         $scope.data = [];
-        $scope.loadMore();
+        $scope.loadMore("&order_by=likes");
         };
 
         $scope.defaultSort = function(){
