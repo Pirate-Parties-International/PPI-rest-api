@@ -1,9 +1,9 @@
 {% extends 'base.html.twig' %}
 {% block javascripts_extra %}
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
-    <script src="/js/ng-infinite-scroll.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>  
 	<script src="/js/pictureList.js"></script>
     <script src="/js/pictureAndPostFactory.js"></script>
+    <script src="/js/ng-infinite-scroll.min.js"></script>
 {% endblock javascripts_extra %}
 {% block title %}Pirate Party Registry Social Media Pictures{% endblock %}
 
@@ -12,7 +12,7 @@
 {% verbatim %}
     <div class="container"  ng-app="app" ng-controller="pictureController">
         <div class="section valign-wrapper">
-            <div class="singlePage valign" infinite-scroll='loadMore()' infinite-scroll-distance='1'>
+            <div class="singlePage valign" infinite-scroll="loadMore()" infinite-scroll-distance="2">
                 <div class="row">
                     <div class="col m12 s6">
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">deafult</a>
@@ -45,18 +45,17 @@
                          <div class="card">
                             <div class="card-image card-image-img" ng-style="{'background-image':'url({{items.url}})'}">
                                 <span class="card-title-bottom  card-belt">
-                                    <p class="card-belt-font display-inline ">{{items.party}}</p>
+                                    <p class="card-belt-font display-inline ">{{items.code}}</p>
                                     <img class="card-belt-social-img" ng-src="/img/{{items.socialPlatform}}.png" style="width:29px;height:29px;">
                                 </span>
                             </div>
                             <div class="card-content right-align card-content-additions">
-                              <p><b>Reach:</b> {{items.likes}} people</p>
+                              <p><b>Reach:</b> {{items.post_likes}} people</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div ng-init="fireEvent()"></div>
         </div>
         <br><br>
 

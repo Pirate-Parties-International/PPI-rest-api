@@ -20,78 +20,48 @@
         $scope.data =[];
         $scope.masterArray =[];
         $scope.orginalArray =[]; // The purpose of this array is to store the original layout of the masterArray
-        //temporary function that creates fake data in the same format as I expect to get the data though an API
-        var getFakeData = function(){
-            var data = {};           
-            for (var i = 0; i < 1000; i++){
-                if ((i%4) == 0){
-                   data[i] = { url: "/img/200.jpeg" }; //"http://loremflickr.com/200/200?random="+i 
-                }
-                else if ((i%2) == 0){
-                    data[i] = { url: "/img/350.png" };
-                }
-                else if ((i%3) == 0){
-                    data[i] = { url: "/img/1000.png" };
-                }
-                else {
-                    data[i] = { url: "/img/2000.jpeg" };
-                }
-                
-                if ((i%2)==0){
-                    data[i]["socialPlatform"] = "FB"
-                    data[i]["likes"] = 10000 + (i)*2
-                    data[i]["party"] = "PPSI"
-                    data[i]["partyName"] = "Pirate party of Slovenia"
-                    data[i]["code"] = "si"
-                }
-                else {
-                    data[i]["socialPlatform"] = "TW"
-                    data[i]["likes"] = 10000 + (-i)*2
-                    data[i]["party"] = "PPAT-NOE"
-                    data[i]["partyName"] = "Pirate party of Austria"
-                    data[i]["code"] = "at"
-                };
-            };
-            return data;
-    	};
-        //fake data with solely the party names
-
+        
         //this functions loads more data for the infinite scroll
         // it constantily updates the array from which ng-rpeat gets its data
         $scope.loadMore = function() {
-            var last = [];
-            var x
-            if ( $scope.data.length == 0){
-                x = 0
-            }
-            else {
-                x = $scope.data.length - 1;
-            }
-            for(var i = 1; i <= 20; i++) {
-                var currentValue = $scope.masterArray[x+i];        
-                $scope.data.push(currentValue);
-            }
-        };
-        //Function that runs after data is acquired
-        //it transforms the object into an array and runs 
-        $.when(getFakeData()).done(function(data){ 
-            for (var x in data){
-                $scope.masterArray.push(data[x]); 
-            };
-            $scope.originalArray = $scope.masterArray.slice();
-            $scope.loadMore(); 
 
-        });
+            //Function that gets the data 
+            //it transforms the object into an array and runs 
+            pictureAndPostFactory.imageList().then(function(successResponse){
+                $scope.masterArray = Object.values(successResponse)
+                console.log($scope.masterArray);
+                $scope.originalArray = $scope.masterArray.slice();
+                var last = [];
+                var x
+                if ( $scope.data.length == 0){
+                    x = 0
+                }
+                else {
+                    x = $scope.data.length - 1;
+                }
+                for(var i = 1; i <= 20; i++) {
+                    if ($scope.masterArray.length-1 < $scope.data.length)
+                    {      
+                        return
+                    } else {
+                        var currentValue = $scope.masterArray[x+i]; 
+                        console.log($scope.data.length);
+                        console.log($scope.masterArray.length);       
+                        $scope.data.push(currentValue);
+                    }
+                };
+            });
+
+            
+        };
+
         //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
 
         pictureAndPostFactory.partyList().then(function(successResponse){
             $scope.partyList = Object.values(successResponse)
             console.log($scope.partyList);
         });
-        pictureAndPostFactory.imageList().then(function(successResponse){
-            $scope.imageList = Object.values(successResponse)
-            console.log($scope.imageList);
-        });
+        
 
         //ensure that you can click anywhere inside the li to check the dropdown radio button
         $(".party-dropdown").click(function(){
