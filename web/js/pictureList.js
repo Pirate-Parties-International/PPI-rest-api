@@ -30,11 +30,11 @@
                 $scope.masterArray = Object.values(successResponse)
                 console.log($scope.masterArray);
                 $scope.originalArray = $scope.masterArray.slice();
-                loadData();
+                loadData(x);
             });   
         };
 
-        var loadData = function(){
+        var loadData = function(x){
             var last = [];
                     var x
                     if ( $scope.data.length == 0){
@@ -44,13 +44,11 @@
                         x = $scope.data.length - 1;
                     }
                     for(var i = 1; i <= 20; i++) {
-                        if ($scope.masterArray.length-1 < $scope.data.length)
-                        {      
+                        //check if the element is undefined, then there is no more data
+                        if ($scope.masterArray.length-1 < $scope.data.length){
                             return
                         } else {
-                            var currentValue = $scope.masterArray[x+i]; 
-                            console.log($scope.data.length);
-                            console.log($scope.masterArray.length);       
+                            var currentValue = $scope.masterArray[x+i];        
                             $scope.data.push(currentValue);
                         }
                     };
@@ -92,26 +90,28 @@
         $scope.defaultSort = function(){
         $scope.masterArray = $scope.originalArray.slice(); 
         $scope.data = [];
-        $scope.loadMore(); 
+        $scope.loadMore(""); 
         $(".up").removeClass("arrow-color")
         $(".down").removeClass("arrow-color")
         }
 
         //function that toggles between ascending and descending amount of reach
-        $scope.sortByViews = function(){
+        //the API currently doesn't support descending/ascending sort,so this code is pointless
+        //If it is added, uncomment and change the function called by the element with ID asc-desc-views
+        /*$scope.sortByViews = function(){
             if ( $("#asc-desc-views").hasClass("desc") ) {
                 $("#asc-desc-views").removeClass("desc")
                 $("#asc-desc-views").addClass("asc")
-                $scope.sortAscViews()
-            }
-            else {
+                $scope.sortAscViews()       
+            }*/
+            //same reason as above
+           /* else {
                 $("#asc-desc-views").addClass("toggled")
                 $("#asc-desc-views").addClass("desc")
                 $("#asc-desc-views").removeClass("asc")
                 $scope.sortDescViews();
             };
-
-        } 
+        }*/
         //stops dropdown from closing
         $('#platform-selection').bind('click', function (e) { e.stopPropagation() })
         $('#party-selection').bind('click', function (e) { e.stopPropagation() })

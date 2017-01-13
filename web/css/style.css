@@ -452,6 +452,7 @@ Sorting
 	width: 100%;
 	padding-left: 0px !important;
 	padding-bottom: 0px !important;
+  text-transform: uppercase;
 }
 
 .card-belt-font {
