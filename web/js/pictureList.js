@@ -35,7 +35,7 @@
                 $scope.masterArray = $scope.originalArray.concat(successResponse);
                 console.log($scope.masterArray);
                 $scope.originalArray = $scope.masterArray.slice();
-                $scope.loadMore(address);
+                $scope.loadMore();
                 $scope.loading = false;
             });   
         };
@@ -77,17 +77,15 @@
             if (($scope.data.length%100)===0){
                 if (($scope.masterArray.length/100)==1){
                     address = address + "offset=100"
-                    $scope.address += address;
+                    $scope.address = address;
                     console.log("saved Address je 1 " + address);
                 }
                 else {
-                    console.log(address)
-                    address = address.substring(0, address.lastIndexOf("=")-1);
-                    console.log(address)
-                    address = address + $scope.masterArray.length;
-                    console.log(address)
-                    $scope.address += address;
                     console.log(address);
+                    console.log($scope.masterArray.length-100)
+                    address = address.replace($scope.masterArray.length-100, $scope.masterArray.length)
+                    console.log(address);
+                    $scope.address = address;
                 };
                 $scope.loadData($scope.address); 
             }; 
