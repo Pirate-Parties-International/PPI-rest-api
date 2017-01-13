@@ -13,13 +13,13 @@ angular.module("app").factory("pictureAndPostFactory", function($http)
             return promise
         }, 
         imageList : function(x){
-            var promise = $http.get('http://api.piratetimes.net/api/v1/social/?_format=json&sub_type=I'+x)
+            var promise = $http.get(x)
             .then(function(response) {
                 //First function handles success
                 return response.data;
             }, function(response) {
                 //Second function handles error
-                console.log("error in acquring party list")
+                console.log("error in acquring image list")
         });  
             return promise
         }

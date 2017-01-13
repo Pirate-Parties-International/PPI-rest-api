@@ -12,7 +12,7 @@
 {% verbatim %}
     <div class="container"  ng-app="app" ng-controller="pictureController">
         <div class="section valign-wrapper">
-            <div class="singlePage valign" infinite-scroll="loadMore('')" infinite-scroll-distance="2">
+            <div class="singlePage valign" infinite-scroll="loadMore()" infinite-scroll-distance="2">
                 <div class="row">
                     <div class="col m12 s6">
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">default</a>
@@ -40,12 +40,28 @@
                         <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortDescViews()" id="asc-desc-views">reach</a>
                      </div>
                 </div>
+                <div class="row" ng-if="loading">
+                    <div class="col l3 m6 placement-class" ng-repeat="n in [].constructor(40) track by $index">
+                         <div class="card">
+                            <div class="card-image card-image-img" ng-style="{'background-image':'url()'}">
+                                <span class="card-title-bottom  card-belt">
+                                    <p class="card-belt-font display-inline ">PPXX</p>
+                                    <img class="card-belt-social-img" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
+                                </span>
+                            </div>
+                            <div class="card-content right-align card-content-additions">
+                              <p><b>Reach:</b> unknown people</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col l3 m6 placement-class" ng-repeat="items in data track by $index">
                          <div class="card">
                             <div class="card-image card-image-img" ng-style="{'background-image':'url({{items.url}})'}">
                                 <span class="card-title-bottom  card-belt">
                                     <p class="card-belt-font display-inline ">{{items.code}}</p>
+                                    <p>{{items.post_id}}</p>
                                     <img class="card-belt-social-img" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
                                 </span>
                             </div>
