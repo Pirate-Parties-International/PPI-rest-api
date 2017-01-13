@@ -104,7 +104,7 @@ class ApiController extends BaseController
         $social['twitter']  = $this->getTwitterFollowers($id);     
         $social['facebook'] = $this->getFacebookLikes($id);     
         $social['gplus']    = $this->getGooglePlusFollowers($id);
-        $social['youtube']   = $this->getYoutubeStatistics($id);
+        $social['youtube']  = $this->getYoutubeData($id);
 
         $party->socialData = $social;
 
