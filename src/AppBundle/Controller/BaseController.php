@@ -11,26 +11,44 @@ use AppBundle\Entity\SocialMedia as Sm;
 
 class BaseController extends Controller
 {
-	public function getAllParties($includeDefunct = false) {
-		$parties = $this->getDoctrine()
+    public function getAllParties($showDefunct = false, $membershipFilter = null, $orderBy = 'code') {
+        $parties = $this->getDoctrine()
             ->getRepository('AppBundle:Party');
 
-        if (!$includeDefunct) {
-            $parties = $parties->findBy([
-                'defunct' => $includeDefunct
-            ]);
-        } else {
-            $parties = $parties->findAll();
+        $query = $parties->createQueryBuilder('qb')
+            ->select('p')->from('AppBundle:Party', 'p');
+
+        if (!is_null($membershipFilter)) {
+            $query->join('p.intMemberships', 'm')
+                ->innerJoin('m.intOrg', 'o')
+                ->where(sprintf("o.code = '%s'", $membershipFilter)); // show only 'ppi', 'ppeu' etc.
+        } // else do nothing, i.e. show all
+
+        if (!is_null($showDefunct)) {
+            $query->andwhere(sprintf("p.defunct = '%s'", $showDefunct)); // true = show only defunct, false = only non-defunct
+        } // else do nothing, i.e. show all
+
+        switch ($orderBy) {
+            case 'name':
+                $query->orderBy('p.name', 'ASC');
+                break;
+            case 'country':
+                $query->orderBy('p.countryName', 'ASC');
+                break;
+            default: // case 'code' or null
+                $query->orderBy('p.code', 'ASC');
         }
 
-    	$allData = array();
+        $parties = $query->getQuery()->getResult();
 
-    	foreach ($parties as $party) {
+        $allData = array();
+        foreach ($parties as $party) {
             $allData[strtolower($party->getCode())] = $party;
-    	}
+        }
 
-    	return $allData;
-	}
+        return $allData;
+    }
+
 
 	public function getOneParty($code) {
 		$party = $this->getDoctrine()
