@@ -43,7 +43,7 @@ class LoadIntOrgData implements FixtureInterface, ContainerAwareInterface
 
         $t = new IntOrg();
         $t->setCode('ype');
-        $t->setName('Young Parties of Europe');
+        $t->setName('Young Pirates of Europe');
         $t->setWebsite('http://young-pirates.eu/');
         $orgs[] = $t;
 
