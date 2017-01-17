@@ -17,20 +17,24 @@
 
     app.controller('pictureController', ['$scope', 'pictureAndPostFactory', function($scope, pictureAndPostFactory) {
         //URL that gets all socialmedia posts that are (primarily) pictures
-        $scope.data =[];
-        $scope.masterArray =[];
+        $scope.data =[]; //stores past and currenty visible data
+        $scope.masterArray =[]; //stores al the data
         $scope.originalArray =[]; // The purpose of this array is to store the original layout of the masterArray
-        $scope.address = 'http://api.piratetimes.net/api/v1/social/?_format=json&sub_type=I&'
+        $scope.address = { //object contains all possible filters for the API
+            sort: "",
+            partyCode: "ppsi",
+            offset: 0
+        };
         
         
         //this functions loads more data for the infinite scroll
         // it constantily updates the array from which ng-repeat gets its data
-        $scope.loadData = function(address) {
+        $scope.loadData = function() {
             //Function that gets the data 
             //it transforms the object into an array and runs
             console.log("test")
             $scope.loading = true;
-            pictureAndPostFactory.imageList(address).then(function(successResponse){
+            pictureAndPostFactory.imageList($scope.address).then(function(successResponse){
                 
                 $scope.masterArray = $scope.originalArray.concat(successResponse);
                 console.log($scope.masterArray);
@@ -40,14 +44,24 @@
             });   
         };
         $scope.loadMore = function(){
-            if ($scope.masterArray.length == 0){
-                console.log("is inside first IF")
-                $scope.loadData($scope.address);
-                infiniteArray()
+            infiniteArray()
+            if (($scope.data.length/100)==0){
+                console.log("test1")
+                $scope.loadData()
             } else {
+                console.log("test2")
+                offset()
                 infiniteArray()
-                offset($scope.address);
             }
+        };
+
+        function offset(){
+            if (($scope.data.length%100)===0){
+                console.log($scope.data.length);
+                console.log($scope.address);
+                $scope.loadData();
+                $scope.address.offset += 100
+            };
         };
 
         function infiniteArray(){
@@ -59,7 +73,7 @@
             else {
                 x = $scope.data.length - 1;
             }
-            for(var i = 1; i <= 20; i++) {
+            for(var i = 0; i <= 19; i++) {
                 //check if the element is undefined, then there is no more data and the fuction can stop
                 var currentValue = $scope.masterArray[x+i];
                 if (currentValue == undefined){
@@ -70,27 +84,12 @@
             };
         }
 
-        function offset(address){
-            //we get 100 pieces of data at a time, this checks, if we need to get more
-            //it first checks if offset is already present in the address and if it is, it removes the offset number
-            //and replaces it with a new one    
-            if (($scope.data.length%100)===0){
-                if (($scope.masterArray.length/100)==1){
-                    address = address + "offset=100"
-                    $scope.address = address;
-                    console.log("saved Address je 1 " + address);
-                }
-                else {
-                    console.log(address);
-                    console.log($scope.masterArray.length-100)
-                    address = address.replace($scope.masterArray.length-100, $scope.masterArray.length)
-                    console.log(address);
-                    $scope.address = address;
-                };
-                $scope.loadData($scope.address); 
-            }; 
-        }
-
+        function resetArray(){
+            $scope.masterArray = [];
+            $scope.originalArray = [];
+            $scope.data =[];
+            console.log($scope.masterArray);
+        };
 
         //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
 
@@ -120,16 +119,24 @@
 
         //function that sorts entries by reach in descending order
         $scope.sortDescViews = function(){
-        $scope.data = [];
-        $scope.loadMore("&order_by=likes");
+            resetArray()
+            $scope.address.sort = "likes";
+            $scope.address.offset = 0;
+            $scope.address;
+            $scope.loadMore();
         };
 
         $scope.defaultSort = function(){
-        $scope.masterArray = $scope.originalArray.slice(); 
-        $scope.data = [];
-        $scope.loadMore(""); 
-        $(".up").removeClass("arrow-color")
-        $(".down").removeClass("arrow-color")
+            resetArray()
+            $scope.address = {
+                sort: "",
+                partyCode: "",
+                offset: 0
+            };
+            $scope.loadMore(); 
+            console.log("default")
+            $(".up").removeClass("arrow-color")
+            $(".down").removeClass("arrow-color")
         }
 
         //function that toggles between ascending and descending amount of reach
