@@ -22,7 +22,7 @@
         $scope.originalArray =[]; // The purpose of this array is to store the original layout of the masterArray
         $scope.address = { //object contains all possible filters for the API
             sort: "",
-            partyCode: "ppsi",
+            partyCode: "",
             offset: 0
         };
         
@@ -46,10 +46,8 @@
         $scope.loadMore = function(){
             infiniteArray()
             if (($scope.data.length/100)==0){
-                console.log("test1")
                 $scope.loadData()
             } else {
-                console.log("test2")
                 offset()
                 infiniteArray()
             }
@@ -68,14 +66,14 @@
             var last = [];
             var x
             if ( $scope.data.length == 0){
-                x = 0
+                x = -1
             }
             else {
                 x = $scope.data.length - 1;
             }
-            for(var i = 0; i <= 19; i++) {
+            for(var i = 1; i <= 20; i++) {
                 //check if the element is undefined, then there is no more data and the fuction can stop
-                var currentValue = $scope.masterArray[x+i];
+                var currentValue = $scope.masterArray[(x+i)];
                 if (currentValue == undefined){
                     return
                 } else {      
