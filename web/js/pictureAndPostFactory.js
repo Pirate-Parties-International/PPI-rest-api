@@ -15,6 +15,7 @@ angular.module("app").factory("pictureAndPostFactory", function($http)
         imageList : function(x){
             var promise = $http.get("http://api.piratetimes.net/api/v1/social/?_format=json&sub_type=I"+"&order_by="+x.sort+"&code="+x.partyCode+"&offset="+x.offset)
             .then(function(response) {
+                console.log(response.data);
                 //First function handles success
                 console.log("http://api.piratetimes.net/api/v1/social/?_format=json&sub_type=I"+"&order_by="+x.sort+"&code="+x.partyCode+"&offset="+x.offset)
                 return response.data;

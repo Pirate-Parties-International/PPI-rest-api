@@ -32,7 +32,7 @@
         $scope.loadData = function() {
             //Function that gets the data 
             //it transforms the object into an array and runs
-            console.log("test")
+            console.log($scope.address)
             $scope.loading = true;
             pictureAndPostFactory.imageList($scope.address).then(function(successResponse){
                 
@@ -55,10 +55,9 @@
 
         function offset(){
             if (($scope.data.length%100)===0){
-                console.log($scope.data.length);
-                console.log($scope.address);
-                $scope.loadData();
+                console.log("I'm in the if sentence");
                 $scope.address.offset += 100
+                $scope.loadData();
             };
         };
 
