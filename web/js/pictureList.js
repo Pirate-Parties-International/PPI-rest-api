@@ -35,7 +35,11 @@
             console.log($scope.address)
             $scope.loading = true;
             pictureAndPostFactory.imageList($scope.address).then(function(successResponse){
-                
+                if (successResponse == undefined){
+                    $scope.noData = true;
+                    $scope.loading = false;
+                    return
+                };
                 $scope.masterArray = $scope.originalArray.concat(successResponse);
                 console.log($scope.masterArray);
                 $scope.originalArray = $scope.masterArray.slice();
@@ -55,7 +59,6 @@
 
         function offset(){
             if (($scope.data.length%100)===0){
-                console.log("I'm in the if sentence");
                 $scope.address.offset += 100
                 $scope.loadData();
             };
@@ -80,7 +83,7 @@
                 }
             };
         }
-
+        //This function is called when filtering, so that new data is added into an empty array
         function resetArray(){
             $scope.masterArray = [];
             $scope.originalArray = [];
@@ -96,7 +99,7 @@
         
 
         //ensure that you can click anywhere inside the li to check the dropdown radio button
-        $(".party-dropdown").click(function(){
+        $("#platform-selection").click(function(){
             $("this > input").attr("checked", "checked")
         })
 
@@ -135,6 +138,13 @@
             $(".up").removeClass("arrow-color")
             $(".down").removeClass("arrow-color")
         }
+        //function that filters parties
+        $scope.filterParty = function(code) {
+            resetArray()
+            $scope.address.partyCode = code;
+            $scope.loadMore(); 
+        }
+
 
         //function that toggles between ascending and descending amount of reach
         //the API currently doesn't support descending/ascending sort,so this code is pointless
@@ -156,7 +166,7 @@
 
         //stops dropdown from closing
         $('#platform-selection').bind('click', function (e) { e.stopPropagation() })
-        $('#party-selection').bind('click', function (e) { e.stopPropagation() })
+        $('#party-selection-search').bind('click', function (e) { e.stopPropagation() })
 
     }]);
 })(jQuery); // end of jQuery name space
