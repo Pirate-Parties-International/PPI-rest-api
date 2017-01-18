@@ -70,7 +70,7 @@
             else {
                 x = $scope.data.length - 1;
             }
-            for(var i = 1; i <= 20; i++) {
+            for(var i = 1; i <= 10; i++) {
                 //check if the element is undefined, then there is no more data and the fuction can stop
                 var currentValue = $scope.masterArray[(x+i)];
                 if (currentValue == undefined){

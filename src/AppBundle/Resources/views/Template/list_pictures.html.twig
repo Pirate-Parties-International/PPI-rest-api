@@ -12,7 +12,7 @@
 {% verbatim %}
     <div class="container"  ng-app="app" ng-controller="pictureController">
         <div class="section valign-wrapper">
-            <div class="singlePage valign" infinite-scroll="loadMore()" infinite-scroll-distance="2">
+            <div class="singlePage valign" infinite-scroll="loadMore()" infinite-scroll-distance="1">
                 <div class="row">
                     <div class="col m12 s6">
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">default</a>
@@ -58,11 +58,10 @@
                 <div class="row">
                     <div class="col l3 m6 placement-class" ng-repeat="items in data track by $index">
                          <div class="card">
-                            <div class="card-image card-image-img" ng-style="{'background-image':'url({{items.url}})'}">
+                            <div class="card-image card-image-img" ng-style="{'background-image':'url(http://api.piratetimes.net/img/uploads/{{items.code}}/{{items.type}}/{{items.post_image}})'}">
                                 <span class="card-title-bottom  card-belt">
-                                    <p class="card-belt-font display-inline ">{{items.code}}</p>
-                                    <p>{{items.post_id}}</p>
                                     <p>{{$index}}</p>
+                                    <p class="card-belt-font display-inline ">{{items.code}}</p>                                    
                                     <img class="card-belt-social-img" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
                                 </span>
                             </div>
