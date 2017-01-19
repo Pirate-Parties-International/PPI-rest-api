@@ -418,9 +418,9 @@ Sorting
     user-select: none;
 }
 
+
 /* Picture list page
 */
-
 .card .card-image .card-title-top {
   color: #fff;
   text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
@@ -482,6 +482,12 @@ Sorting
 	background: rgb(41, 182, 246);
 }
 
+@media (max-width: 818px){
+  .filter-button{
+    width: 100% !important;
+    border: 1px solid white;
+}}
+
 .filter-menu-items{
   height: 100%;
 }
@@ -520,6 +526,11 @@ overflow-x:hidden;
 .dropdown-menu-social-filter{
   padding-left: 15px; 
 }
+
+.reach-selected {
+  background-color: #2bbbad !important;
+}
+
 
 .hide-bellow-1250{
 }

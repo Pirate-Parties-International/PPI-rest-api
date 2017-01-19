@@ -21,10 +21,13 @@
         $scope.masterArray =[]; //stores al the data
         $scope.originalArray =[]; // The purpose of this array is to store the original layout of the masterArray
         $scope.address = { //object contains all possible filters for the API
+            socialPlatform: "",
             sort: "",
             partyCode: "",
             offset: 0
         };
+        //sets default checked radio button when the page loads 
+        $scope.radioBtn = "all";
         
         
         //this functions loads more data for the infinite scroll
@@ -63,7 +66,7 @@
                 $scope.loadData();
             };
         };
-
+        //this function slowly serves data from the masterArray
         function infiniteArray(){
             var last = [];
             var x
@@ -97,12 +100,6 @@
             $scope.partyList = Object.values(successResponse)
         });
         
-
-        //ensure that you can click anywhere inside the li to check the dropdown radio button
-        $("#platform-selection").click(function(){
-            $("this > input").attr("checked", "checked")
-        })
-
         $scope.emptyInput = function(){
             $scope.partySelection = "";
         }
@@ -120,6 +117,7 @@
         //function that sorts entries by reach in descending order
         $scope.sortDescViews = function(){
             resetArray()
+            $("#asc-desc-views").addClass("reach-selected");
             $scope.address.sort = "likes";
             $scope.address.offset = 0;
             $scope.address;
@@ -129,6 +127,7 @@
         $scope.defaultSort = function(){
             resetArray()
             $scope.address = {
+                socialPlatform: "",
                 sort: "",
                 partyCode: "",
                 offset: 0
@@ -137,6 +136,7 @@
             console.log("default")
             $(".up").removeClass("arrow-color")
             $(".down").removeClass("arrow-color")
+            $("#asc-desc-views").removeClass("reach-selected");
         }
         //function that filters parties
         $scope.filterParty = function(code) {
@@ -144,6 +144,28 @@
             $scope.address.partyCode = code;
             $scope.loadMore(); 
         }
+
+        $scope.filterPlatform = function(platform){
+            if (platform == "all"){
+                resetArray()
+                $scope.address.socialPlatform = "";
+                $scope.loadMore();
+            } else {
+                resetArray()
+                $scope.address.socialPlatform = platform;
+                $scope.loadMore();
+            };      
+        };
+        //clicking enter after searching for party "clicks" on the first party in the list
+        $("#party-selection-search").on('keydown', function (e) {
+            if (e.keyCode == 13) {
+                $(this).parent().next().click();
+            };
+        });
+
+        $("#party-selection-button").click(function(){
+            $("#party-selection-search").click().focus();
+        });
 
 
         //function that toggles between ascending and descending amount of reach
