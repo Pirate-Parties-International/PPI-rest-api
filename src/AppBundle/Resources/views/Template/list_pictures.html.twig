@@ -17,7 +17,7 @@
                     <div class="col s12">
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">Reset filters</a>
                         <!-- Platform selection dropdown -->
-                        <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" data-activates="platform-selection" data-beloworigin="true">platform selection</a>
+                        <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white platform-button asc" data-activates="platform-selection" data-beloworigin="true">{{selectedPlatform()}}</a>
                             <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
                                 <li class="filter-menu-items dropdown-menu-social-filter" ng-click="radioBtn = 'all'"><input id="all-platforms" class="with-gap platform-button" name="platform" type="radio" id="all-platform" value="all" ng-model="radioBtn" ng-click="filterPlatform(radioBtn)">
                                     <label for="all-platforms" class="dropdown-font-text radioButtonLabel">All</label>

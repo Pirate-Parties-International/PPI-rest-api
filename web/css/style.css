@@ -421,6 +421,9 @@ Sorting
 
 /* Picture list page
 */
+
+
+
 .card .card-image .card-title-top {
   color: #fff;
   text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
@@ -486,6 +489,15 @@ Sorting
   .filter-button{
     width: 100% !important;
     border: 1px solid white;
+}}
+
+.platform-button {
+  min-width: 177px;
+}
+
+@media (max-width: 818px){
+  .platform-button{
+    min-width: initial;
 }}
 
 .filter-menu-items{

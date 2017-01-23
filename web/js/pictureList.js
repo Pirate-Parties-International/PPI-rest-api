@@ -26,6 +26,7 @@
             partyCode: "",
             offset: 0
         };
+
         //sets default checked radio button when the page loads 
         $scope.radioBtn = "all";
         
@@ -35,7 +36,6 @@
         $scope.loadData = function() {
             //Function that gets the data 
             //it transforms the object into an array and runs
-            console.log($scope.address)
             $scope.loading = true;
             pictureAndPostFactory.imageList($scope.address).then(function(successResponse){
                 if (successResponse == undefined){
@@ -44,7 +44,6 @@
                     return
                 };
                 $scope.masterArray = $scope.originalArray.concat(successResponse);
-                console.log($scope.masterArray);
                 $scope.originalArray = $scope.masterArray.slice();
                 $scope.loadMore();
                 $scope.loading = false;
@@ -86,12 +85,41 @@
                 }
             };
         }
+        //determines if post if from FB or TW and creates an URL
+        $scope.getURl = function(data){
+            var url = ""
+            if (data.type.toUpperCase() == "TW"){
+                url = "https://twitter.com/pirates/"+data.post_id
+            }else{
+                url = "https://facebook.com/"+data.post_id
+            };
+            return url
+
+        };
+
+        //function changes the text in the Platform selection button, based on wahat you've selected
+        $scope.selectedPlatform = function() {
+            var text = "Platform"
+            switch ($scope.radioBtn){
+                case "all":
+                    text = "Platform"
+                    break;
+                case "tw":
+                    text = "Twitter"
+                    break;
+                case "fb":
+                    text = "Facebook"
+                    break;
+            };
+            return text
+        };
+
+        
         //This function is called when filtering, so that new data is added into an empty array
         function resetArray(){
             $scope.masterArray = [];
             $scope.originalArray = [];
             $scope.data =[];
-            console.log($scope.masterArray);
         };
 
         //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
@@ -114,14 +142,20 @@
         loadData();
         };*/
 
-        //function that sorts entries by reach in descending order
+        //a toggle that sorts entries by reach in descending order
         $scope.sortDescViews = function(){
             resetArray()
-            $("#asc-desc-views").addClass("reach-selected");
-            $scope.address.sort = "likes";
-            $scope.address.offset = 0;
-            $scope.address;
-            $scope.loadMore();
+            if ($("#asc-desc-views").hasClass("reach-selected")){
+                $("#asc-desc-views").removeClass("reach-selected");
+                $scope.address.sort = "";
+                $scope.address.offset = 0;
+                $scope.loadMore();
+            } else {
+                $("#asc-desc-views").addClass("reach-selected");
+                $scope.address.sort = "likes";
+                $scope.address.offset = 0;
+                $scope.loadMore(); 
+            };
         };
 
         $scope.defaultSort = function(){
@@ -133,7 +167,6 @@
                 offset: 0
             };
             $scope.loadMore(); 
-            console.log("default")
             $(".up").removeClass("arrow-color")
             $(".down").removeClass("arrow-color")
             $("#asc-desc-views").removeClass("reach-selected");
