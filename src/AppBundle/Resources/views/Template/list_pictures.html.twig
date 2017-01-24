@@ -9,8 +9,11 @@
 
 
 {% block content %}
-{% verbatim %}
+{% verbatim %} 
     <div class="container"  ng-app="app" ng-controller="pictureController">
+        <!--loading screen without loading circle -->
+        <div  ng-class="backgroundClass">
+        </div>
         <div class="section valign-wrapper">
             <div class="singlePage valign" infinite-scroll="loadMore()" infinite-scroll-distance="1">
                 <div class="row">
@@ -34,7 +37,7 @@
                             <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" ng-click="emptyInput()"data-activates="party-selection" data-beloworigin="true" id="party-selection-button">Party selection</a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-menu-parties">
                                 <li class="dropdown-text-input-li">
-                                    <input placeholder="SEARCH" class="dropdown-text-input" name="party" type="text" ng-click="filterParty('')" ng-model="partySelection" id="party-selection-search" autofocus>
+                                    <input placeholder="SEARCH" class="dropdown-text-input" name="party" type="text" ng-model="partySelection" id="party-selection-search" autofocus>
                                 </li>             
                                 <li class="filter-menu-items party-dropdown waves-effect valign" ng-click="filterParty(items.code)"  ng-repeat="items in partyList | filter:partySelection:items.name.en track by $index">
                                     <span class="dropdown-font-text valign" ng-attr-id="{{items.code}}">{{items.name.en}}</span>
@@ -45,6 +48,19 @@
                 </div>
                 <!-- cards while loading -->
                 <div class="row" ng-if="loading">
+                    <div class="preloader-wrapper big active" id="loading">
+                        <div class="spinner-layer spinner-blue-only">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="gap-patch">
+                                <div class="circle"></div>
+                              </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col l3 m6 placement-class" ng-repeat="n in [].constructor(40) track by $index">
                          <div class="card">
                             <div class="card-image card-image-img" ng-style="{'background-image':'url()'}">
@@ -88,6 +104,7 @@
             </div>
         </div>
         <br><br>
+
 
     </div>
 {% endverbatim %}

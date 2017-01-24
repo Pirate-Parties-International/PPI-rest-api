@@ -37,6 +37,7 @@
             //Function that gets the data 
             //it transforms the object into an array and runs
             $scope.loading = true;
+            $scope.backgroundClass = "background-wrapper";
             pictureAndPostFactory.imageList($scope.address).then(function(successResponse){
                 if (successResponse == undefined){
                     $scope.noData = true;
@@ -46,6 +47,7 @@
                 $scope.masterArray = $scope.originalArray.concat(successResponse);
                 $scope.originalArray = $scope.masterArray.slice();
                 $scope.loadMore();
+                $scope.backgroundClass = "";
                 $scope.loading = false;
             });   
         };
