@@ -88,7 +88,7 @@
             };
         }
         //determines if post if from FB or TW and creates an URL
-        $scope.getURl = function(data){
+        $scope.getUrl = function(data){
             var url = ""
             if (data.type.toUpperCase() == "TW"){
                 url = "https://twitter.com/pirates/"+data.post_id
@@ -96,7 +96,6 @@
                 url = "https://facebook.com/"+data.post_id
             };
             return url
-
         };
 
         //function changes the text in the Platform selection button, based on wahat you've selected
