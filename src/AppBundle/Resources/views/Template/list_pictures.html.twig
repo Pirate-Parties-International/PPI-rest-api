@@ -12,7 +12,7 @@
 {% verbatim %} 
     <div class="container"  ng-app="app" ng-controller="pictureController">
         <!--loading screen without loading circle -->
-        <div  ng-class="backgroundClass">
+        <div  id="loading-background" ng-class="backgroundClass">
         </div>
         <div class="section valign-wrapper">
             <div class="singlePage valign" infinite-scroll="loadMore()" infinite-scroll-distance="1">
@@ -44,7 +44,7 @@
                                     <span class="party-dropdown-font valign" ng-attr-id="{{items.code}}">{{items.name.en}}</span>
                                 </li>
                             </ul>
-                        <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortDescViews()" id="asc-desc-views">reach</a>
+                        <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortDescViews()" id="asc-desc-views">Engagement</a>
                      </div>
                 </div>
                 <!-- cards while loading and loading circle-->
@@ -71,7 +71,7 @@
                                 </span>
                             </div>
                             <div class="card-content right-align card-content-additions">
-                              <p><b>Reach:</b> unknown people</p>
+                                <p class="card-text"><span class="emphasis">LOADING</span> people <i class="material-icons really-tiny">info_outline</i><p>
                             </div>
                         </div>
                     </div>
@@ -79,19 +79,24 @@
                 <!-- cards -->
                 <div class="row">
                     <div class="col l3 m6 placement-class" ng-repeat="items in data track by $index">
-                        <a class="card-text" target="_blank" ng-href="{{getUrl(items)}}">
                             <div class="card">
+                                <a class="card-text" target="_blank" ng-href="{{getUrl(items)}}">
                                 <div class="card-image card-image-img" ng-style="{'background-image':'url(http://api.piratetimes.net/img/uploads/{{items.code}}/{{items.type}}/{{items.post_image}})'}">
                                     <span class="card-title-bottom  card-belt">
                                         <p class="card-belt-font display-inline ">{{items.code}}</p>                                    
                                         <img class="card-belt-social-img" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
                                     </span>
                                 </div>
+                                </a>
                                 <div class="card-content right-align card-content-additions">
-                                  <p><b>Reach:</b> {{items.post_likes}} people</p>
+                                    <p class="card-text">
+                                        <span class="emphasis">{{items.post_likes}}</span> people 
+                                        <span class="tooltip"><i class="material-icons really-tiny tooltip  test">info_outline</i>
+                                        <span class="tooltiptext">Social engagement score</span></span>
+                                        <p>
                                 </div>
                             </div>
-                        </a>
+                        
                     </div>
                 </div>
                 <!-- When no data is present -->

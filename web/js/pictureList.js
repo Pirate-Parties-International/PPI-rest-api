@@ -37,7 +37,7 @@
             //Function that gets the data 
             //it transforms the object into an array and runs
             $scope.loading = true;
-            $scope.backgroundClass = "background-wrapper";
+            $scope.backgroundClass = "loading-background";
             pictureAndPostFactory.imageList($scope.address).then(function(successResponse){
                 if (successResponse == undefined){
                     $scope.noData = true;
