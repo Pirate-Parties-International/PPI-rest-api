@@ -1,19 +1,5 @@
 (function($) {
     var app = angular.module('app', ['infinite-scroll']); 
-    //directive that cheks if an image is loaded
-    /*app.directive('imageonload', function() {
-        return {
-            restrict: 'A',
-            link: function(scope, element, attrs) {
-                element.bind('load', function() {
-                    return true;
-                });
-                element.bind('error', function(){
-                    return false;
-                });
-            }
-        };
-    });*/
 
     app.controller('pictureController', ['$scope', 'pictureAndPostFactory', function($scope, pictureAndPostFactory) {
         //URL that gets all socialmedia posts that are (primarily) pictures
@@ -21,6 +7,7 @@
         $scope.masterArray =[]; //stores al the data
         $scope.originalArray =[]; // The purpose of this array is to store the original layout of the masterArray
         $scope.address = { //object contains all possible filters for the API
+            subType: "I",
             socialPlatform: "",
             sort: "",
             partyCode: "",
@@ -38,8 +25,9 @@
             //it transforms the object into an array and runs
             $scope.loading = true;
             $scope.backgroundClass = "loading-background";
-            pictureAndPostFactory.imageList($scope.address).then(function(successResponse){
+            pictureAndPostFactory.postList($scope.address).then(function(successResponse){
                 if (successResponse == undefined){
+                    console.log("test")
                     $scope.noData = true;
                     $scope.loading = false;
                     return
@@ -162,6 +150,7 @@
         $scope.defaultSort = function(){
             resetArray()
             $scope.address = {
+                subType: "I",
                 socialPlatform: "",
                 sort: "",
                 partyCode: "",

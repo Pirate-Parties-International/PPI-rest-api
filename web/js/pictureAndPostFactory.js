@@ -12,17 +12,18 @@ angular.module("app").factory("pictureAndPostFactory", function($http)
         });  
             return promise
         }, 
-        imageList : function(x){
-            var promise = $http.get(address+"social/?_format=json&sub_type=I"+"&order_by="+x.sort+"&code="+x.partyCode+"&type="+x.socialPlatform+"&offset="+x.offset)
+        postList : function(x){
+            var promise = $http.get(address+"social/?_format=json&sub_type="+x.subType+"&order_by="+x.sort+"&code="+x.partyCode+"&type="+x.socialPlatform+"&offset="+x.offset)
             .then(function(response) {
                 //First function handles success
                 return response.data;
             }, function(response) {
                 //Second function handles error
-                console.log("error in acquring image list")
+                console.log("error in acquring list")
         });  
             return promise
-        }
+        },
+
     };
 return pictureAndPostFactory;
 });
