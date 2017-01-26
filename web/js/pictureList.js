@@ -79,7 +79,7 @@
         $scope.getUrl = function(data){
             var url = ""
             if (data.type.toUpperCase() == "TW"){
-                url = "https://twitter.com/pirates/"+data.post_id
+                url = "https://twitter.com/pirates/status/"+data.post_id
             }else{
                 url = "https://facebook.com/"+data.post_id
             };

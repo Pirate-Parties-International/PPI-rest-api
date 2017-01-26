@@ -427,7 +427,7 @@ Sorting
 }
 
 
-/* Picture list page
+/* Picture and post list page
 */
 
 
@@ -442,6 +442,22 @@ Sorting
   left: 0;
   margin-top: 15%;
 }
+.card-post {  
+  height: 200px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: 50% 50%;
+  max-width: 100%;
+  overflow: hidden;
+  margin-left: auto;
+  margin-right: auto;
+}
+.card-logo {
+  max-height: 75px;
+  max-width: 75px;
+  display: inline;
+}
+
 .card-text {
   color: #272727;
 }
