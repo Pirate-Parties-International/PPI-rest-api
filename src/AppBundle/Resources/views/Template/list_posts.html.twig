@@ -21,7 +21,7 @@
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">Reset filters</a>
                         <!-- Platform selection dropdown -->
                         <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white platform-button asc" data-activates="platform-selection" data-beloworigin="true">{{selectedPlatform()}}</a>
-                            <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu">
+                            <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-platform">
                                 <li class="filter-menu-items dropdown-menu-social-filter" ng-click="radioBtn = 'all'"><input id="all-platforms" class="with-gap platform-button" name="platform" type="radio" id="all-platform" value="all" ng-model="radioBtn" ng-click="filterPlatform(radioBtn)">
                                     <label for="all-platforms" class="platform-dropdown-font  radioButtonLabel">All</label>
                                 </li>
@@ -62,7 +62,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col l3 m6 placement-class" ng-repeat="n in [].constructor(40) track by $index">
+                    <div class="col l8 m12 offset-l2 placement-class" ng-repeat="n in [].constructor(20) track by $index">
                          <div class="card">
                             <div class="card-image card-image-img" ng-style="{'background-image':'url()'}">
                                 <span class="card-title-bottom  card-belt">
@@ -77,13 +77,13 @@
                     </div>
                 </div>
                 <!-- cards -->
-                <div class="row">
-                    <div class="col  m6 s12 offset-m3 placement-class" ng-repeat="items in data track by $index">
-                            <div class="card">
+                <div class="row"  ng-repeat="items in data track by $index">
+                    <div class="col  l8 m12 offset-l2 placement-class">
+                            <div class="card card-post-size">
                                 <a class="card-text" target="_blank" ng-href="{{getUrl(items)}}">
                                 <div class="card-image card-post"> 
-                                	<img ng-src="{{items.avatar}}" class="card-logo"><span>{{items.name}}</span>
-                                	<p>{{items.post_text}}</p>
+                                	<img ng-src="{{items.avatar}}" class="card-logo"><span class="card-post-title">{{items.name}}</span>
+                                	<p class="card-post-text">{{items.post_text}}</p>
                                     <span class="card-title-bottom  card-belt">                                    
                                         <img class="card-belt-social-img" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
                                     </span>

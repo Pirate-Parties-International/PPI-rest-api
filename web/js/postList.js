@@ -13,38 +13,37 @@
             partyCode: "",
             offset: 0
         };
-        
-
         //sets default checked radio button when the page loads 
         $scope.radioBtn = "all";
-
-        //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
 
         pictureAndPostFactory.partyList().then(function(successResponse){
             $scope.partyList = Object.values(successResponse)
             $scope.partyListObject = successResponse;
-            console.log($scope.partyListObject)
         });      
         
         //this functions loads more data for the infinite scroll
         // it constantily updates the array from which ng-repeat gets its data
         $scope.loadData = function() {
-            //Function that gets the data 
+            //Function that gets both the post data and list of parties
             //it transforms the object into an array and runs
             $scope.loading = true;
             $scope.backgroundClass = "loading-background";
-            pictureAndPostFactory.postList($scope.address).then(function(successResponse){
-                if (successResponse == undefined){
-                    console.log("test")
-                    $scope.noData = true;
+            pictureAndPostFactory.partyList().then(function(successResponse){
+                $scope.partyList = Object.values(successResponse)
+                $scope.partyListObject = successResponse;
+                pictureAndPostFactory.postList($scope.address).then(function(successResponse){
+                    if (successResponse == undefined){
+                        console.log("test")
+                        $scope.noData = true;
+                        $scope.loading = false;
+                        return
+                    };
+                    $scope.masterArray = $scope.originalArray.concat(successResponse);
+                    $scope.originalArray = $scope.masterArray.slice();
+                    $scope.loadMore();
+                    $scope.backgroundClass = "";
                     $scope.loading = false;
-                    return
-                };
-                $scope.masterArray = $scope.originalArray.concat(successResponse);
-                $scope.originalArray = $scope.masterArray.slice();
-                $scope.loadMore();
-                $scope.backgroundClass = "";
-                $scope.loading = false;
+                });
             });   
         };
         $scope.loadMore = function(){
@@ -79,9 +78,9 @@
                 if (currentValue == undefined){
                     return
                 } else {
+                	//this looks into the partylist and gets party logo and name an includes them in the currentValue object
                 	currentValue["avatar"] = $scope.partyListObject[currentValue["code"]]["logo"]
                 	currentValue["name"] = $scope.partyListObject[currentValue["code"]]["name"]["en"]
-                	console.log(currentValue);
                     $scope.data.push(currentValue);
                 }
             };
@@ -213,8 +212,7 @@
             };
         }*/
 
-        //stops dropdown from closing
-        $('#platform-selection').bind('click', function (e) { e.stopPropagation() })
+        //stops dropdown from closing)
         $('#party-selection-search').bind('click', function (e) { e.stopPropagation() })
 
     }]);

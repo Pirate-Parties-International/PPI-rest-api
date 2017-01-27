@@ -442,6 +442,8 @@ Sorting
   left: 0;
   margin-top: 15%;
 }
+
+
 .card-post {  
   height: 200px;
   background-size: contain;
@@ -455,7 +457,24 @@ Sorting
 .card-logo {
   max-height: 75px;
   max-width: 75px;
-  display: inline;
+  display: inline-block;
+}
+
+.card-post-title{
+  display: inline-block;
+  position: absolute;
+  top: 20px;
+  left: 80px;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.card-post-size{
+  min-height: 270px;
+}
+.card-post-text{
+margin-left: 80px;
+margin-right: 10px;
 }
 
 .card-text {
@@ -548,6 +567,7 @@ Sorting
 
 .filter-button{
 	background: rgb(41, 182, 246);
+  border-radius: 0px !important;
 }
 
 @media (max-width: 818px){
@@ -576,9 +596,16 @@ Sorting
   font-size: 0.8em !important;
 }
 
+.dropdown-platform{
+  border-bottom: 1px #e6e6e6 solid;
+  border-left: 1px #e6e6e6 solid;
+  border-right: 1px #e6e6e6 solid;
+}
+
 .dropdown-menu-parties{
 max-height: 300px;
-border-bottom: 1px black inset;
+border-bottom: 1px #e6e6e6 solid;
+border-left: 1px #e6e6e6 solid;
 overflow-x:hidden;
 }
 
