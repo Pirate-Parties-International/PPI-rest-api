@@ -65,13 +65,11 @@
                     <div class="col l8 m12 offset-l2 placement-class" ng-repeat="n in [].constructor(20) track by $index">
                          <div class="card">
                             <div class="card-image card-image-img" ng-style="{'background-image':'url()'}">
-                                <span class="card-title-bottom  card-belt">
-                                    <p class="card-belt-font display-inline ">PPXX</p>
-                                    <img class="card-belt-social-img" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
-                                </span>
                             </div>
                             <div class="card-content right-align card-content-additions">
-                                <p class="card-text"><span class="emphasis">unknown</span> people <i class="material-icons really-tiny">info_outline</i><p>
+                                <p class="card-text">
+                                    <span class="emphasis-posts">xxxx</span> people <i class="material-icons really-tiny">info_outline</i>
+                                <p>
                             </div>
                         </div>
                     </div>
@@ -89,9 +87,9 @@
                                     </span>
                                 </div>
                                 </a>
-                                <div class="card-content right-align card-content-additions">
-                                    <p class="card-text">
-                                        <span class="emphasis">{{items.post_likes}}</span> people 
+                                <div class="card-content card-content-additions card-post-bottom">
+                                    <p class="card-text right-align">
+                                        <span class="emphasis-posts">{{items.post_likes}}</span> people 
                                         <span class="tooltip"><i class="material-icons really-tiny tooltip">info_outline</i>
                                         <span class="tooltiptext">Social engagement score</span></span>
                                         <p>

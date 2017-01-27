@@ -454,6 +454,10 @@ Sorting
   margin-left: auto;
   margin-right: auto;
 }
+
+.card-post-bottom{
+  background-color:#e6e6e6;
+}
 .card-logo {
   max-height: 75px;
   max-width: 75px;
@@ -483,6 +487,12 @@ margin-right: 10px;
 .card-text > .emphasis {
   font-weight: bold;
   font-size:1.4em;
+
+}
+
+.card-text > .emphasis-posts {
+  font-weight: bold;
+  font-size:2.5em;
 
 }
 #loading-background{
