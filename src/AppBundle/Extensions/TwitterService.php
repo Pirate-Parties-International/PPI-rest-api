@@ -148,7 +148,7 @@ class TwitterService extends ScraperServices
                             $img = $scraper->saveImage('tw', $code, $imgSrc, $imgId);
 
                             $out[$postType][] = [
-                                'postId'    => $imgId,
+                                'postId'    => $item->id,
                                 'postTime'  => $twTime, // DateTime
                                 'postText'  => $item->text,
                                 'postImage' => $img,
