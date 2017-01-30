@@ -330,6 +330,10 @@ dd {
 	vertical-align: middle;
 }
 
+.largerText{
+  font-size: 1.8em !important;
+}
+
 /*
 	Static pages
  */
@@ -445,7 +449,6 @@ Sorting
 
 
 .card-post {  
-  height: 200px;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: 50% 50%;
@@ -455,30 +458,54 @@ Sorting
   margin-right: auto;
 }
 
-.card-post-bottom{
-  background-color:#e6e6e6;
+.card-post-size {
+    min-height: 200px;
 }
+
+
+
 .card-logo {
-  max-height: 75px;
-  max-width: 75px;
+  max-height: 85px;
+  max-width: 85px;
   display: inline-block;
+  border-radius:50% !important;
+  padding: 5px;
+  z-index: 2;
 }
 
 .card-post-title{
   display: inline-block;
   position: absolute;
-  top: 20px;
-  left: 80px;
+  top: 25px;
+  left: 90px;
   font-weight: bold;
+  font-size: 1.2em;
+  background-color: white;
+  padding: 5px 5px 5px 10px;
+  margin-left: -17px;
+}
+
+.card-post-div{
+  height: 100px; /* when display: table, height acts the same way as min-hight under normal circusmtances; */
+  display: table;
+  margin: 15px 35px 15px 80px;
+
+}
+
+.card-post-text{
+  word-break: keep-all;
+  display: table-cell;
+  vertical-align: middle;
   font-size: 1.2em;
 }
 
-.card-post-size{
-  min-height: 270px;
-}
-.card-post-text{
-margin-left: 80px;
-margin-right: 10px;
+@media (max-width: 600px){
+  .card-post-text{
+    word-break: normal;
+}}
+
+.card-post-text-size{
+margin-bottom: 5px;
 }
 
 .card-text {
@@ -553,6 +580,10 @@ margin-right: 10px;
   margin-right: auto;
  }
 
+.card-image-top{
+  background-color: rgba(41,182,246,0.07) ;
+}
+
 .card-belt {
 	width: 100%;
 	padding-left: 0px;
@@ -571,12 +602,16 @@ margin-right: 10px;
 .card-belt-social-img {
 	float: right;
 }
+
+.card-belt-social-post-img {
+  float: left;
+}
 .display-inline {
 	display: inline;
 }
 
 .filter-button{
-	background: rgb(41, 182, 246);
+	background: #29b6f6;
   border-radius: 0px !important;
 }
 

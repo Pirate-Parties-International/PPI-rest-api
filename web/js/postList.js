@@ -113,6 +113,16 @@
             return text
         };
         
+        $scope.textSize = function (text){
+            if (text.length < 85){
+                console.log("potatoes")
+                return true
+            }
+            else {
+                return false
+            }
+        }
+
         //This function is called when filtering, so that new data is added into an empty array
         function resetArray(){
             $scope.masterArray = [];

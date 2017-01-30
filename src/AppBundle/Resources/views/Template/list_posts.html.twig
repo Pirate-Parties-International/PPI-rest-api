@@ -15,7 +15,7 @@
         <div  id="loading-background" ng-class="backgroundClass">
         </div>
         <div class="section valign-wrapper">
-            <div class="singlePage valign" infinite-scroll="loadMore()" infinite-scroll-distance="1">
+            <div class="singlePage" infinite-scroll="loadMore()" infinite-scroll-distance="1">
                 <div class="row">
                     <div class="col s12">
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">Reset filters</a>
@@ -80,19 +80,22 @@
                             <div class="card card-post-size">
                                 <a class="card-text" target="_blank" ng-href="{{getUrl(items)}}">
                                 <div class="card-image card-post"> 
-                                	<img ng-src="{{items.avatar}}" class="card-logo"><span class="card-post-title">{{items.name}}</span>
-                                	<p class="card-post-text">{{items.post_text}}</p>
-                                    <span class="card-title-bottom  card-belt">                                    
+                                	<div class="card-image-top">
+                                        <img ng-src="{{items.avatar}}" class="card-logo circle">
+                                        <span class="card-post-title">{{items.name}}</span>
                                         <img class="card-belt-social-img" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
-                                    </span>
+                                    </div>
+                                    <div  class="card-post-div">
+                                        <p class="card-post-text" ng-class="{largerText:textSize(items.post_text)}">{{items.post_text}}</p>
+                                    </div>
                                 </div>
                                 </a>
-                                <div class="card-content card-content-additions card-post-bottom">
+                                <div class="card-content card-content-additions">
                                     <p class="card-text right-align">
                                         <span class="emphasis-posts">{{items.post_likes}}</span> people 
                                         <span class="tooltip"><i class="material-icons really-tiny tooltip">info_outline</i>
                                         <span class="tooltiptext">Social engagement score</span></span>
-                                        <p>
+                                    <p>
                                 </div>
                             </div>
                         
