@@ -22,7 +22,7 @@
                         <!-- Platform selection dropdown -->
                         <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white platform-button asc" data-activates="platform-selection" data-beloworigin="true">{{selectedPlatform()}}</a>
                             <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-platform">
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="radioBtn = 'all'"><input id="all-platforms" class="with-gap platform-button" name="platform" type="radio" id="all-platform" value="all" ng-model="radioBtn" ng-click="filterPlatform(radioBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="radioBtn = 'all'; filterPlatform(radioBtn)"><input id="all-platforms" class="with-gap platform-button" name="platform" type="radio" id="all-platform" value="all" ng-model="radioBtn" ng-click="filterPlatform(radioBtn)">
                                     <label for="all-platforms" class="platform-dropdown-font  radioButtonLabel">All</label>
                                 </li>
                                 <li class="filter-menu-items dropdown-menu-social-filter" ng-click="radioBtn = 'fb'; filterPlatform(radioBtn)" ><input class="with-gap" name="platform" type="radio" id="FB-platform" value="fb" ng-model='radioBtn' ng-click="filterPlatform(radioBtn)">

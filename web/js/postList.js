@@ -115,7 +115,6 @@
         
         $scope.textSize = function (text){
             if (text.length < 85){
-                console.log("potatoes")
                 return true
             }
             else {
@@ -182,7 +181,9 @@
         }
 
         $scope.filterPlatform = function(platform){
+            console.log("test2")
             if (platform == "all"){
+                console.log("test")
                 resetArray()
                 $scope.address.socialPlatform = "";
                 $scope.loadMore();
