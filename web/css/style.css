@@ -486,9 +486,10 @@ Sorting
 }
 
 .card-post-div{
-  height: 100px; /* when display: table, height acts the same way as min-hight under normal circusmtances; */
+  height: 150px; /* when display: table, height acts the same way as min-hight under normal circusmtances; */
   display: table;
   margin: 15px 35px 15px 80px;
+  border-bottom: 1px #b8b8b8 dashed;
 
 }
 
@@ -608,6 +609,18 @@ margin-bottom: 5px;
 }
 .display-inline {
 	display: inline;
+}
+
+.card-post-smaller{
+  color: #b8b8b8 !important;
+  margin-left: 60px !important;
+  font-size: 0.9em;
+}
+
+.card-content span:last-child {
+    position: absolute;
+    right: 20px; /* must be equal to parent's right padding */
+    bottom: 8px;  
 }
 
 .filter-button{

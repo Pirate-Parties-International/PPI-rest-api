@@ -181,9 +181,7 @@
         }
 
         $scope.filterPlatform = function(platform){
-            console.log("test2")
             if (platform == "all"){
-                console.log("test")
                 resetArray()
                 $scope.address.socialPlatform = "";
                 $scope.loadMore();

@@ -78,7 +78,7 @@
                 <div class="row"  ng-repeat="items in data track by $index">
                     <div class="col  l8 m12 offset-l2 placement-class">
                             <div class="card card-post-size">
-                                <a class="card-text" target="_blank" ng-href="{{getUrl(items)}}">
+                                <a class="card-text" target="_blank">
                                 <div class="card-image card-post"> 
                                 	<div class="card-image-top">
                                         <img ng-src="{{items.avatar}}" class="card-logo circle">
@@ -87,15 +87,17 @@
                                     </div>
                                     <div  class="card-post-div">
                                         <p class="card-post-text" ng-class="{largerText:textSize(items.post_text)}">{{items.post_text}}</p>
+                                        <p class="right-align"><a ng-href="{{getUrl(items)}}">Original link</a></p>
                                     </div>
                                 </div>
-                                </a>
+                                </a>                            
                                 <div class="card-content card-content-additions">
-                                    <p class="card-text right-align">
+                                    <span class="card-post-smaller card-post-display">{{items.post_time | date }}</span>
+                                    <span class="card-text right-align card-post-display">
                                         <span class="emphasis-posts">{{items.post_likes}}</span> people 
                                         <span class="tooltip"><i class="material-icons really-tiny tooltip">info_outline</i>
                                         <span class="tooltiptext">Social engagement score</span></span>
-                                    <p>
+                                    <span>
                                 </div>
                             </div>
                         
