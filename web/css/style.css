@@ -462,6 +462,11 @@ Sorting
     min-height: 200px;
 }
 
+.card-post-bottom{
+  margin-left: 60px;
+  width: 80%;
+}
+
 
 
 .card-logo {
@@ -486,11 +491,17 @@ Sorting
 }
 
 .card-post-div{
+  width: 80%;
   height: 150px; /* when display: table, height acts the same way as min-hight under normal circusmtances; */
   display: table;
   margin: 15px 35px 15px 80px;
   border-bottom: 1px #b8b8b8 dashed;
 
+}
+
+
+.card-post-link{
+  bottom: 10;
 }
 
 .card-post-text{
@@ -613,14 +624,13 @@ margin-bottom: 5px;
 
 .card-post-smaller{
   color: #b8b8b8 !important;
-  margin-left: 60px !important;
   font-size: 0.9em;
 }
 
 .card-content span:last-child {
     position: absolute;
-    right: 20px; /* must be equal to parent's right padding */
-    bottom: 8px;  
+    left: 79%;
+    bottom: 10px;  
 }
 
 .filter-button{
@@ -707,7 +717,7 @@ i.really-tiny{
     /* Position the tooltip text */
     position: absolute;
     z-index: 1;
-    bottom: 125%;
+    bottom: 125% !important;
     left: 50%;
     margin-left: -100px;
 
