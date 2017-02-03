@@ -499,11 +499,6 @@ Sorting
 
 }
 
-
-.card-post-link{
-  bottom: 10;
-}
-
 .card-post-text{
   word-break: keep-all;
   display: table-cell;
@@ -631,6 +626,12 @@ margin-bottom: 5px;
     position: absolute;
     left: 79%;
     bottom: 10px;  
+}
+
+.card-post-link{
+  position: absolute;
+    left: 80%;
+    bottom: 20px; 
 }
 
 .filter-button{
