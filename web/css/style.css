@@ -483,11 +483,19 @@ Sorting
   position: absolute;
   top: 25px;
   left: 90px;
-  font-weight: bold;
   font-size: 1.2em;
   background-color: white;
   padding: 5px 5px 5px 10px;
   margin-left: -17px;
+}
+
+.card-post-title-img{
+  height: 31px;
+  width: 31px !important;
+  float: right;
+  bottom: 5px !important;
+  top: auto !important;
+  left: 5px !important;
 }
 
 .card-post-div{
@@ -496,6 +504,7 @@ Sorting
   display: table;
   margin: 15px 35px 15px 80px;
   border-bottom: 1px #b8b8b8 dashed;
+
 
 }
 
@@ -606,13 +615,11 @@ margin-bottom: 5px;
   padding-right: 50px;
 }
 
-.card-belt-social-img {
-	float: right;
+
+.display-inline-block{
+  display: inline-block;
 }
 
-.card-belt-social-post-img {
-  float: left;
-}
 .display-inline {
 	display: inline;
 }
@@ -631,7 +638,7 @@ margin-bottom: 5px;
 .card-post-link{
   position: absolute;
     left: 80%;
-    bottom: 20px; 
+    bottom: 25px; 
 }
 
 .filter-button{

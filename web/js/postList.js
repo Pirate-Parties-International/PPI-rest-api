@@ -1,5 +1,5 @@
 (function($) {
-    var app = angular.module('app', ['infinite-scroll']); 
+    var app = angular.module('app', ['infinite-scroll','ngSanitize']); 
 
     app.controller('postController', ['$scope', 'pictureAndPostFactory', function($scope, pictureAndPostFactory) {
         //URL that gets all socialmedia posts that are (primarily) pictures
