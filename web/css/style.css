@@ -483,7 +483,7 @@ Sorting
   top: 22px;
   left: 100px;
   right:0;
-  font-size: 1.2em;
+  font-size: 1.3em;
   background-color: white;
   padding: 5px 5px 5px 10px;
   margin-left: -20px;
@@ -499,7 +499,6 @@ Sorting
 }
 
 .card-post-div{
-  width: 80%;
   height: 50px; /* when display: table, height acts the same way as min-hight under normal circusmtances; */
   display: table;
   margin: 0px 80px 15px 90px;

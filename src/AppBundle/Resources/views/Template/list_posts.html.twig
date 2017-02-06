@@ -65,13 +65,29 @@
                     </div>
                     <div class="col l8 m12 offset-l2 placement-class" ng-repeat="n in [].constructor(20) track by $index">
                          <div class="card">
-                            <div class="card-image card-image-img" ng-style="{'background-image':'url()'}">
-                            </div>
-                            <div class="card-content right-align card-content-additions">
-                                <p class="card-text">
-                                    <span class="emphasis-posts">xxxx</span> people <i class="material-icons really-tiny">info_outline</i>
-                                <p>
-                            </div>
+                            <div class="card-image card-post"> 
+                                    <div>
+                                        <div class="display-inline-block">
+                                            <img src="/img/generic.png" class="card-logo circle">
+                                        </div>
+                                        <div class="card-post-title display-inline-block">
+                                            Pirate party of the World
+                                            <img class="card-post-title-img" ng-src="/img/tw.png">
+                                        </div>     
+                                    </div>
+                                    <div  class="card-post-div">
+                                        <div class="margin-bottom-25px"><p class="card-post-text" ng-class="{largerText:textSize(items.post_text)}" ng-bind-html="items.post_text | linky"></p></div>
+                                        <a class="card-post-link" target="_blank" ng-href="{{getUrl(items)}}">Original link</a>
+                                    </div>
+                                </div> 
+                            <div class="card-content card-content-additions card-post-bottom">
+                                    <span class="card-post-smaller">31.2.17</span>
+                                    <span class="card-text right-align">
+                                        <span class="emphasis-posts">XXXX</span> <span>people</span>
+                                        <span class="tooltip"><i class="material-icons really-tiny tooltip">info_outline</i>
+                                        <span class="tooltiptext">Social engagement score</span></span>
+                                    <span>
+                                </div>
                         </div>
                     </div>
                 </div>
@@ -97,7 +113,8 @@
                                 <div class="card-content card-content-additions card-post-bottom">
                                     <span class="card-post-smaller">{{items.post_time | date }}</span>
                                     <span class="card-text right-align">
-                                        <span class="emphasis-posts">{{items.post_likes}}</span> <span ng-show="items.post_likes!=1">people</span><span ng-show="items.post_likes==1">person</span>
+                                        <span class="emphasis-posts">{{items.post_likes}}</span> <span ng-show="items.post_likes!=1">people</span>
+                                        <span ng-show="items.post_likes==1">person</span>
                                         <span class="tooltip"><i class="material-icons really-tiny tooltip">info_outline</i>
                                         <span class="tooltiptext">Social engagement score</span></span>
                                     <span>
