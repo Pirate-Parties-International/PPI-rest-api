@@ -463,7 +463,7 @@ Sorting
 }
 
 .card-post-bottom{
-  margin-left: 60px;
+  margin-left: 70px;
   width: 80%;
 }
 
@@ -486,7 +486,7 @@ Sorting
   font-size: 1.2em;
   background-color: white;
   padding: 5px 5px 5px 10px;
-  margin-left: -17px;
+  margin-left: -20px;
 }
 
 .card-post-title-img{
@@ -502,7 +502,7 @@ Sorting
   width: 80%;
   height: 50px; /* when display: table, height acts the same way as min-hight under normal circusmtances; */
   display: table;
-  margin: 0px 35px 15px 90px;
+  margin: 0px 80px 15px 90px;
   border-bottom: 1px #b8b8b8 dashed;
 }
 
@@ -633,13 +633,13 @@ margin-bottom: 5px;
 
 .card-content span:last-child {
     position: absolute;
-    left: 79%;
+    right: 80px;
     bottom: 10px;  
 }
 
 .card-post-link{
   position: absolute;
-    left: 81%;
+    right: 80px;
     bottom: 22px; 
 }
 
