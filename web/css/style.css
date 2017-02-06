@@ -479,10 +479,10 @@ Sorting
 }
 
 .card-post-title{
-  display: inline-block;
   position: absolute;
-  top: 25px;
-  left: 90px;
+  top: 22px;
+  left: 100px;
+  right:0;
   font-size: 1.2em;
   background-color: white;
   padding: 5px 5px 5px 10px;
@@ -493,26 +493,28 @@ Sorting
   height: 31px;
   width: 31px !important;
   float: right;
-  bottom: 5px !important;
-  top: auto !important;
-  left: 5px !important;
+  right: 25px!important;
+  left: initial !important;
+
 }
 
 .card-post-div{
   width: 80%;
-  height: 150px; /* when display: table, height acts the same way as min-hight under normal circusmtances; */
+  height: 50px; /* when display: table, height acts the same way as min-hight under normal circusmtances; */
   display: table;
-  margin: 15px 35px 15px 80px;
+  margin: 0px 35px 15px 90px;
   border-bottom: 1px #b8b8b8 dashed;
-
-
 }
 
+
+.margin-bottom-25px{
+  margin-bottom: 25px;
+}
 .card-post-text{
   word-break: keep-all;
   display: table-cell;
-  vertical-align: middle;
   font-size: 1.2em;
+  margin-bottom: 25px;
 }
 
 @media (max-width: 600px){
@@ -637,8 +639,8 @@ margin-bottom: 5px;
 
 .card-post-link{
   position: absolute;
-    left: 80%;
-    bottom: 25px; 
+    left: 81%;
+    bottom: 22px; 
 }
 
 .filter-button{

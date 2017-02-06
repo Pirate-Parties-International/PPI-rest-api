@@ -35,7 +35,7 @@
                                     <label for="G+-platform" class="dropdown-font-text radioButtonLabel">Google+</label></li> -->
                             </ul>
                             <!-- Party selection dropdown -->
-                            <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" ng-click="emptyInput()"data-activates="party-selection" data-beloworigin="true" id="party-selection-button"> Party<span class="hide-bellow-1250">selection</span></a>
+                            <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" ng-click="emptyInput()"data-activates="party-selection" data-beloworigin="true" id="party-selection-button"> Party <span class="hide-bellow-1250">selection</span></a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-menu-parties">
                                 <!--both dropdown-text-input-li and dropdown-text-input are using !important" -->
                                 <li class="dropdown-text-input-li">
@@ -90,8 +90,8 @@
                                         </div>     
                                     </div>
                                     <div  class="card-post-div">
-                                        <p class="card-post-text" ng-class="{largerText:textSize(items.post_text)}" ng-bind-html="items.post_text | linky"></p>
-                                        <a class="card-post-link" ng-href="{{getUrl(items)}}">Original link</a>
+                                        <div class="margin-bottom-25px"><p class="card-post-text" ng-class="{largerText:textSize(items.post_text)}" ng-bind-html="items.post_text | linky"></p></div>
+                                        <a class="card-post-link" target="_blank" ng-href="{{getUrl(items)}}">Original link</a>
                                     </div>
                                 </div>                           
                                 <div class="card-content card-content-additions card-post-bottom">
