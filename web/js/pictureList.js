@@ -1,11 +1,11 @@
 (function($) {
-    var app = angular.module('app', ['infinite-scroll']); 
+    var app = angular.module('app', ['infinite-scroll']);
 
     app.controller('pictureController', ['$scope', 'pictureAndPostFactory', function($scope, pictureAndPostFactory) {
         //URL that gets all socialmedia posts that are (primarily) pictures
-        $scope.data =[]; //stores past and currenty visible data
-        $scope.masterArray =[]; //stores al the data
-        $scope.originalArray =[]; // The purpose of this array is to store the original layout of the masterArray
+        $scope.data = []; //stores past and currenty visible data
+        $scope.masterArray = []; //stores al the data
+        $scope.originalArray = []; // The purpose of this array is to store the original layout of the masterArray
         $scope.address = { //object contains all possible filters for the API
             subType: "I",
             socialPlatform: "",
@@ -16,8 +16,8 @@
 
         //sets default checked radio button when the page loads 
         $scope.radioBtn = "all";
-        
-        
+
+
         //this functions loads more data for the infinite scroll
         // it constantily updates the array from which ng-repeat gets its data
         $scope.loadData = function() {
@@ -25,8 +25,8 @@
             //it transforms the object into an array and runs
             $scope.loading = true;
             $scope.backgroundClass = "loading-background";
-            pictureAndPostFactory.postList($scope.address).then(function(successResponse){
-                if (successResponse == undefined){
+            pictureAndPostFactory.postList($scope.address).then(function(successResponse) {
+                if (successResponse == undefined) {
                     console.log("test")
                     $scope.noData = true;
                     $scope.loading = false;
@@ -37,11 +37,11 @@
                 $scope.loadMore();
                 $scope.backgroundClass = "";
                 $scope.loading = false;
-            });   
+            });
         };
-        $scope.loadMore = function(){
+        $scope.loadMore = function() {
             infiniteArray()
-            if (($scope.data.length/100)==0){
+            if (($scope.data.length / 100) == 0) {
                 $scope.loadData()
             } else {
                 offset()
@@ -49,39 +49,38 @@
             }
         };
 
-        function offset(){
-            if (($scope.data.length%100)===0){
+        function offset() {
+            if (($scope.data.length % 100) === 0) {
                 $scope.address.offset += 100
                 $scope.loadData();
             };
         };
         //this function slowly serves data from the masterArray
-        function infiniteArray(){
+        function infiniteArray() {
             var last = [];
             var x
-            if ( $scope.data.length == 0){
+            if ($scope.data.length == 0) {
                 x = -1
-            }
-            else {
+            } else {
                 x = $scope.data.length - 1;
             }
-            for(var i = 1; i <= 10; i++) {
+            for (var i = 1; i <= 10; i++) {
                 //check if the element is undefined, then there is no more data and the fuction can stop
-                var currentValue = $scope.masterArray[(x+i)];
-                if (currentValue == undefined){
+                var currentValue = $scope.masterArray[(x + i)];
+                if (currentValue == undefined) {
                     return
-                } else {      
+                } else {
                     $scope.data.push(currentValue);
                 }
             };
         }
         //determines if post if from FB or TW and creates an URL
-        $scope.getUrl = function(data){
+        $scope.getUrl = function(data) {
             var url = ""
-            if (data.type.toUpperCase() == "TW"){
-                url = "https://twitter.com/pirates/status/"+data.post_id
-            }else{
-                url = "https://facebook.com/"+data.post_id
+            if (data.type.toUpperCase() == "TW") {
+                url = "https://twitter.com/pirates/status/" + data.post_id
+            } else {
+                url = "https://facebook.com/" + data.post_id
             };
             return url
         };
@@ -89,7 +88,7 @@
         //function changes the text in the Platform selection button, based on wahat you've selected
         $scope.selectedPlatform = function() {
             var text = "Platform"
-            switch ($scope.radioBtn){
+            switch ($scope.radioBtn) {
                 case "all":
                     text = "Platform"
                     break;
@@ -103,21 +102,21 @@
             return text
         };
 
-        
+
         //This function is called when filtering, so that new data is added into an empty array
-        function resetArray(){
+        function resetArray() {
             $scope.masterArray = [];
             $scope.originalArray = [];
-            $scope.data =[];
+            $scope.data = [];
         };
 
         //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
 
-        pictureAndPostFactory.partyList().then(function(successResponse){
+        pictureAndPostFactory.partyList().then(function(successResponse) {
             $scope.partyList = Object.values(successResponse)
         });
-        
-        $scope.emptyInput = function(){
+
+        $scope.emptyInput = function() {
             $scope.partySelection = "";
         }
 
@@ -132,9 +131,9 @@
         };*/
 
         //a toggle that sorts entries by reach in descending order
-        $scope.sortDescViews = function(){
+        $scope.sortDescViews = function() {
             resetArray()
-            if ($("#asc-desc-views").hasClass("reach-selected")){
+            if ($("#asc-desc-views").hasClass("reach-selected")) {
                 $("#asc-desc-views").removeClass("reach-selected");
                 $scope.address.sort = "";
                 $scope.address.offset = 0;
@@ -143,33 +142,33 @@
                 $("#asc-desc-views").addClass("reach-selected");
                 $scope.address.sort = "likes";
                 $scope.address.offset = 0;
-                $scope.loadMore(); 
+                $scope.loadMore();
             };
         };
 
-        $scope.defaultSort = function(){
-            resetArray()
-            $scope.address = {
-                subType: "I",
-                socialPlatform: "",
-                sort: "",
-                partyCode: "",
-                offset: 0
-            };
-            $scope.loadMore(); 
-            $(".up").removeClass("arrow-color")
-            $(".down").removeClass("arrow-color")
-            $("#asc-desc-views").removeClass("reach-selected");
-        }
-        //function that filters parties
+        $scope.defaultSort = function() {
+                resetArray()
+                $scope.address = {
+                    subType: "I",
+                    socialPlatform: "",
+                    sort: "",
+                    partyCode: "",
+                    offset: 0
+                };
+                $scope.loadMore();
+                $(".up").removeClass("arrow-color")
+                $(".down").removeClass("arrow-color")
+                $("#asc-desc-views").removeClass("reach-selected");
+            }
+            //function that filters parties
         $scope.filterParty = function(code) {
             resetArray()
             $scope.address.partyCode = code;
-            $scope.loadMore(); 
+            $scope.loadMore();
         }
 
-        $scope.filterPlatform = function(platform){
-            if (platform == "all"){
+        $scope.filterPlatform = function(platform) {
+            if (platform == "all") {
                 resetArray()
                 $scope.address.socialPlatform = "";
                 $scope.loadMore();
@@ -177,16 +176,16 @@
                 resetArray()
                 $scope.address.socialPlatform = platform;
                 $scope.loadMore();
-            };      
+            };
         };
         //clicking enter after searching for party "clicks" on the first party in the list
-        $("#party-selection-search").on('keydown', function (e) {
+        $("#party-selection-search").on('keydown', function(e) {
             if (e.keyCode == 13) {
                 $(this).parent().next().click();
             };
         });
 
-        $("#party-selection-button").click(function(){
+        $("#party-selection-button").click(function() {
             $("#party-selection-search").click().focus();
         });
 
@@ -200,8 +199,8 @@
                 $("#asc-desc-views").addClass("asc")
                 $scope.sortAscViews()       
             }*/
-            //same reason as above
-           /* else {
+        //same reason as above
+        /* else {
                 $("#asc-desc-views").addClass("toggled")
                 $("#asc-desc-views").addClass("desc")
                 $("#asc-desc-views").removeClass("asc")
@@ -210,8 +209,8 @@
         }*/
 
         //stops dropdown from closing
-        $('#platform-selection').bind('click', function (e) { e.stopPropagation() })
-        $('#party-selection-search').bind('click', function (e) { e.stopPropagation() })
+        $('#platform-selection').bind('click', function(e) { e.stopPropagation() })
+        $('#party-selection-search').bind('click', function(e) { e.stopPropagation() })
 
     }]);
 })(jQuery); // end of jQuery name space
