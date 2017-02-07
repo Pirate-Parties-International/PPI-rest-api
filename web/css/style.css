@@ -29,7 +29,7 @@ html {
 .hide-above-1250{}
 
 @media (min-width: 1250px) {
-    .hide-bellow-1250 {
+    .hide-above-1250 {
         display: none;
     }
 }
