@@ -14,7 +14,7 @@ Features:
 
 Live version can be found here:
 
-[api.piratetimes.net](api.piratetimes.net)
+[api.piratetimes.net](http://api.piratetimes.net)
 
 
 **[Deployment documentation](doc/deployment.md)**
