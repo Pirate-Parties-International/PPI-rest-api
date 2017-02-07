@@ -452,7 +452,12 @@ Sorting
 
 
 /* Picture and post list page
+classes starting with .card-post are for the post page and .card-picture is for picture page
+the rest is for both
 */
+
+
+/*loading screen */
 
 #loading {
     position: fixed;
@@ -464,96 +469,6 @@ Sorting
     right: 0;
     left: 0;
     margin-top: 15%;
-}
-
-.card-post {
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-    max-width: 100%;
-    overflow: hidden;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.card-post-size {
-    min-height: 200px;
-}
-
-.card-post-bottom {
-    margin-left: 70px;
-    width: 80%;
-}
-
-.card-logo {
-    max-height: 85px;
-    max-width: 85px;
-    display: inline-block;
-    border-radius: 50% !important;
-    padding: 5px;
-    z-index: 2;
-}
-
-.card-post-title {
-    position: absolute;
-    top: 20px;
-    left: 100px;
-    right: 0;
-    font-size: 1.3em;
-    background-color: white;
-    padding: 5px 5px 5px 10px;
-    margin-left: -20px;
-}
-
-.card-post-title-img {
-    height: 31px;
-    width: 31px !important;
-    float: right;
-    right: 25px!important;
-    left: initial !important;
-}
-
-.card-post-div {
-    height: 50px;
-    /* when display: table, height acts the same way as min-hight under normal circusmtances; */
-    display: table;
-    margin: 0px 80px 15px 90px;
-    border-bottom: 1px #b8b8b8 dashed;
-}
-
-.margin-bottom-25px {
-    margin-bottom: 25px;
-}
-
-.card-post-text {
-    word-break: keep-all;
-    display: table-cell;
-    font-size: 1.2em;
-    margin-bottom: 25px;
-}
-
-@media (max-width: 600px) {
-    .card-post-text {
-        word-break: normal;
-    }
-}
-
-.card-post-text-size {
-    margin-bottom: 5px;
-}
-
-.card-text {
-    color: #272727;
-}
-
-.card-text > .emphasis {
-    font-weight: bold;
-    font-size: 1.4em;
-}
-
-.card-text > .emphasis-posts {
-    font-weight: bold;
-    font-size: 2.5em;
 }
 
 #loading-background {
@@ -584,15 +499,108 @@ Sorting
     -webkit-transition: opacity 1s ease-out;
 }
 
-.card .card-image .card-title-top {
-    color: #fff;
-    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
-    position: absolute;
-    top: 0;
-    left: 0;
-    padding: 0px;
+
+/*card post */
+.card-post {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    max-width: 100%;
+    overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
 }
 
+.card-post-bottom {
+    margin-left: 70px;
+    width: 80%;
+}
+
+.card-post-div {
+    height: 50px;
+    /* when display: table, height acts the same way as min-hight under normal circusmtances; */
+    display: table;
+    margin: 0px 80px 15px 90px;
+    border-bottom: 1px #b8b8b8 dashed;
+}
+
+.card-post-link {
+    position: absolute;
+    right: 80px;
+    bottom: 22px;
+}
+.card-post-logo {
+    max-height: 85px;
+    max-width: 85px;
+    display: inline-block;
+    border-radius: 50% !important;
+    padding: 5px;
+    z-index: 2;
+}
+
+.card-post-size {
+    min-height: 200px;
+}
+
+.card-post-smaller {
+    color: #b8b8b8 !important;
+    font-size: 0.9em;
+}
+.card-post-text {
+    word-break: keep-all;
+    display: table-cell;
+    font-size: 1.2em;
+    margin-bottom: 25px;
+}
+
+@media (max-width: 600px) {
+    .card-post-text {
+        word-break: normal;
+    }
+}
+
+.card-post-text-size {
+    margin-bottom: 5px;
+}
+
+.card-post-title {
+    position: absolute;
+    top: 20px;
+    left: 100px;
+    right: 0;
+    font-size: 1.3em;
+    background-color: white;
+    padding: 5px 5px 5px 10px;
+    margin-left: -20px;
+}
+
+
+.card-post-title-img {
+    height: 31px;
+    width: 31px !important;
+    float: right;
+    right: 25px!important;
+    left: initial !important;
+}
+
+.card-post-tooltip-position {
+    position: absolute;
+}
+
+/*card picture */
+
+.card-picture-belt-position {
+    float: right;
+}
+
+.card-picture-engagement-position {
+    position: absolute;
+    right: 80px;
+    bottom: 10px;
+}
+
+
+/* all cards */
 .card .card-image .card-title-bottom {
     color: #fff;
     text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
@@ -602,20 +610,13 @@ Sorting
     padding-right: 0px;
 }
 
-.card-image-img {
-    height: 200px;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-    background-color: #d3d3d3;
-    max-width: 100%;
-    overflow: hidden;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.card-image-top {
-    background-color: rgba(41, 182, 246, 0.07);
+.card .card-image .card-title-top {
+    color: #fff;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0px;
 }
 
 .card-belt {
@@ -633,38 +634,39 @@ Sorting
     padding-right: 50px;
 }
 
-.display-inline-block {
-    display: inline-block;
+
+.card-image-img {
+    height: 200px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-color: #d3d3d3;
+    max-width: 100%;
+    overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.display-inline {
-    display: inline;
+.card-image-top {
+    background-color: rgba(41, 182, 246, 0.07);
 }
 
-.card-post-smaller {
-    color: #b8b8b8 !important;
-    font-size: 0.9em;
+.card-text {
+    color: #272727;
 }
 
-.card-post-tooltip-position {
-    position: absolute;
+.card-text > .emphasis {
+    font-weight: bold;
+    font-size: 1.4em;
 }
 
-.card-picture-engagement-position {
-    position: absolute;
-    right: 80px;
-    bottom: 10px;
+.card-text > .emphasis-posts {
+    font-weight: bold;
+    font-size: 2.5em;
 }
 
-.card-picture-belt-position {
-    float: right;
-}
+/* Filter menu on post and picture pages */
 
-.card-post-link {
-    position: absolute;
-    right: 80px;
-    bottom: 22px;
-}
 
 .filter-button {
     background: #29b6f6;
@@ -732,15 +734,18 @@ Sorting
     background-color: #2bbbad;
 }
 
-i.really-tiny {
-    font-size: 0.9em;
-}
+
+
+/* tooltip */
 
 .tooltip {
     position: relative;
     display: inline-block;
 }
 
+i.really-tiny {
+    font-size: 0.9em;
+}
 
 /* Tooltip text */
 
@@ -783,4 +788,18 @@ i.really-tiny {
 .tooltip:hover .tooltiptext {
     visibility: visible;
     opacity: 1;
+}
+
+/* classes used for specific minor tweaks*/
+
+.display-inline-block {
+    display: inline-block;
+}
+
+.display-inline {
+    display: inline;
+}
+
+.margin-bottom-25px {
+    margin-bottom: 25px;
 }
