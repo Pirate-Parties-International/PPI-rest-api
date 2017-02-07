@@ -646,10 +646,18 @@ Sorting
     font-size: 0.9em;
 }
 
-.card-content span:last-child {
+.card-post-tooltip-position {
+    position: absolute;
+}
+
+.card-picture-engagement-position {
     position: absolute;
     right: 80px;
     bottom: 10px;
+}
+
+.card-picture-belt-position {
+    float: right;
 }
 
 .card-post-link {
