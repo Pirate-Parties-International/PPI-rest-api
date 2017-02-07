@@ -26,6 +26,14 @@ html {
     }
 }
 
+.hide-above-1250{}
+
+@media (min-width: 1250px) {
+    .hide-bellow-1250 {
+        display: none;
+    }
+}
+
 .pplist tbody img {
     max-width: 80px;
     max-height: 80px;
@@ -524,6 +532,16 @@ the rest is for both
     border-bottom: 1px #b8b8b8 dashed;
 }
 
+@media (max-width: 450px) {
+.card-post-div {
+    height: 50px;
+    /* when display: table, height acts the same way as min-hight under normal circusmtances; */
+    display: table;
+    margin: 0px 10px 15px 10px;
+    border-bottom: 1px #b8b8b8 dashed;
+    }
+}
+
 .card-post-link {
     position: absolute;
     right: 80px;
@@ -558,6 +576,14 @@ the rest is for both
         word-break: normal;
     }
 }
+
+@media (max-width: 290px) {
+    .card-post-text {
+        word-break: break-all;
+    }
+}
+
+
 
 .card-post-text-size {
     margin-bottom: 5px;

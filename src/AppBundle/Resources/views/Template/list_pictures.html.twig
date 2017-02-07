@@ -62,7 +62,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col l3 m6 placement-class" ng-repeat="n in [].constructor(40) track by $index">
+                    <div class="col l3 m6 s12 placement-class" ng-repeat="n in [].constructor(40) track by $index">
                          <div class="card">
                             <div class="card-image card-image-img" ng-style="{'background-image':'url()'}">
                                 <span class="card-title-bottom  card-belt">
@@ -78,7 +78,7 @@
                 </div>
                 <!-- cards -->
                 <div class="row">
-                    <div class="col l3 m6 placement-class" ng-repeat="items in data track by $index">
+                    <div class="col l3 m6 s12 placement-class" ng-repeat="items in data track by $index">
                             <div class="card">
                                 <a class="card-text" target="_blank" ng-href="{{getUrl(items)}}">
                                 <div class="card-image card-image-img" ng-style="{'background-image':'url(http://api.piratetimes.net/img/uploads/{{items.code}}/{{items.type}}/{{items.post_image}})'}">
