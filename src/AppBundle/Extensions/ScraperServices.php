@@ -152,6 +152,13 @@ class ScraperServices
             $p = new SocialMedia();
         }
 
+        $postText = (strlen($postText)>255) ? $this->getTruncatedString($postText) : $postText;
+
+        if (strlen($postText)>255) {
+            echo "post ".$postId." text too long (".strlen($postText)." characters)\n";
+            die;
+        }
+
         $p->setCode($code);
         $p->setType($type);
         $p->setSubType($subType);
@@ -167,6 +174,24 @@ class ScraperServices
 
         $this->posts[] = $p;
         return $p;
+    }
+
+
+    /**
+     * Truncates a string to 255 characters or fewer to fit varchar field
+     * @param  string $string
+     * @return string
+     **/
+    public function getTruncatedString($string) {
+        $string = trim($string);
+
+        if(strlen($string) > 255) { // if string is longer than 255 characters
+            $string = wordwrap($string, 249, "\n"); // split into substrings
+            $string = explode("\n", $string, 2); // add substrings to array
+            $string = $string[0].' […]'; // save only first substring and add ellipses
+        }
+
+        return $string;
     }
 
 
