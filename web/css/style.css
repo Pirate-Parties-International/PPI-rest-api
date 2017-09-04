@@ -1,10 +1,16 @@
 /* Custom Stylesheet */
 
+
 /* 
-	General
+  General
 */
-.material-icons .md-light { 
-	color: rgba(255, 255, 255, 1); 
+
+html {
+    overflow-y: scroll;
+}
+
+.material-icons .md-light {
+    color: rgba(255, 255, 255, 1);
 }
 
 
@@ -12,88 +18,111 @@
  Front page
  */
 
+.hide-bellow-1250 {}
 
+@media (max-width: 1250px) {
+    .hide-bellow-1250 {
+        display: none;
+    }
+}
+
+.hide-above-1250{}
+
+@media (min-width: 1250px) {
+    .hide-above-1250 {
+        display: none;
+    }
+}
 
 .pplist tbody img {
-	max-width: 80px;
-	max-height: 80px;
+    max-width: 80px;
+    max-height: 80px;
 }
 
 .ppcard .logo-wrapper {
-	min-width: 120px;
+    min-width: 120px;
 }
 
 div.ppcard > div {
-	min-height: 150px;
+    min-height: 150px;
 }
 
 .section .row div.ppcard {
-	max-width: 450px;
+    max-width: 450px;
 }
 
 .container div.section div.pplist {
-	max-width: 900px;
-	margin-left: auto;
-	margin-right: auto;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .pplist .social-reach {
-	min-width: 140px;
-	text-align: left;
+    min-width: 140px;
+    text-align: left;
 }
 
 .pplist .party-name {
-	font-size: 1.2em;
-	padding-right: 50px;
+    font-size: 1.2em;
+    padding-right: 50px;
 }
 
 .pplist a {
-	color: rgba(0, 0, 0, 0.870588);
+    color: rgba(0, 0, 0, 0.870588);
 }
 
 .pplist a:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }
 
+
 /*
-	Party detail page
+  Party detail page
  */
+
 .container div.party-detail-header {
-		max-width: 851px;
-		max-height: 315px;
-		margin-top: 40px;
-		margin-left: auto;
-		margin-right: auto;
-		position:relative;
-		z-index:-2;
-		display:block;
-		box-shadow: none;
+    max-width: 851px;
+    max-height: 315px;
+    margin-top: 40px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    z-index: -2;
+    display: block;
+    box-shadow: none;
 }
 
 .container div.party-detail-header .card-image {
-	max-height: 100%;
-	overflow: visible;
+    max-height: 100%;
+    overflow: visible;
 }
 
 .pickgradient {
-  display:inline-block;
-  background: -moz-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.65)), color-stop(100%,rgba(0,0,0,0))); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%); /* Chrome10+,Safari5.1+ */
-  background: -o-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%); /* Opera 11.10+ */
-  background: -ms-linear-gradient(top, rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%); /* IE10+ */
-  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%,rgba(0,0,0,0.65) 100%); /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#a6000000', endColorstr='#00000000',GradientType=0 ); /* IE6-9 */
+    display: inline-block;
+    background: -moz-linear-gradient(top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.65) 100%);
+    /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgba(0, 0, 0, 0.65)), color-stop(100%, rgba(0, 0, 0, 0)));
+    /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.65) 100%);
+    /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.65) 100%);
+    /* Opera 11.10+ */
+    background: -ms-linear-gradient(top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.65) 100%);
+    /* IE10+ */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.65) 100%);
+    /* W3C */
+    filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#a6000000', endColorstr='#00000000', GradientType=0);
+    /* IE6-9 */
 }
 
 .container div.party-detail-header .card-image .pickgradient img {
-  position:relative;
-  z-index:-1;
-  display:block;
+    position: relative;
+    z-index: -1;
+    display: block;
 }
 
 .party-detail-header span.card-title {
-	font-size: 2em;
+    font-size: 2em;
     font-weight: 400;
     text-shadow: 0 1px 0 black;
     margin-left: 170px;
@@ -101,13 +130,13 @@ div.ppcard > div {
 }
 
 .party-detail-header span.card-title small {
-	font-size: 0.5em;
+    font-size: 0.5em;
 }
 
 .party-detail-header .logo {
-	max-width: 150px;
-	max-height: 150px;
-	position: absolute;
+    max-width: 150px;
+    max-height: 150px;
+    position: absolute;
     bottom: -70px;
     left: 0;
     margin: 20px;
@@ -117,7 +146,7 @@ div.ppcard > div {
 }
 
 .party-detail-header .defunct {
-	position: absolute;
+    position: absolute;
     bottom: -55px;
     right: 0;
     margin: 20px;
@@ -132,62 +161,63 @@ div.ppcard > div {
 }
 
 .party-detail-header-mobile {
-	width: 100%;
+    width: 100%;
 }
 
 .party-detail-header-mobile .logo img {
-	width: 120px;
-	max-width: 40%;
-	max-height: 40%;
+    width: 120px;
+    max-width: 40%;
+    max-height: 40%;
 }
 
 .party-detail-header-mobile h2 {
-	font-size: 2em;
+    font-size: 2em;
 }
 
 .party-detail-header-mobile h2 small {
-	font-size: 0.5em;
+    font-size: 0.5em;
 }
 
 .party-detail-header-mobile .logo {
-	margin-top: 20px;
+    margin-top: 20px;
 }
 
 .party-detail-cards {
-	max-width: 851px;
-	margin-left: auto;
-	margin-right: auto;
-	padding-top: 60px;
+    max-width: 851px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 60px;
 }
 
 dt {
-	float: left;
-	clear: left;
-	width: 100px;
-	text-align: right;
-	font-weight: bold;
-	color: black;
+    float: left;
+    clear: left;
+    width: 100px;
+    text-align: right;
+    font-weight: bold;
+    color: black;
 }
+
 dt:after {
-	content: ":";
+    content: ":";
 }
 
 dd {
-	margin: 0 0 0 110px;
-	padding: 0 0 0.5em 0;
+    margin: 0 0 0 110px;
+    padding: 0 0 0.5em 0;
 }
 
 .party-detail-cards .basic-info .flag img {
-	max-width: 70px;
-	max-height: 70px;
-	position: absolute;
+    max-width: 70px;
+    max-height: 70px;
+    position: absolute;
     top: 10px;
     right: 10px;
     margin: 20px;
 }
 
 .party-detail-cards .defunct {
-	position: absolute;
+    position: absolute;
     top: 14px;
     right: 10px;
     margin: 10px;
@@ -202,26 +232,26 @@ dd {
 }
 
 .contact-details .card-content p {
-	padding-left: 15px;
-	vertical-align: middle;
+    padding-left: 15px;
+    vertical-align: middle;
 }
 
 .contact-title {
-	font-weight: bold;
-	padding-top: 10px;
+    font-weight: bold;
+    padding-top: 10px;
 }
 
 .websites div {
-	padding-top: 10px;
+    padding-top: 10px;
 }
 
 .parent-org img {
-	max-width: 50px;
-	max-height: 50px;
+    max-width: 50px;
+    max-height: 50px;
 }
 
 .parent-org .org-body {
-	vertical-align: middle;
+    vertical-align: middle;
     line-height: 50px;
     font-size: 1.2em;
     margin-top: 5px;
@@ -229,16 +259,16 @@ dd {
 }
 
 .parent-org .org-body img {
-	margin-right:15px;
+    margin-right: 15px;
 }
 
 .membership img {
-	max-width: 50px;
-	max-height: 50px;
+    max-width: 50px;
+    max-height: 50px;
 }
 
 .membership .org-body {
-	vertical-align: middle;
+    vertical-align: middle;
     line-height: 50px;
     font-size: 1.1em;
     margin-top: 5px;
@@ -246,110 +276,131 @@ dd {
 }
 
 .membership .org-body a {
-	color: inherit;
+    color: inherit;
 }
 
 .membership .org-body small {
-	font-size:0.8em;
-	color: gray;
+    font-size: 0.8em;
+    color: gray;
 }
 
 .membership .org-body img {
-	margin-right:15px;
+    margin-right: 15px;
 }
 
 .social .card-content .social-text {
-	font-size: 1.4em;
-	font-weight: 400;
-	width:80%;
-	text-align: center;
+    font-size: 1.4em;
+    font-weight: 400;
+    width: 80%;
+    text-align: center;
 }
 
 .social .icon-wrapper {
-	padding: 20px;
+    padding: 20px;
 }
 
 .social div.card-content {
-	padding: 0;
+    padding: 0;
+}
+
+.social-hidden {
+    visibility: hidden;
+}
+
+.social-media-graph-card-action {
+    padding-bottom: 10px !important;
+}
+
+.social-media-graph-card-content {
+    padding-top: 0px !important;
 }
 
 .youtube .social-text-item {
-	padding-left: 30px;
+    padding-left: 30px;
     padding-right: 30px;
 }
 
 .youtube-videos .card {
-	box-shadow: none;
-	z-index: -2;
+    box-shadow: none;
+    z-index: -2;
 }
 
 .youtube-videos h3 {
-	font-size: 1.7em;
+    font-size: 1.7em;
     color: gray;
     padding-left: 12px;
 }
 
 .youtube-videos .card .card-image .card-title {
-	font-size: 1em;
-	font-weight: bold;
-	max-width: 100%;
+    font-size: 1em;
+    font-weight: bold;
+    max-width: 100%;
 }
 
 .youtube-videos .card .card-image img {
-	position:relative;
-	z-index:-1;
-	display:block;
+    position: relative;
+    z-index: -1;
+    display: block;
 }
 
 .headquarters #map {
-	height: 380px;
+    height: 380px;
 }
 
 .brand-logo img {
-	max-height: 50px;
-	vertical-align: middle;
+    max-height: 50px;
+    vertical-align: middle;
 }
 
+.largerText {
+    font-size: 1.8em !important;
+}
+
+
 /*
-	Static pages
+  Static pages
  */
 
 .singlePage h1 {
-	font-size: 2.5em;
+    font-size: 2.5em;
 }
 
 .singlePage h2 {
-	font-size: 1.5em;
+    font-size: 1.5em;
 }
+
 
 /*
 Sorting
  */
 
 .sort:after {
-  display:inline-block;
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  content:"";
-  position: relative;
-  top:-10px;
-  right:-5px;
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    content: "";
+    position: relative;
+    top: -10px;
+    right: -5px;
 }
+
 .sort.asc:after {
-  width: 0;
-  height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid black;
-  content:"";
-  position: relative;
-  top:4px;
-  right:-5px;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid black;
+    content: "";
+    position: relative;
+    top: 4px;
+    right: -5px;
 }
+
 .sort.desc:after {
+<<<<<<< HEAD
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
@@ -364,6 +415,59 @@ Sorting
 .SocialMediaStatsButton {
 	cursor: pointer;
 	-webkit-touch-callout: none;
+=======
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid black;
+    content: "";
+    position: relative;
+    top: -4px;
+    right: -5px;
+}
+
+.sort-white:after {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    content: "";
+    position: relative;
+    top: -10px;
+    right: -5px;
+}
+
+.sort-white.asc:after {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid white;
+    content: "";
+    position: relative;
+    top: 4px;
+    right: -5px;
+}
+
+.sort-white.desc:after {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid white;
+    content: "";
+    position: relative;
+    top: -4px;
+    right: -5px;
+}
+
+.SocialMediaStatsButton {
+    cursor: pointer;
+    -webkit-touch-callout: none;
+>>>>>>> socialMediaPostsSorting
     -webkit-user-select: none;
     -khtml-user-select: none;
     -moz-user-select: none;
@@ -371,9 +475,383 @@ Sorting
     user-select: none;
 }
 
+<<<<<<< HEAD
 .social-media-graph-card-action{
 	padding-bottom: 10px !important;
 }
 .social-media-graph-card-content {
 	padding-top: 0px !important;
 }
+=======
+
+/* Picture and post list page
+classes starting with .card-post are for the post page and .card-picture is for picture page
+the rest is for both
+*/
+
+
+/*loading screen */
+
+#loading {
+    position: fixed;
+    z-index: 1000;
+    margin-left: auto;
+    margin-right: auto;
+    width: 90px;
+    height: 90px;
+    right: 0;
+    left: 0;
+    margin-top: 15%;
+}
+
+#loading-background {
+    opacity: 0;
+    transition: opacity 1s ease-in;
+    -ms-transition: opacity 1s ease-in;
+    -moz-transition: opacity 1s ease-in;
+    -webkit-transition: opacity 1s ease-in;
+}
+
+#loading-background.loading-background {
+    background-color: #1a1a1a;
+    width: 100%;
+    height: 100%;
+    margin-top: -65px;
+    /* without this, the first 65px of the screen are covered */
+    overflow: hidden;
+    position: fixed;
+    left: 0;
+    top: 100;
+    z-index: 100;
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+    /* For IE8 and earlier */
+    transition: opacity 1s ease-out;
+    -ms-transition: opacity 1s ease-out;
+    -moz-transition: opacity 1s ease-out;
+    -webkit-transition: opacity 1s ease-out;
+}
+
+
+/*card post */
+.card-post {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    max-width: 100%;
+    overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.card-post-bottom {
+    margin-left: 70px;
+    width: 80%;
+}
+
+.card-post-div {
+    height: 50px;
+    /* when display: table, height acts the same way as min-hight under normal circusmtances; */
+    display: table;
+    margin: 0px 80px 15px 90px;
+    border-bottom: 1px #b8b8b8 dashed;
+}
+
+@media (max-width: 450px) {
+.card-post-div {
+    height: 50px;
+    /* when display: table, height acts the same way as min-hight under normal circusmtances; */
+    display: table;
+    margin: 0px 10px 15px 10px;
+    border-bottom: 1px #b8b8b8 dashed;
+    }
+}
+
+.card-post-link {
+    position: absolute;
+    right: 80px;
+    bottom: 22px;
+}
+.card-post-logo {
+    max-height: 85px;
+    max-width: 85px;
+    display: inline-block;
+    border-radius: 50% !important;
+    padding: 5px;
+    z-index: 2;
+}
+
+.card-post-size {
+    min-height: 200px;
+}
+
+.card-post-smaller {
+    color: #b8b8b8 !important;
+    font-size: 0.9em;
+}
+.card-post-text {
+    word-break: keep-all;
+    display: table-cell;
+    font-size: 1.2em;
+    margin-bottom: 25px;
+}
+
+@media (max-width: 600px) {
+    .card-post-text {
+        word-break: normal;
+    }
+}
+
+@media (max-width: 290px) {
+    .card-post-text {
+        word-break: break-all;
+    }
+}
+
+
+
+.card-post-text-size {
+    margin-bottom: 5px;
+}
+
+.card-post-title {
+    position: absolute;
+    top: 20px;
+    left: 100px;
+    right: 0;
+    font-size: 1.3em;
+    background-color: white;
+    padding: 5px 5px 5px 10px;
+    margin-left: -20px;
+}
+
+
+.card-post-title-img {
+    height: 31px;
+    width: 31px !important;
+    float: right;
+    right: 25px!important;
+    left: initial !important;
+}
+
+.card-post-tooltip-position {
+    position: absolute;
+}
+
+/*card picture */
+
+.card-picture-belt-position {
+    float: right;
+}
+
+.card-picture-engagement-position {
+    position: absolute;
+    right: 80px;
+    bottom: 10px;
+}
+
+
+/* all cards */
+.card .card-image .card-title-bottom {
+    color: #fff;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding-right: 0px;
+}
+
+.card .card-image .card-title-top {
+    color: #fff;
+    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0px;
+}
+
+.card-belt {
+    width: 100%;
+    padding-left: 0px;
+    padding-bottom: 0px;
+    text-transform: uppercase;
+}
+
+.card-belt-font {
+    font-weight: bold;
+    background-color: black;
+    color: #fff;
+    padding: 0.6rem;
+    padding-right: 50px;
+}
+
+
+.card-image-img {
+    height: 200px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-color: #d3d3d3;
+    max-width: 100%;
+    overflow: hidden;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.card-image-top {
+    background-color: rgba(41, 182, 246, 0.07);
+}
+
+.card-text {
+    color: #272727;
+}
+
+.card-text > .emphasis {
+    font-weight: bold;
+    font-size: 1.4em;
+}
+
+.card-text > .emphasis-posts {
+    font-weight: bold;
+    font-size: 2.5em;
+}
+
+/* Filter menu on post and picture pages */
+
+
+.filter-button {
+    background: #29b6f6;
+    border-radius: 0px !important;
+}
+
+@media (max-width: 818px) {
+    .filter-button {
+        width: 100%;
+        border: 1px solid white;
+    }
+}
+
+.platform-button {
+    min-width: 177px;
+}
+
+.filter-menu-items {
+    height: 100%;
+}
+
+.filter-menu-buttons {
+    width: 100%;
+}
+
+.platform-dropdown-font {
+    color: #3f3f3f;
+}
+
+.party-dropdown-font {
+    color: #3f3f3f !important;
+    font-size: 0.8em !important;
+}
+
+.dropdown-platform {
+    border-bottom: 1px #e6e6e6 solid;
+    border-left: 1px #e6e6e6 solid;
+    border-right: 1px #e6e6e6 solid;
+}
+
+.dropdown-menu-parties {
+    max-height: 300px;
+    border-bottom: 1px #e6e6e6 solid;
+    border-left: 1px #e6e6e6 solid;
+    overflow-x: hidden;
+}
+
+.dropdown-text-input-li {
+    border-bottom: 1px #29b6f6 solid !important;
+    margin-bottom: 0px !important;
+}
+
+.dropdown-text-input {
+    border-bottom: none !important;
+    margin-bottom: 0px !important;
+    box-shadow: none !important;
+    margin-left: 15px !important;
+}
+
+.dropdown-menu-social-filter {
+    padding-left: 15px;
+}
+
+.reach-selected {
+    background-color: #2bbbad;
+}
+
+
+
+/* tooltip */
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+i.really-tiny {
+    font-size: 0.9em;
+}
+
+/* Tooltip text */
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+    /* Position the tooltip text */
+    position: absolute;
+    z-index: 1;
+    bottom: 125% !important;
+    left: 50%;
+    margin-left: -100px;
+    /* Fade in tooltip */
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+
+/* Tooltip arrow */
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+
+/* Show the tooltip text when you mouse over the tooltip container */
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* classes used for specific minor tweaks*/
+
+.display-inline-block {
+    display: inline-block;
+}
+
+.display-inline {
+    display: inline;
+}
+
+.margin-bottom-25px {
+    margin-bottom: 25px;
+}
+>>>>>>> socialMediaPostsSorting
