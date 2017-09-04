@@ -18,6 +18,7 @@ class PatchCommand extends ContainerAwareCommand
 			->setName('papi:patch')
 			->setDescription('Patches existing db entries')
             ->addOption('twitter', 't', InputOption::VALUE_NONE, "Fix 'postId' field in twitter images and videos")
+            ->addOption('charset', 'c', InputOption::VALUE_NONE, "Convert 'postText' field to utf8mb4 character set")
         ;
 	}
 
@@ -35,14 +36,93 @@ class PatchCommand extends ContainerAwareCommand
                 $output->writeln("##### Patching twitter images #####");
                 $this->patchTwitterImages();
                 break;
+            case $input->getOption('charset'):
+            	$output->writeln("##### Patching 'postText' charset #####");
+            	$this->patchCharset();
+            	break;
             default:
                 $output->writeln("Invalid option.");
         }
     }
 
+    public function getConfirmation() {
+    	echo "##### CAUTION: THIS WILL ALTER THE DATABASE! #####\n";
+    	echo "  It is recommended to make a backup of your database before performing this action.\n";
+    	echo "  Do you wish to continue? y/n - ";
+
+    	$handle = fopen ("php://stdin","r");
+		$line = fgets($handle);
+
+		if (trim($line) != 'y' && trim($line) != 'yes'){
+    		echo "  Process aborted.\n";
+    		exit;
+		} else {
+			echo "\n";
+		}
+    }
+
 
 /////
-//Twitter images
+// Charset for 'postText' field
+/////
+    public function patchCharset() {
+    	$charset = $this->checkCharset();
+
+		if ($charset == 'utf8mb4') {
+			echo ", no fix needed.\n";
+			return;
+		}
+
+		echo ", fix needed.\n";
+		$this->getConfirmation();
+		$this->fixCharset();
+		$newCharset = $this->checkCharset();
+
+		if ($newCharset == 'utf8mb4') {
+			echo ", great success! :D\n";
+			return;
+		}
+
+		echo ", process failed. :(\n";
+		echo "  Your database may need to be altered manually. Contact us on github if you need help.\n";
+    }
+
+    /**
+     * Checks current charset
+     */
+    public function checkCharset() {
+    	$db_name = $this->container->getParameter('database_name');
+
+    	$sql = "SELECT character_set_name
+    		FROM information_schema.columns
+    		WHERE table_schema = '$db_name'
+    		AND table_name = 'social_media'
+    		AND column_name = 'postText';";
+
+    	$query = $this->em->getConnection()->prepare($sql);
+    	$query->execute();
+    	$answer = $query->fetchAll();
+    	$charset = $answer[0]['character_set_name'];
+		echo "  Current character set for postText = ".$charset;
+		return $charset;
+    }
+
+    /**
+     * Converts charset to 4-byte compatible utf8mb4
+     */
+    public function fixCharset() {
+    	$sql = "ALTER TABLE social_media
+    		CHANGE postText postText VARCHAR(191)
+    		CHARACTER SET utf8mb4
+    		COLLATE utf8mb4_unicode_ci;";
+
+    	$query = $this->em->getConnection()->prepare($sql);
+    	$query->execute();
+    }
+
+
+/////
+// Twitter images
 /////
 
     /**
@@ -63,7 +143,7 @@ class PatchCommand extends ContainerAwareCommand
 		}
 
 		$this->em->flush();
-		echo "All done.\n";
+		echo "  All done.\n";
 	}
 
 	/**
@@ -73,7 +153,7 @@ class PatchCommand extends ContainerAwareCommand
 	public function getPostIdFromUrl($post)
 	{
 		$oldId = $post->getPostId();
-		echo "postId = ".$oldId;
+		echo "  postId = ".$oldId;
 		$postData = $post->getPostData();
 		$postUrl = $postData['url'];
 		$newId = substr($postUrl, -18);

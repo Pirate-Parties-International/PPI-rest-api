@@ -74,7 +74,7 @@ class SocialMedia
     /**
      * @var string
      *
-     * @ORM\Column(name="postText", type="string", nullable=true)
+     * @ORM\Column(name="postText", type="string", length=191, nullable=true)
      */
     private $postText;
 
