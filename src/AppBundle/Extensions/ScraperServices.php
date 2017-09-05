@@ -185,10 +185,14 @@ class ScraperServices
     public function getTruncatedString($string) {
         $string = trim($string);
 
-        if(strlen($string) > 191) { // if string is longer than 191 characters
-            $string = wordwrap($string, 185, "\n"); // split into substrings
-            $string = explode("\n", $string, 2); // add substrings to array
+        if (strlen($string) > 191) { // if string is longer than 191 characters
+            $string = wordwrap($string, 185, "<cut>"); // split into substrings
+            $string = explode("<cut>", $string, 2); // add substrings to array
             $string = trim($string[0]).' […]'; // save only first substring and add ellipses
+
+            if (strlen($string) > 191) { // double check in case wordwrap failed
+                $string = substr($string, 0, 185).' […]'; // force if necessary
+            }
         }
 
         return $string;
