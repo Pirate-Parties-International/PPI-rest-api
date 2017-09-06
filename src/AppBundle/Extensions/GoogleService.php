@@ -45,9 +45,11 @@ class GoogleService extends ScraperServices
         if (empty($data->statistics) || empty($data->statistics->viewCount)) {
             return false;
         }
-        $out['stats']['viewCount']       = $data->statistics->viewCount;
-        $out['stats']['subscriberCount'] = $data->statistics->subscriberCount;
-        $out['stats']['videoCount']      = $data->statistics->videoCount;
+
+        // these stats are strings, so we need to force them to int to save them to db
+        $out['stats']['viewCount']       = (int)$data->statistics->viewCount;
+        $out['stats']['subscriberCount'] = (int)$data->statistics->subscriberCount;
+        $out['stats']['videoCount']      = (int)$data->statistics->videoCount;
 
         $playlist = $data->contentDetails->relatedPlaylists->uploads;
         $videos   = $youtube->getPlaylistItemsByPlaylistId($playlist);
