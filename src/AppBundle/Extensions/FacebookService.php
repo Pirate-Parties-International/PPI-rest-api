@@ -217,28 +217,20 @@ class FacebookService extends ScraperServices
 
         if ($what == null || $what == 'posts') {
             $temp = $this->getPostDetails($fbPageId, $fb, $req['pDetails'], $code, $full);
-            if (isset($temp['posts'])) {
-                $out['posts']  = $temp['posts'];
-            }
-            if (isset($temp['videos'])) {
-                $out['videos'] = $temp['videos'];
-            }
+            $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : null;
+            $out['videos'] = isset($temp['videos']) ? $temp['videos'] : null;
         }
 
         if ($what == null || $what == 'images') {
             $temp = $this->getImageDetails($fbPageId, $fb, $req['iDetails'], $code, $full);
             $out['photoCount'] = isset($temp['photoCount']) ? $temp['photoCount'] : null;
-            if (isset($temp['photos'])) {
-                $out['photos'] = $temp['photos'];
-            }
+            $out['photos']     = isset($temp['photos'])     ? $temp['photos']     : null;
         }
 
         if ($what == null || $what == 'events') {
             $temp = $this->getEventDetails($fbPageId, $fb, $req['eDetails'], $code, $full);
             $out['eventCount'] = isset($temp['eventCount']) ? $temp['eventCount'] : null;
-            if (isset($temp['events'])) {
-                $out['events'] = $temp['events'];
-            }
+            $out['events']     = isset($temp['events'])     ? $temp['events']     : null;
         }
 
         return $out;
@@ -659,14 +651,14 @@ class FacebookService extends ScraperServices
             $response = $fb->getClient()->sendRequest($request);
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
             // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage();
+            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
             exit;
         } catch(Facebook\Exceptions\FacebookSDKException $e) {
             // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage();
+            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
             exit;
         } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage();
+            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
             return false;
         }
         $graphNode = $response->getGraphNode();
