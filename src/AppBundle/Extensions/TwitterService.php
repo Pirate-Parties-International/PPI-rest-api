@@ -71,19 +71,13 @@ class TwitterService extends ScraperServices
         echo "     + Info and stats... ok\n";
 
         $temp = $this->getTweetDetails($settings, $requestMethod, $username, $code, $full);
-        if (isset($temp['posts'])) {
-            $out['posts']  = $temp['posts'];
-        }
-        if (isset($temp['images'])) {
-            $out['images'] = $temp['images'];
-        }
-        if (isset($temp['videos'])) {
-            $out['videos'] = $temp['videos'];
-        }
+        $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : null;
+        $out['images'] = isset($temp['images']) ? $temp['images'] : null;
+        $out['videos'] = isset($temp['videos']) ? $temp['videos'] : null;
 
         $timeCheck = $temp['timeCheck'];
-        $imgCount  = array_key_exists('images', $out) ? count($out['images']) : '0';
-        $vidCount  = array_key_exists('videos', $out) ? count($out['videos']) : '0';
+        $imgCount  = array_key_exists('images', $out) ? count($out['images']) : 0;
+        $vidCount  = array_key_exists('videos', $out) ? count($out['videos']) : 0;
         echo "...total ".$out['tweets']." tweets found: ".count($out['posts'])." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed\n";
         return $out;
     }

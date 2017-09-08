@@ -67,7 +67,7 @@ class ScraperServices
             ->findOneByCode($code);
 
         if (empty($party)) {
-            echo ("   + ERROR - Party code \"". $code ."\" not recognised\n");
+            echo ("   - ERROR - Party code \"". $code ."\" not recognised\n");
             echo ("# Process halted\n");
             die;
         }
@@ -148,15 +148,14 @@ class ScraperServices
             ->getRepository('AppBundle:SocialMedia')
             ->findOneByPostId($postId);
 
-        if (!$p) {
-            $p = new SocialMedia();
-        }
-
         $postText = (strlen($postText)>191) ? $this->getTruncatedString($postText) : $postText;
-
         if (strlen($postText)>191) {
             echo "post ".$postId." text too long (".strlen($postText)." characters)\n";
             die;
+        }
+
+        if (!$p) {
+            $p = new SocialMedia();
         }
 
         $p->setCode($code);

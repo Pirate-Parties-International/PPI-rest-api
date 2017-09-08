@@ -299,7 +299,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $post['postText'],
                             $post['postImage'],
                             $post['postLikes'],
-                            json_encode($post['postData'])
+                            $post['postData']
                         );
                     }
                     $output->writeln("       + Text posts added");
@@ -319,7 +319,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $image['postText'],
                             $image['postImage'],
                             $image['postLikes'],
-                            json_encode($image['postData'])
+                            $image['postData']
                         );
                     }
                     $output->writeln("       + Videos added");
@@ -342,7 +342,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $image['postText'],
                             $image['postImage'],
                             $image['postLikes'],
-                            json_encode($image['postData'])
+                            $image['postData']
                         );
                     }
                     $output->writeln("       + Photos added");
@@ -364,7 +364,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $event['postText'],
                             $event['postImage'],
                             $event['postLikes'],
-                            json_encode($event['postData'])
+                            $event['postData']
                         );
                     }
                     $output->writeln("     + Events added");
@@ -447,7 +447,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $post['postText'],
                             $post['postImage'],
                             $post['postLikes'],
-                            json_encode($post['postData'])
+                            $post['postData']
                         );
                     }
                     $output->writeln("     + Tweets added");
@@ -467,7 +467,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $image['postText'],
                             $image['postImage'],
                             $image['postLikes'],
-                            json_encode($image['postData'])
+                            $image['postData']
                         );
                     }
 
@@ -482,7 +482,7 @@ class ScraperCommand extends ContainerAwareCommand
                                 $image['postText'],
                                 $image['postImage'],
                                 $image['postLikes'],
-                                json_encode($image['postData'])
+                                $image['postData']
                             );
                         }
                     }
@@ -581,7 +581,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $video['postText'],
                             $video['postImage'],
                             $video['postLikes'],
-                            json_encode($video['postData'])
+                            $video['postData']
                         );
                     }
                     $output->writeln("     + Videos added");

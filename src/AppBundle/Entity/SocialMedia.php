@@ -330,7 +330,7 @@ class SocialMedia
      */
     public function setPostData($postData)
     {
-        $this->postData = $postData;
+        $this->postData = json_encode($postData);
 
         return $this;
     }

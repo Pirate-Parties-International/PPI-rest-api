@@ -58,7 +58,6 @@ class GoogleService extends ScraperServices
 
         if (!empty($videos)) {
             $out['videos'] = [];
-
             foreach ($videos as $key => $vid) {
 
                 $vidId   = $vid->snippet->resourceId->videoId;
@@ -75,13 +74,13 @@ class GoogleService extends ScraperServices
                 if (!empty($vidInfo->statistics->likeCount)) {
                     $vidLikes = $vidInfo->statistics->likeCount;
                 } else {
-                    $vidLikes = "0";
+                    $vidLikes = 0;
                 }
 
                 if (!empty($vidInfo->statistics->commentCount)) {
                     $vidComments = $vidInfo->statistics->commentCount;
                 } else {
-                    $vidComments = "0";
+                    $vidComments = 0;
                 }
 
                 $out['videos'][] = [
