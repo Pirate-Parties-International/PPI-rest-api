@@ -131,6 +131,7 @@ class ApiController extends BaseController
      *      {"name"="code", "dataType"="string", "required"="false", "description"="Get only posts from one party (by code, i.e. ppsi, ppse)"},
      *      {"name"="type", "dataType"="string", "required"="false", "description"="Get only Facebook, Twitter or YouTube posts", "pattern"="fb | tw | yt"},
      *      {"name"="sub_type", "dataType"="string", "required"="false", "description"="Get only text posts, images, videos or events", "pattern"="t | i | v | e"},
+     *      {"name"="fields", "dataType"="string", "requied"="false", "description"="Choose specific fields to be returned"},
      *      {"name"="order_by", "dataType"="string", "required"="false", "description"="Order to return results", "pattern"="code | likes | date"},
      *      {"name"="limit", "dataType"="int", "required"="false", "description"="Number of results to return (default 100)"},
      *      {"name"="offset", "dataType"="int", "required"="false", "description"="Start point of results"}
@@ -146,6 +147,7 @@ class ApiController extends BaseController
         $code    = isset($_GET['code'])     ? $_GET['code']     : null;
         $type    = isset($_GET['type'])     ? $_GET['type']     : null;
         $subType = isset($_GET['sub_type']) ? $_GET['sub_type'] : null;
+        $fields  = isset($_GET['fields'])   ? $_GET['fields']   : null;
         $limit   = isset($_GET['limit'])    ? $_GET['limit']    : 100;
         $offset  = isset($_GET['offset'])   ? $_GET['offset']   : 0;
 
@@ -163,7 +165,7 @@ class ApiController extends BaseController
             }
         } else $orderBy = 'code';
 
-        $data = $this->getAllSocial($code, $type, $subType, $orderBy, $limit, $offset);
+        $data = $this->getAllSocial($code, $type, $subType, $orderBy, $limit, $offset, $fields);
 
         if (empty($data)) {
             return new JsonResponse(array("error"=>"No data found"), 404);
