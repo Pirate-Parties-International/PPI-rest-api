@@ -236,7 +236,7 @@ class BaseController extends Controller
     * @param  int    $offset
     * @return array
     */
-    public function getAllSocial($code = null, $type = null, $subType = null, $orderBy = 'code', $limit = 100, $offset = 0, $fields = null) {
+    public function getAllSocial($code = null, $type = null, $subType = null, $orderBy = 'postTime', $limit = 100, $offset = 0, $fields = null) {
         $social = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia');
 
@@ -285,7 +285,18 @@ class BaseController extends Controller
                 ];
 
             foreach ($terms as $field) {
-                $temp['post_'.$field] = isset($data[$field]) ? $data[$field] : null;
+
+                if ($field == 'time') {
+                    if ($temp['sub_type'] != 'E') {
+                        $temp['post_'.$field] = isset($data['posted']) ? $data['posted'] : null;
+
+                    } else $temp['post_'.$field] = isset($data['start_time']) ? $data['start_time'] : null;
+
+                } else if ($field == 'shares' && $temp['type'] == 'tw') {
+                    $temp['post_'.$field] = isset($data['retweets']) ? $data['retweets'] : null;
+
+                } else $temp['post_'.$field] = isset($data[$field]) ? $data[$field] : null;
+
             }
 
             $out[] = $temp;
