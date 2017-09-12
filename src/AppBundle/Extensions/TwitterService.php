@@ -148,13 +148,14 @@ class TwitterService extends ScraperServices
                                 'postImage' => $img,
                                 'postLikes' => $item->favorite_count,
                                 'postData'  => [
-                                    'id'       => $imgId,
-                                    'posted'   => $twTime->format('Y-m-d H:i:s'), // string
-                                    'text'     => $item->text,
-                                    'image'    => $imgSrc,
-                                    'url'      => 'https://twitter.com/statuses/'.$item->id,
-                                    'likes'    => $item->favorite_count,
-                                    'retweets' => $item->retweet_count
+                                    'id'         => $imgId,
+                                    'posted'     => $twTime->format('Y-m-d H:i:s'), // string
+                                    'text'       => $item->text,
+                                    'image'      => $img,
+                                    'img_source' => $imgSrc,
+                                    'url'        => 'https://twitter.com/statuses/'.$item->id,
+                                    'likes'      => $item->favorite_count,
+                                    'retweets'   => $item->retweet_count
                                     ]
                                 ];
                         }

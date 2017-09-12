@@ -563,7 +563,7 @@ class FacebookService extends ScraperServices
                     $type = $post->getField('type'); // types = 'status', 'link', 'photo', 'video', 'event'
                     if ($type != 'photo' && $type != 'event') { // get photos and events separately to get all details
 
-                        $img = null;
+                        // $img = null;
                         if ($type == 'video') {
                             $temp = $post->getField('link');
                             if (strpos($temp, 'youtube')) {
@@ -576,11 +576,13 @@ class FacebookService extends ScraperServices
                                 $imgSrc = $post->getField('picture');
                                 $imgBkp = null;
                             }
-                            $img = $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'), $imgBkp);
                         } else {
-                            $type = 'post';
+                            $type   = 'post';
+                            $imgSrc = $post->getField('picture') ? $post->getField('picture'): null;
+                            $imgBkp = null;
                         }
 
+                        $img  = $imgSrc ? $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'), $imgBkp) :  null;
                         $text = !empty($post->getField('message')) ? $post->getField('message') : $post->getField('story');
 
                         $likeCount     = $this->getStatCount($post->getField('likes'));
@@ -595,22 +597,22 @@ class FacebookService extends ScraperServices
                             'postImage' => $img,
                             'postLikes' => $reactionCount,
                             'postData'  => [
-                                'id'        => $post->getField('id'),
-                                'posted'    => $post->getField('created_time')->format('Y-m-d H:i:s'), // string
-                                'updated'   => $post->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                                'message'   => $post->getField('message'), // main body of text
-                                'story'     => $post->getField('story'),   // "[page] shared a link", etc.
-                                'link'      => [
-                                    'url'       => $post->getField('link'),
-                                    'name'      => $post->getField('name'),
-                                    'caption'   => $post->getField('caption'),
-                                    'thumb'     => $post->getField('picture')
+                                'id'         => $post->getField('id'),
+                                'posted'     => $post->getField('created_time')->format('Y-m-d H:i:s'), // string
+                                'updated'    => $post->getField('updated_time')->format('Y-m-d H:i:s'), // string
+                                'text'       => $text,
+                                'image'      => $img,
+                                'img_source' => $imgSrc,
+                                'link'       => [
+                                    'url'        => $post->getField('link'),
+                                    'name'       => $post->getField('name'),
+                                    'caption'    => $post->getField('caption'),
                                     ],
-                                'url'       => $post->getField('permalink_url'),
-                                'likes'     => $likeCount,
-                                'reactions' => $reactionCount,
-                                'comments'  => $commentCount,
-                                'shares'    => $shareCount
+                                'url'        => $post->getField('permalink_url'),
+                                'likes'      => $likeCount,
+                                'reactions'  => $reactionCount,
+                                'comments'   => $commentCount,
+                                'shares'     => $shareCount
                                 ],
                             ];
                     }
@@ -692,20 +694,21 @@ class FacebookService extends ScraperServices
                                 'postImage' => $img,
                                 'postLikes' => $reactionCount,
                                 'postData'  => [
-                                    'id'        => $photo->getField('id'),
-                                    'posted'    => $photo->getField('created_time')->format('Y-m-d H:i:s'), // string
-                                    'updated'   => $photo->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                                    'caption'   => $photo->getField('name'),
-                                    'source'    => $imgSrc,
-                                    'url'       => $photo->getField('link'),
-                                    'album'     => [
-                                        'name'      => $album->getField('name'),
-                                        'id'        => $album->getField('Id'),
+                                    'id'         => $photo->getField('id'),
+                                    'posted'     => $photo->getField('created_time')->format('Y-m-d H:i:s'), // string
+                                    'updated'    => $photo->getField('updated_time')->format('Y-m-d H:i:s'), // string
+                                    'text'       => $photo->getField('name'),
+                                    'image'      => $img,
+                                    'img_source' => $imgSrc,
+                                    'url'        => $photo->getField('link'),
+                                    'album'      => [
+                                        'name'       => $album->getField('name'),
+                                        'id'         => $album->getField('id'),
                                         ],
-                                    'likes'     => $likeCount,
-                                    'reactions' => $reactionCount,
-                                    'comments'  => $commentCount,
-                                    'shares'    => $shareCount
+                                    'likes'      => $likeCount,
+                                    'reactions'  => $reactionCount,
+                                    'comments'   => $commentCount,
+                                    'shares'     => $shareCount
                                     ]
                                 ];
                         }
@@ -806,23 +809,19 @@ class FacebookService extends ScraperServices
                             'postImage' => $img,
                             'postLikes' => $event->getField('interested_count'),
                             'postData'  => [
-                                'id'         => $event->getField('id'),
-                                'start_time' => $event->getField('start_time')->format('Y-m-d H:i:s'), // string
-                                'updated'    => $event->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                                'name'       => $event->getField('name'),
-                                'details'    => [
-                                    'description' => $event->getField('description'),
-                                    'place'       => $placeName,
-                                    'address'     => $placeAddress,
-                                    'cover'       => [
-                                        'id'          => $imgId,
-                                        'source'      => $imgSrc
-                                        ]
-                                    ],
-                                'url'        => 'https://www.facebook.com/events/'.$event->getField('id'),
-                                'attending'  => $event->getField('attending_count'),
-                                'interested' => $event->getField('interested_count'),
-                                'comments'   => $commentCount
+                                'id'          => $event->getField('id'),
+                                'start_time'  => $event->getField('start_time')->format('Y-m-d H:i:s'), // string
+                                'updated'     => $event->getField('updated_time')->format('Y-m-d H:i:s'), // string
+                                'text'        => $event->getField('name'),
+                                'description' => $event->getField('description'),
+                                'image'       => $img,
+                                'img_source'  => $imgSrc,
+                                'place'       => $placeName,
+                                'address'     => $placeAddress,
+                                'url'         => 'https://www.facebook.com/events/'.$event->getField('id'),
+                                'attending'   => $event->getField('attending_count'),
+                                'interested'  => $event->getField('interested_count'),
+                                'comments'    => $commentCount
                                 ]
                             ];
                     }
