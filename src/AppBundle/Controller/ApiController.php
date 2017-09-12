@@ -131,7 +131,8 @@ class ApiController extends BaseController
      *      {"name"="code", "dataType"="string", "required"="false", "description"="Get only posts from one party (by code, i.e. ppsi, ppse)"},
      *      {"name"="type", "dataType"="string", "required"="false", "description"="Get only Facebook, Twitter or YouTube posts", "pattern"="fb | tw | yt"},
      *      {"name"="sub_type", "dataType"="string", "required"="false", "description"="Get only text posts, images, videos or events", "pattern"="t | i | v | e"},
-     *      {"name"="fields", "dataType"="string", "requied"="false", "description"="Choose specific fields to be returned"},
+     *      {"name"="fields", "dataType"="string", "requied"="false", "description"="Choose specific fields to be returned, separated by commas (e.g. 'text,time,img_source')",
+     *          "pattern"="time | updated | text | description | image | img_source | album | link | url | likes | reactions | comments | shares | views | place | address | attending | interested"},
      *      {"name"="order_by", "dataType"="string", "required"="false", "description"="Order to return results", "pattern"="code | likes | date"},
      *      {"name"="limit", "dataType"="int", "required"="false", "description"="Number of results to return (default 100)"},
      *      {"name"="offset", "dataType"="int", "required"="false", "description"="Start point of results"}
