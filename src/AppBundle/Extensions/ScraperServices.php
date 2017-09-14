@@ -148,12 +148,6 @@ class ScraperServices
             ->getRepository('AppBundle:SocialMedia')
             ->findOneByPostId($postId);
 
-        $postText = (strlen($postText)>191) ? $this->getTruncatedString($postText) : $postText;
-        if (strlen($postText)>191) {
-            echo "post ".$postId." text too long (".strlen($postText)." characters)\n";
-            die;
-        }
-
         if (!$p) {
             $p = new SocialMedia();
         }
@@ -173,28 +167,6 @@ class ScraperServices
 
         $this->posts[] = $p;
         return $p;
-    }
-
-
-    /**
-     * Truncates a string to 191 characters or fewer to fit varchar field
-     * @param  string $string
-     * @return string
-     **/
-    public function getTruncatedString($string) {
-        $string = trim($string);
-
-        if (strlen($string) > 191) { // if string is longer than 191 characters
-            $string = wordwrap($string, 185, "<cut>"); // split into substrings
-            $string = explode("<cut>", $string, 2); // add substrings to array
-            $string = trim($string[0]).' […]'; // save only first substring and add ellipses
-
-            if (strlen($string) > 191) { // double check in case wordwrap failed
-                $string = substr($string, 0, 185).' […]'; // force if necessary
-            }
-        }
-
-        return $string;
     }
 
 
