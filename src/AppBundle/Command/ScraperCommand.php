@@ -437,7 +437,7 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("     - Tweet data not found");
                     $sn['errors'][] = [$code => 'tw posts'];
                 } else {
-                    $output->writeln("     + Adding text tweets")
+                    $output->writeln("     + Adding text tweets");
                     foreach ($td['posts'] as $key => $post) {
                         $scraperService->addSocial(
                             $code,
@@ -458,7 +458,7 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("     - Image data not found");
                     $sn['errors'][] = [$code => 'tw images'];
                 } else {
-                    $output->writeln("     + Adding images")
+                    $output->writeln("     + Adding images");
                     foreach ($td['images'] as $key => $image) {
                         $scraperService->addSocial(
                             $code,
@@ -472,10 +472,10 @@ class ScraperCommand extends ContainerAwareCommand
                             $image['postData']
                         );
                     }
-                    $output->writeln("       + Images added")
+                    $output->writeln("       + Images added");
 
                     if (!empty($td['videos'])) {
-                        $output->writeln("     + Adding videos")
+                        $output->writeln("     + Adding videos");
                         foreach ($td['videos'] as $key => $video) {
                             $scraperService->addSocial(
                                 $code,
