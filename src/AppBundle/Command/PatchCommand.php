@@ -66,9 +66,9 @@ class PatchCommand extends ContainerAwareCommand
 // Charset for 'postText' field
 /////
     public function patchCharset() {
-    	$charset = $this->checkCharset();
+    	$old = $this->checkCharset();
 
-		if ($charset == 'utf8mb4') {
+		if ($old['char'] == 'utf8mb4' && $old['data'] == 'longtext') {
 			echo ", no fix needed.\n";
 			return;
 		}
@@ -76,9 +76,9 @@ class PatchCommand extends ContainerAwareCommand
 		echo ", fix needed.\n";
 		$this->getConfirmation();
 		$this->fixCharset();
-		$newCharset = $this->checkCharset();
+		$new = $this->checkCharset();
 
-		if ($newCharset == 'utf8mb4') {
+		if ($new['char'] == 'utf8mb4' && $new['data'] == 'longtext') {
 			echo ", great success! :D\n";
 			return;
 		}
@@ -93,18 +93,30 @@ class PatchCommand extends ContainerAwareCommand
     public function checkCharset() {
     	$db_name = $this->container->getParameter('database_name');
 
-    	$sql = "SELECT character_set_name
+    	$sql1 = "SELECT character_set_name
     		FROM information_schema.columns
     		WHERE table_schema = '$db_name'
     		AND table_name = 'social_media'
     		AND column_name = 'postText';";
 
-    	$query = $this->em->getConnection()->prepare($sql);
-    	$query->execute();
-    	$answer = $query->fetchAll();
-    	$charset = $answer[0]['character_set_name'];
-		echo "  Current character set for postText = ".$charset;
-		return $charset;
+    	$query = $this->em->getConnection()->prepare($sql1);
+        $query->execute();
+        $answer['char'] = $query->fetchAll();
+
+        $sql2 = "SELECT data_type
+            FROM information_schema.columns
+            WHERE table_schema = '$db_name'
+            AND table_name = 'social_media'
+            AND column_name = 'postText';";
+
+        $query = $this->em->getConnection()->prepare($sql2);
+        $query->execute();
+        $answer['data'] = $query->fetchAll();
+
+    	$array['char'] = $answer['char'][0]['character_set_name'];
+        $array['data'] = $answer['data'][0]['data_type'];
+		echo "  Current character set is ".$array['char'].", data type is ".$array['data'];
+		return $array;
     }
 
     /**
@@ -112,7 +124,7 @@ class PatchCommand extends ContainerAwareCommand
      */
     public function fixCharset() {
     	$sql = "ALTER TABLE social_media
-    		CHANGE postText postText VARCHAR(191)
+    		CHANGE postText postText LONGTEXT
     		CHARACTER SET utf8mb4
     		COLLATE utf8mb4_unicode_ci;";
 
