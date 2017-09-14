@@ -437,6 +437,7 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("     - Tweet data not found");
                     $sn['errors'][] = [$code => 'tw posts'];
                 } else {
+                    $output->writeln("     + Adding text tweets")
                     foreach ($td['posts'] as $key => $post) {
                         $scraperService->addSocial(
                             $code,
@@ -450,13 +451,14 @@ class ScraperCommand extends ContainerAwareCommand
                             $post['postData']
                         );
                     }
-                    $output->writeln("     + Tweets added");
+                    $output->writeln("       + Text tweets added");
                 }
 
                 if (empty($td['images'])) {
                     $output->writeln("     - Image data not found");
                     $sn['errors'][] = [$code => 'tw images'];
                 } else {
+                    $output->writeln("     + Adding images")
                     foreach ($td['images'] as $key => $image) {
                         $scraperService->addSocial(
                             $code,
@@ -470,8 +472,10 @@ class ScraperCommand extends ContainerAwareCommand
                             $image['postData']
                         );
                     }
+                    $output->writeln("       + Images added")
 
                     if (!empty($td['videos'])) {
+                        $output->writeln("     + Adding videos")
                         foreach ($td['videos'] as $key => $video) {
                             $scraperService->addSocial(
                                 $code,
@@ -485,8 +489,8 @@ class ScraperCommand extends ContainerAwareCommand
                                 $image['postData']
                             );
                         }
+                        $output->writeln("       + Videos added");
                     }
-                    $output->writeln("     + Images and videos added");
                 }
 
                 $output->writeln("   + All Twitter data added");
