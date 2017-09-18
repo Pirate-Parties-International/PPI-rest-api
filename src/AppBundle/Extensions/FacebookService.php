@@ -679,7 +679,7 @@ class FacebookService extends ScraperServices
 
                             $imgSrc = $this->getImageSource($fbPageId, $fb, $photo->getField('id')); // ~480x480 (or closest)
                             $imgBkp = $photo->getField('picture'); // 130x130 thumbnail
-                            $img = $scraper->saveImage('fb', $code, $imgSrc, $photo->getField('id'), $imgBkp);
+                            $img    = $scraper->saveImage('fb', $code, $imgSrc, $photo->getField('id'), $imgBkp);
 
                             $likeCount     = $this->getStatCount($photo->getField('likes'));
                             $reactionCount = $this->getStatCount($photo->getField('reactions'));

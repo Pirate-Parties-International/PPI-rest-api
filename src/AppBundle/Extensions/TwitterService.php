@@ -78,7 +78,7 @@ class TwitterService extends ScraperServices
         $timeCheck = $temp['timeCheck'];
         $imgCount  = array_key_exists('images', $out) ? count($out['images']) : 0;
         $vidCount  = array_key_exists('videos', $out) ? count($out['videos']) : 0;
-        echo " ...".count($out['posts'])." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed\n";
+        echo "...".count($out['posts'])." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed\n";
         return $out;
     }
 
