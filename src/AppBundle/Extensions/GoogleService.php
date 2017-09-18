@@ -71,17 +71,9 @@ class GoogleService extends ScraperServices
                 $vidTime = \DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $vid->snippet->publishedAt);
                 // original ISO 8601, e.g. '2015-04-30T21:45:59.000Z'
 
-                if (!empty($vidInfo->statistics->likeCount)) {
-                    $vidLikes = $vidInfo->statistics->likeCount;
-                } else {
-                    $vidLikes = 0;
-                }
-
-                if (!empty($vidInfo->statistics->commentCount)) {
-                    $vidComments = $vidInfo->statistics->commentCount;
-                } else {
-                    $vidComments = 0;
-                }
+                $vidLikes = isset($vidInfo->statistics->likeCount)    ? $vidInfo->statistics->likeCount    : null;
+                $vidViews = isset($vidInfo->statistics->viewCount)    ? $vidInfo->statistics->viewCount    : null;
+                $vidComms = isset($vidInfo->statistics->commentCount) ? $vidInfo->statistics->commentCount : null;
 
                 $out['videos'][] = [
                     'postId'    => $vidId,
@@ -96,9 +88,9 @@ class GoogleService extends ScraperServices
                         'description' => $vid->snippet->description,
                         'thumb'       => $imgSrc,
                         'url'         => 'https://www.youtube.com/watch?v='.$vidId,
-                        'views'       => $vidInfo->statistics->viewCount,
+                        'views'       => $vidViews,
                         'likes'       => $vidLikes,
-                        'comments'    => $vidComments
+                        'comments'    => $vidComms
                         ]
                     ];
             }

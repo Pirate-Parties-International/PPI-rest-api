@@ -586,7 +586,7 @@ class FacebookService extends ScraperServices
                         $likeCount     = $this->getStatCount($post->getField('likes'));
                         $reactionCount = $this->getStatCount($post->getField('reactions'));
                         $commentCount  = $this->getStatCount($post->getField('comments'));
-                        $shareCount    = !empty($post->getField('shares')) ? json_decode($post->getField('shares')->getField('count'), true) : 0;
+                        $shareCount    = !empty($post->getField('shares')) ? json_decode($post->getField('shares')->getField('count'), true) : null;
 
                         $out[$type.'s'][] = [
                             'postId'    => $post->getField('id'),

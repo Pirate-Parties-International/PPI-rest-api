@@ -88,7 +88,7 @@ class SocialMedia
     /**
     * @var integer
     *
-    * @ORM\Column(name="postLikes", type="integer")
+    * @ORM\Column(name="postLikes", type="integer", nullable=true)
     */
     private $postLikes;
 
