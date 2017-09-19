@@ -236,7 +236,7 @@ class BaseController extends Controller
     * @param  int    $offset
     * @return array
     */
-    public function getAllSocial($code = null, $type = null, $subType = null, $orderBy = 'code', $limit = 100, $offset = 0) {
+    public function getAllSocial($code = null, $type = null, $subType = null, $orderBy = 'postTime', $limit = 100, $offset = 0, $fields = null) {
         $social = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia');
 
@@ -255,7 +255,54 @@ class BaseController extends Controller
 
         $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
 
+        if ($fields) {
+            $socialMedia = $this->selectSocial($socialMedia, $fields);
+        }
+
         return $socialMedia;
+    }
+
+
+    /**
+    * Builds an array of select fields to return to the API
+    * @param  object socialMedia
+    * @param  string fields
+    * @return array
+    */
+    public function selectSocial($socialMedia, $fields) {
+
+        $fields = str_replace(' ', '', $fields);
+        $terms  = explode(',', $fields);
+
+        foreach ($socialMedia as $social) {
+            $data = $social->getPostData();
+            $temp = [
+                'code'     => $social->getCode(),
+                'type'     => $social->getType(),
+                'sub_type' => $social->getSubType(),
+                'post_id'  => $data['id'],
+                // 'postData' => $data
+                ];
+
+            foreach ($terms as $field) {
+
+                if ($field == 'time') {
+                    if ($temp['sub_type'] != 'E') {
+                        $temp['post_'.$field] = isset($data['posted']) ? $data['posted'] : null;
+
+                    } else $temp['post_'.$field] = isset($data['start_time']) ? $data['start_time'] : null;
+
+                } else if ($field == 'shares' && $temp['type'] == 'tw') {
+                    $temp['post_'.$field] = isset($data['retweets']) ? $data['retweets'] : null;
+
+                } else $temp['post_'.$field] = isset($data[$field]) ? $data[$field] : null;
+
+            }
+
+            $out[] = $temp;
+        }
+
+        return $out;
     }
 
 }

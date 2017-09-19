@@ -84,9 +84,10 @@ class GoogleService extends ScraperServices
                     'postData'  => [
                         'id'          => $vidId,
                         'posted'      => $vidTime->format('Y-m-d H:i:s'), // string
-                        'title'       => $vid->snippet->title,
+                        'text'        => $vid->snippet->title,
                         'description' => $vid->snippet->description,
-                        'thumb'       => $imgSrc,
+                        'image'       => $img,
+                        'img_source'  => $imgSrc,
                         'url'         => 'https://www.youtube.com/watch?v='.$vidId,
                         'views'       => $vidViews,
                         'likes'       => $vidLikes,
