@@ -156,7 +156,7 @@ class ApiController extends DataController
 
         switch ($orderBy) {
             case null:
-                break;
+                // break;
             case 'time':
             case 'date':
                 $orderBy = 'postTime';
