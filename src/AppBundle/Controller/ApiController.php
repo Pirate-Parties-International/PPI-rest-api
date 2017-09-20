@@ -14,7 +14,7 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 /**
  * @Route("/api/v1/")
  */
-class ApiController extends BaseController
+class ApiController extends DataController
 {
     /**
      * Lists data about ALL parties
@@ -39,7 +39,10 @@ class ApiController extends BaseController
      */
     public function partiesAction() {
 
-        $showDefunct = (!isset($_GET['show_defunct'])) ? null : $_GET['show_defunct'];
+        $showDefunct      = isset($_GET['show_defunct'])   ? $_GET['show_defunct']   : null;
+        $membershipFilter = isset($_GET['int_membership']) ? $_GET['int_membership'] : null;
+        $orderBy          = isset($_GET['sort_results'])   ? $_GET['sort_results']   : null;
+
         switch($showDefunct) {
             case null:
                 break;
@@ -53,9 +56,6 @@ class ApiController extends BaseController
                 return new JsonResponse(array("error"=>"Bad request: invalid parameter for the field 'show_defunct' (boolean expected)."), 400);
         }
 
-        $membershipFilter = (!isset($_GET['int_membership'])) ? null : $_GET['int_membership'];
-
-        $orderBy = (!isset($_GET['sort_results'])) ? null : $_GET['sort_results'];
         switch ($orderBy) {
             case null:
             case 'name':
@@ -69,12 +69,12 @@ class ApiController extends BaseController
         // run through BaseController
         $allData = $this->getAllParties($showDefunct, $membershipFilter, $orderBy);
 
-        $serializer = $this->get('jms_serializer');
-        $allData = $serializer->serialize($allData, 'json');
-
         if (empty($allData)) {
             return new JsonResponse(array("error"=>"Search returned no results."), 404);
         }
+
+        $serializer = $this->get('jms_serializer');
+        $allData = $serializer->serialize($allData, 'json');
 
 	    return new Response($allData, 200);
     }
@@ -101,6 +101,10 @@ class ApiController extends BaseController
     	
         $party = $this->getOneParty($id);
 
+    	if (empty($party)) {
+    		return new JsonResponse(array("error"=>"Party with the ID '".$id."' does not exsist."), 404);
+    	}
+
         $social['twitter']  = $this->getTwitterFollowers($id);     
         $social['facebook'] = $this->getFacebookLikes($id);     
         $social['gplus']    = $this->getGooglePlusFollowers($id);
@@ -110,10 +114,6 @@ class ApiController extends BaseController
 
         $serializer = $this->get('jms_serializer');
         $data = $serializer->serialize($party, 'json');
-
-    	if ($data === null) {
-    		return new JsonResponse(array("error"=>"Party with this ID does not exsist"), 404);
-    	}
 
     	return new Response($data, 200);
     }
@@ -139,6 +139,7 @@ class ApiController extends BaseController
      *  },
      *  statusCodes={
      *          200="Returned when successful.",
+     *          400="Returned upon bad request.",
      *          404="Returned when not found."
      *  }
      * )
@@ -149,27 +150,31 @@ class ApiController extends BaseController
         $type    = isset($_GET['type'])     ? $_GET['type']     : null;
         $subType = isset($_GET['sub_type']) ? $_GET['sub_type'] : null;
         $fields  = isset($_GET['fields'])   ? $_GET['fields']   : null;
+        $orderBy = isset($_GET['order_by']) ? $_GET['order_by'] : null;
         $limit   = isset($_GET['limit'])    ? $_GET['limit']    : 100;
         $offset  = isset($_GET['offset'])   ? $_GET['offset']   : 0;
 
-        if (isset($_GET['order_by'])) {
-            switch ($_GET['order_by']) {
-                case 'time':
-                case 'date':
-                    $orderBy = 'postTime';
-                    break;
-                case 'likes':
-                    $orderBy = 'postLikes';
-                    break;
-                default: // case 'code' or null
-                    $orderBy = 'code';
-            }
-        } else $orderBy = 'code';
+        switch ($orderBy) {
+            case null:
+                break;
+            case 'time':
+            case 'date':
+                $orderBy = 'postTime';
+                break;
+            case 'likes':
+                $orderBy = 'postLikes';
+                break;
+            case 'code':
+                $orderBy = 'code';
+                break;
+            default:
+                return new JsonResponse(array("error"=>"Bad request: '".$orderBy."' is not a valid parameter for the field 'order_by'."), 400);
+        }
 
-        $data = $this->getAllSocial($code, $type, $subType, $orderBy, $limit, $offset, $fields);
+        $data = $this->getAllSocial($code, $type, $subType, $fields, $orderBy, $limit, $offset);
 
         if (empty($data)) {
-            return new JsonResponse(array("error"=>"No data found"), 404);
+            return new JsonResponse(array("error"=>"No data found."), 404);
         }
 
         $serializer = $this->get('jms_serializer');
