@@ -93,16 +93,21 @@ class ApiController extends DataController
      *  },
      *  statusCodes={
      *         200="Returned when successful.",
+     *         400="Returned unpon bad request.",
      *         404="Returned when not found."
      *     }
      * )
      */
     public function partyAction($id) {
-    	
+
+        if ($id == "{id}") { // if null (should not apply outside of doc page)
+            return new JsonResponse(array("error"=>"Bad request: No Party ID entered."), 400);
+        }
+
         $party = $this->getOneParty($id);
 
     	if (empty($party)) {
-    		return new JsonResponse(array("error"=>"Party with the ID '".$id."' does not exsist."), 404);
+    		return new JsonResponse(array("error"=>"Party with the ID '".$id."' does not exist."), 404);
     	}
 
         $social['twitter']  = $this->getTwitterFollowers($id);     
@@ -171,6 +176,7 @@ class ApiController extends DataController
                 return new JsonResponse(array("error"=>"Bad request: '".$orderBy."' is not a valid parameter for the field 'order_by'."), 400);
         }
 
+        // run through BaseController
         $data = $this->getAllSocial($code, $type, $subType, $fields, $orderBy, $limit, $offset);
 
         if (empty($data)) {
