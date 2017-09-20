@@ -9,17 +9,17 @@ services:
 #        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
 
     ScraperServices:
-        class: AppBundle\Extensions\ScraperServices
+        class: AppBundle\Service\ScraperServices
         arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
 
     FacebookService:
-        class: AppBundle\Extensions\FacebookService
+        class: AppBundle\Service\FacebookService
         arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
 
     TwitterService:
-        class: AppBundle\Extensions\TwitterService
+        class: AppBundle\Service\TwitterService
         arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
 
     GoogleService:
-        class: AppBundle\Extensions\GoogleService
+        class: AppBundle\Service\GoogleService
         arguments: [ @doctrine.orm.entity_manager, '@service_container' ]

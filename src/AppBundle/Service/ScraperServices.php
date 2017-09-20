@@ -1,5 +1,5 @@
 <?php
-namespace AppBundle\Extensions;
+namespace AppBundle\Service;
 
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Response;

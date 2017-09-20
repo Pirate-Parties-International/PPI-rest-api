@@ -1,5 +1,5 @@
 <?php
-namespace AppBundle\Extensions;
+namespace AppBundle\Service;
 
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Response;
@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 use AppBundle\Command\ScraperCommand;
-use AppBundle\Extensions\ScraperServices;
+use AppBundle\Service\ScraperServices;
 
 use TwitterAPIExchange;
 
