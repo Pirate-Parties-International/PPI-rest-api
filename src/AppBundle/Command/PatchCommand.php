@@ -17,9 +17,10 @@ class PatchCommand extends ContainerAwareCommand
 		$this
 			->setName('papi:patch')
 			->setDescription('Patches existing db entries')
-            ->addOption('twitter',  't', InputOption::VALUE_NONE, "Fix 'postId' field in twitter images and videos")
+            ->addOption('twitter',  't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
             ->addOption('charset',  'c', InputOption::VALUE_NONE, "Convert 'postText' field to utf8mb4 character set")
             ->addOption('postdata', 'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
+            ->addOption('stats',    'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
         ;
     }
 
@@ -34,7 +35,7 @@ class PatchCommand extends ContainerAwareCommand
 
         switch (true) { // add more options here
             case $input->getOption('twitter'):
-                $output->writeln("##### Patching twitter images #####");
+                $output->writeln("##### Patching Twitter images #####");
                 $this->getConfirmation();
                 $this->patchTwitterImages();
                 break;
@@ -46,6 +47,10 @@ class PatchCommand extends ContainerAwareCommand
                 $output->writeln("##### Patching 'postData' array keys #####");
                 $this->getConfirmation();
                 $this->patchPostData();
+                break;
+            case $input->getOption('stats');
+                $output->writeln("##### Patching stat codes #####");
+                $this->patchStatCodes();
                 break;
             default:
                 $output->writeln("Invalid option.");
@@ -63,9 +68,67 @@ class PatchCommand extends ContainerAwareCommand
         if (trim($line) != 'y' && trim($line) != 'yes'){
             echo "  Process aborted.\n";
             exit;
-        } else {
-            echo "\n";
         }
+    }
+
+
+/////
+// stat codes
+/////
+    public function patchStatCodes() {
+        $posts = $this->em->getRepository('AppBundle:Statistic')->findBy(['subType' => 'P']);
+
+        if (empty($posts)) {
+            echo "  The database is up to date. No patch needed.\n";
+            exit;
+        }
+
+        $this->getConfirmation();
+
+        echo "  Checking tweets... ";
+        $tweets = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'tw', 'subType' => 'P']);
+
+        if (!empty($tweets)) {
+            echo "patching...";
+
+            foreach ($tweets as $tweet) {
+                $tweet->setSubType('T');
+                $this->em->persist($tweet);
+                echo ".";
+            }
+
+            echo "\n    All patched, saving to DB... ";
+            $this->em->flush();
+            echo "done.\n";
+
+        } else echo "no patch needed.\n";
+
+        echo "  Checking Facebook statuses... ";
+        $statuses = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'fb', 'subType' => 'P']);
+
+        if (!empty($statuses)) {
+            echo "patching...";
+
+            $talking = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'fb', 'subType' => 'T']);
+            foreach ($talking as $talk) {
+                $talk->setSubType('A');
+                $this->em->persist($talk);
+                echo ".";
+            }
+
+            foreach ($statuses as $status) {
+                $status->setSubType('T');
+                $this->em->persist($status);
+                echo ".";
+            }
+
+            echo "\n    All patched, saving to DB... ";
+            $this->em->flush();
+            echo "done.\n";
+
+        } else echo "no patch needed.\n";
+
+        echo "  All done.\n";
     }
 
 
