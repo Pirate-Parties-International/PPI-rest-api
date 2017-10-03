@@ -80,7 +80,7 @@ class ApiController extends DataController
     }
 
     /**
-     * List data about ONE party
+     * Lists data about ONE party
      * 
      * @Route("parties/{id}", name="ppi_api_parties_id")
      * @Method({"GET"})
@@ -125,7 +125,7 @@ class ApiController extends DataController
 
 
     /**
-     * List data about social media
+     * Lists data about social media posts
      *
      * @Route("social/", name="ppi_api_social")
      * @Method({"GET"})
@@ -192,16 +192,29 @@ class ApiController extends DataController
 
 
     /**
-     * Shows history accross all social networks for one party. Supports JSON and CSV
+     * Shows history across all social networks for one party. Supports JSON and CSV
      *
      * Meaning of codes:<br />
-     * - fb-L: Facebook likes<br />
-     * - tw-F: Twitter followers<br />
-     * - tw-T: Twitter tweets<br />
-     * - g+-F: Google Plus Followers<br />
-     * - yt-S: Youtube Subscribers<br />
-     * - yt-V: Youtube Views<br />
-     * - yt-M: Youtube Videos
+     * - Facebook:<br />
+     * - - fb-L: likes<br />
+     * - - fb-A: 'talking about' count<br />
+     * - - fb-T: statuses (text)<br />
+     * - - fb-I: images<br />
+     * - - fb-M: videos<br />
+     * - - fb-E: events<br />
+     * - Twitter:<br />
+     * - - tw-L: likes<br />
+     * - - tw-F: followers<br />
+     * - - tw-G: following<br />
+     * - - tw-T: tweets (text)<br />
+     * - - tw-I: images<br />
+     * - - tw-M: videos<br />
+     * - YouTube:<br />
+     * - - yt-S: subscribers<br />
+     * - - yt-V: views<br />
+     * - - yt-M: videos<br />
+     * - Google+:<br />
+     * - - g+-F: followers<br />
      * 
      * @Route("history/party/{id}", name="ppi_api_history_party")
      * @Method({"GET"})
@@ -261,16 +274,29 @@ class ApiController extends DataController
     }
 
     /**
-     * Shows history accross of one dimension for all parties. Supports JSON and CSV
+     * Shows history across one dimension of social media for all parties. Supports JSON and CSV
      *
      * Meaning of codes:<br />
-     * - fb-L: Facebook likes<br />
-     * - tw-F: Twitter followers<br />
-     * - tw-T: Twitter tweets<br />
-     * - g+-F: Google Plus Followers<br />
-     * - yt-S: Youtube Subscribers<br />
-     * - yt-V: Youtube Views<br />
-     * - yt-M: Youtube Videos
+     * - Facebook:<br />
+     * - - fb-L: likes<br />
+     * - - fb-A: 'talking about' count<br />
+     * - - fb-T: statuses (text)<br />
+     * - - fb-I: images<br />
+     * - - fb-M: videos<br />
+     * - - fb-E: events<br />
+     * - Twitter:<br />
+     * - - tw-L: likes<br />
+     * - - tw-F: followers<br />
+     * - - tw-G: following<br />
+     * - - tw-T: tweets (text)<br />
+     * - - tw-I: images<br />
+     * - - tw-M: videos<br />
+     * - YouTube:<br />
+     * - - yt-S: subscribers<br />
+     * - - yt-V: views<br />
+     * - - yt-M: videos<br />
+     * - Google+:<br />
+     * - - g+-F: followers<br />
      * 
      * @Route("history/dimension/{view}", name="ppi_api_history_dimension")
      * @Method({"GET"})

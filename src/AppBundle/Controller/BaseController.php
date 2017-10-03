@@ -67,7 +67,7 @@ class BaseController extends Controller
 
 
     /**
-    * Queries for a single type of social media
+    * Queries for a single type of social media post
     * @param  string $code
     * @param  string $type
     * @param  string $subType
@@ -87,7 +87,7 @@ class BaseController extends Controller
 
 
     /**
-    * Queries for all social media
+    * Queries for all social media posts
     * @param  string $code    <optional>
     * @param  string $type    <optional>
     * @param  string $subType <optional>
