@@ -249,17 +249,26 @@ class ApiController extends DataController
         }
         switch ($format) {
             case 'csv':
-                $out = "Date;fb-L;tw-F;tw-T;g+-F;yt-S;yt-V;yt-M" . PHP_EOL;
+                $out = "Date;fb-L;fb-A;fb-T;fb-I;fb-M;fb-E;tw-F;tw-L;tw-G;tw-T;tw-I;tw-M;g+-F;yt-S;yt-V;yt-M" . PHP_EOL;
                 foreach ($payload as $date => $s) {
-                    $out .= sprintf('%s;%s;%s;%s;%s;%s;%s;%s',
+                    $out .= sprintf('%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s',
                         $date,
-                        $s['fb-L'],
-                        $s['tw-F'],
-                        $s['tw-T'],
-                        $s['g+-F'],
-                        $s['yt-S'],
-                        $s['yt-V'],
-                        $s['yt-M']
+                        isset($s['fb-L']) ? $s['fb-L'] : 'null',
+                        isset($s['fb-A']) ? $s['fb-A'] : 'null',
+                        isset($s['fb-T']) ? $s['fb-T'] : 'null',
+                        isset($s['fb-I']) ? $s['fb-I'] : 'null',
+                        isset($s['fb-M']) ? $s['fb-M'] : 'null',
+                        isset($s['fb-E']) ? $s['fb-E'] : 'null',
+                        isset($s['tw-F']) ? $s['tw-F'] : 'null',
+                        isset($s['tw-L']) ? $s['tw-L'] : 'null',
+                        isset($s['tw-G']) ? $s['tw-G'] : 'null',
+                        isset($s['tw-T']) ? $s['tw-T'] : 'null',
+                        isset($s['tw-I']) ? $s['tw-I'] : 'null',
+                        isset($s['tw-M']) ? $s['tw-M'] : 'null',
+                        isset($s['g+-F']) ? $s['g+-F'] : 'null',
+                        isset($s['yt-S']) ? $s['yt-S'] : 'null',
+                        isset($s['yt-V']) ? $s['yt-V'] : 'null',
+                        isset($s['yt-M']) ? $s['yt-M'] : 'null'
                     ) . PHP_EOL;
                 }
                 $format = "text/csv";
