@@ -81,7 +81,7 @@
                     <div class="col l3 m6 s12 placement-class" ng-repeat="items in data track by $index">
                             <div class="card">
                                 <a class="card-text" target="_blank" ng-href="{{getUrl(items)}}">
-                                <div class="card-image card-image-img" ng-style="{'background-image':'url(http://api.piratetimes.net/img/uploads/{{items.code}}/{{items.type}}/{{items.post_image}})'}">
+                                <div class="card-image card-image-img" ng-style="{'background-image':'url(/img/uploads/{{items.code}}/{{items.type}}/{{items.post_image}})'}">
                                     <span class="card-title-bottom  card-belt">
                                         <p class="card-belt-font display-inline ">{{items.code}}</p>                                    
                                         <img class="card-picture-belt-position" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
