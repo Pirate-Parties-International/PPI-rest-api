@@ -110,10 +110,10 @@ class ApiController extends DataController
     		return new JsonResponse(array("error"=>"Party with the ID '".$id."' does not exist."), 404);
     	}
 
-        $social['twitter']  = $this->getTwitterFollowers($id);     
-        $social['facebook'] = $this->getFacebookLikes($id);     
-        $social['gplus']    = $this->getGooglePlusFollowers($id);
-        $social['youtube']  = $this->getYoutubeData($id);
+        $social['twitter']            = $this->getTwitterStats($id);
+        $social['facebook']           = $this->getFacebookStats($id);
+        $social['gplus']['followers'] = $this->getGooglePlusFollowers($id);
+        $social['youtube']            = $this->getYoutubeStats($id);
 
         $party->socialData = $social;
 
@@ -122,6 +122,7 @@ class ApiController extends DataController
 
     	return new Response($data, 200);
     }
+
 
     /**
      * List data about social media
@@ -188,6 +189,7 @@ class ApiController extends DataController
 
         return new Response($data, 200);
     }
+
 
     /**
      * Shows history accross all social networks for one party. Supports JSON and CSV
@@ -257,6 +259,7 @@ class ApiController extends DataController
         }
         return new Response($out, Response::HTTP_OK, array('content-type' => $format));
     }
+
     /**
      * Shows history accross of one dimension for all parties. Supports JSON and CSV
      *
