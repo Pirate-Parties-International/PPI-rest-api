@@ -84,21 +84,16 @@ Then run the data import:
 
 ## Production deploy
 
-Install capistrano & capifony
-http://everzet.github.io/capifony/
+Install [Deployer](https://deployer.org)
 
-Install rest via manual deploy
+    curl -LO https://deployer.org/deployer.phar
+    mv deployer.phar /usr/local/bin/dep
+    chmod +x /usr/local/bin/dep
 
-First, make sure to properly configure the app/config/deploy.rb and /app/config/deploy/* files
+Setup your ssh connection
 
-Then, start setup
+    nano ~/.ssh/config
 
-    cap dev:setup
+Then just deploy
 
-Deploy to target
-    cap dev deploy
-
-Load data
-    cap dev symfony
-
-Execute command "papi:loadData"
+    dep deploy production
