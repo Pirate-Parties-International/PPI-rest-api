@@ -13,7 +13,7 @@
 {% verbatim %} 
     <div class="container"  ng-app="app" ng-controller="postController">
         <!--loading screen without loading circle -->
-        <div  id="loading-background" ng-class="backgroundClass">
+        <div  id="loading-background" ng-class="backgroundClass" ng-if="loading">
         </div>
         <div class="section valign-wrapper">
             <div class="singlePage" infinite-scroll="loadMore()" infinite-scroll-distance="1">

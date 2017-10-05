@@ -15,7 +15,6 @@
         };
         //sets default checked radio button when the page loads 
         $scope.radioBtn = "all";
-
         //this functions loads more data for the infinite scroll
         // it constantily updates the array from which ng-repeat gets its data
         $scope.loadData = function() {
