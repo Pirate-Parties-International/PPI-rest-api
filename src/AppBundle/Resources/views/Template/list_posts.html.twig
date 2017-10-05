@@ -13,7 +13,7 @@
 {% verbatim %} 
     <div class="container"  ng-app="app" ng-controller="postController">
         <!--loading screen without loading circle -->
-        <div  id="loading-background" ng-class="backgroundClass">
+        <div  id="loading-background" ng-class="backgroundClass" ng-if="loading">
         </div>
         <div class="section valign-wrapper">
             <div class="singlePage" infinite-scroll="loadMore()" infinite-scroll-distance="1">
@@ -110,7 +110,7 @@
                 <!-- When no data is present -->
                 <div class="row" ng-if="noData">
                     <div class="col s12">
-                        <h3 class="center-align">Error, we couldn't find any pictures for this party :(</h3>
+                        <h3 class="center-align">Error, we couldn't find any posts for this party :(</h3>
                     </div>
                     <div class="col s12 social-hidden">
                         <p>Hidden text, that ensure that the page is prperly streched even though there is no data on the page. this is fake text, taht streches the page. No idea why it isn't working fine with it without it.</p>

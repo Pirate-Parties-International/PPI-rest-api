@@ -16,6 +16,12 @@
         //sets default checked radio button when the page loads 
         $scope.radioBtn = "all";
 
+        pictureAndPostFactory.partyList().then(function(successResponse) {
+            $scope.partyList = Object.values(successResponse)
+            $scope.partyListObject = successResponse;
+            console.log($scope.partyListObject)
+        });
+
         //this functions loads more data for the infinite scroll
         // it constantily updates the array from which ng-repeat gets its data
         $scope.loadData = function() {
