@@ -2,7 +2,7 @@ angular.module("app").factory("pictureAndPostFactory", function($http) {
     var address = "/api/v1/"
     var pictureAndPostFactory = {
         partyList: function() {
-            var promise = $http.get(address + "parties/?_format=json&show_defunct=false")
+            var promise = $http.get(address + "parties/?_format=json")
                 .then(function(response) {
                     //First function handles success
                     return response.data;
