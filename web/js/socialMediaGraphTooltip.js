@@ -1,9 +1,7 @@
 (function($) {
     $(function() {
-<<<<<<< HEAD
         sessionStorage.clear();
-=======
->>>>>>> socialMediaPostsSorting
+
         // address of the api 
         var partyApiAddress = "/api/v1/history/party/" + partyCode;
         //get data through the api

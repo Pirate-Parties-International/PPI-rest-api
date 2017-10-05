@@ -17,9 +17,12 @@ class PatchCommand extends ContainerAwareCommand
 		$this
 			->setName('papi:patch')
 			->setDescription('Patches existing db entries')
-            ->addOption('twitter', 't', InputOption::VALUE_NONE, "Fix 'postId' field in twitter images and videos")
+            ->addOption('twitter',  't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
+            ->addOption('charset',  'c', InputOption::VALUE_NONE, "Convert 'postText' field to utf8mb4 character set")
+            ->addOption('postdata', 'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
+            ->addOption('stats',    'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
         ;
-	}
+    }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -32,17 +35,253 @@ class PatchCommand extends ContainerAwareCommand
 
         switch (true) { // add more options here
             case $input->getOption('twitter'):
-                $output->writeln("##### Patching twitter images #####");
+                $output->writeln("##### Patching Twitter images #####");
+                $this->getConfirmation();
                 $this->patchTwitterImages();
+                break;
+            case $input->getOption('charset'):
+                $output->writeln("##### Patching 'postText' charset #####");
+                $this->patchCharset();
+                break;
+            case $input->getOption('postdata'):
+                $output->writeln("##### Patching 'postData' array keys #####");
+                $this->getConfirmation();
+                $this->patchPostData();
+                break;
+            case $input->getOption('stats');
+                $output->writeln("##### Patching stat codes #####");
+                $this->patchStatCodes();
                 break;
             default:
                 $output->writeln("Invalid option.");
         }
     }
 
+    public function getConfirmation() {
+        echo "### CAUTION: THIS WILL ALTER THE DATABASE! ###\n";
+        echo "  It is recommended to make a backup of your database before performing this action.\n";
+        echo "  Do you wish to continue? y/n - ";
+
+        $handle = fopen ("php://stdin","r");
+        $line = fgets($handle);
+
+        if (trim($line) != 'y' && trim($line) != 'yes'){
+            echo "  Process aborted.\n";
+            exit;
+        }
+    }
+
 
 /////
-//Twitter images
+// stat codes
+/////
+    public function patchStatCodes() {
+        $posts = $this->em->getRepository('AppBundle:Statistic')->findBy(['subType' => 'P']);
+
+        if (empty($posts)) {
+            echo "  The database is up to date. No patch needed.\n";
+            exit;
+        }
+
+        $this->getConfirmation();
+
+        echo "  Checking tweets... ";
+        $tweets = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'tw', 'subType' => 'P']);
+
+        if (!empty($tweets)) {
+            echo "patching...";
+
+            foreach ($tweets as $tweet) {
+                $tweet->setSubType('T');
+                $this->em->persist($tweet);
+                echo ".";
+            }
+
+            echo "\n    All patched, saving to DB... ";
+            $this->em->flush();
+            echo "done.\n";
+
+        } else echo "no patch needed.\n";
+
+        echo "  Checking Facebook statuses... ";
+        $statuses = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'fb', 'subType' => 'P']);
+
+        if (!empty($statuses)) {
+            echo "patching...";
+
+            $talking = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'fb', 'subType' => 'T']);
+            foreach ($talking as $talk) {
+                $talk->setSubType('A');
+                $this->em->persist($talk);
+                echo ".";
+            }
+
+            foreach ($statuses as $status) {
+                $status->setSubType('T');
+                $this->em->persist($status);
+                echo ".";
+            }
+
+            echo "\n    All patched, saving to DB... ";
+            $this->em->flush();
+            echo "done.\n";
+
+        } else echo "no patch needed.\n";
+
+        echo "  All done.\n";
+    }
+
+
+/////
+// postData array keys
+/////
+    public function patchPostData() {
+        echo "  Getting posts from DB...\n";
+        $socialMedia = $this->em->getRepository('AppBundle:SocialMedia')->findAll();
+        echo "  Patching...";
+ 
+        foreach ($socialMedia as $social) {
+            $temp = $social->getPostData();
+            $type = $social->getType();
+            $img  = (null != $social->getPostImage()) ? $social->getPostImage() : null;
+
+            if (isset($temp['img_source'])) {
+                // no patch needed, do nothing
+            } else if ($type != 'tw' && isset($temp['text'])) {
+                // no patch needed, do nothing
+
+            } else {
+                if ($type == 'tw' && !is_null($img)) {
+                    $temp['img_source'] = $temp['image'];
+                    $temp['image'] = $img;
+                    echo ".";
+
+                } else if ($type == 'yt') {
+                    $temp['text'] = $temp['title'];
+                    $temp['image'] = $img;
+                    $temp['img_source'] = $temp['thumb'];
+                    unset($temp['title']);
+                    unset($temp['thumb']);
+                    echo ".";
+
+                } else if ($type == 'fb') {
+                    switch ($social->getSubType()) {
+                        case 'I': // images
+                            $temp['text'] = $temp['caption'];
+                            $temp['image'] = $img;
+                            $temp['img_source'] = $temp['source'];
+                            unset($temp['caption']);
+                            unset($temp['source']);
+                            echo ".";
+                            break;
+
+                        case 'E': // events
+                            $temp['text'] = $temp['name'];
+                            $temp['description'] = $temp['details']['description'];
+                            $temp['image'] = $img;
+                            $temp['img_source'] = $temp['details']['cover']['source'];
+                            $temp['place'] = $temp['details']['place'];
+                            $temp['address'] = $temp['details']['address'];
+                            unset($temp['name']);
+                            unset($temp['details']);
+                            echo ".";
+                            break;
+
+                        case 'T': // text posts
+                        case 'V': // videos
+                            $story = isset($temp['story']) ? $temp['story'] : null;
+                            $temp['text'] = isset($temp['message']) ? $temp['message'] : $story;
+                            $temp['image'] = $img;
+                            $temp['img_source'] = isset($temp['link']['thumb']) ? $temp['link']['thumb'] : null;
+                            unset($temp['message']);
+                            unset($temp['story']);
+                            unset($temp['link']['thumb']);
+                            echo ".";
+                    }
+                }
+                $social->setPostData($temp);
+                $this->em->persist($social);
+            }
+        }
+        echo "\n  All patched. Saving to DB...\n";
+        $this->em->flush();
+        echo "  Done.\n";
+    }
+
+
+/////
+// Charset for 'postText' field
+/////
+    public function patchCharset() {
+    	$old = $this->checkCharset();
+
+		if ($old['char'] == 'utf8mb4' && $old['data'] == 'longtext') {
+			echo ", no fix needed.\n";
+			return;
+		}
+
+		echo ", fix needed.\n";
+		$this->getConfirmation();
+		$this->fixCharset();
+		$new = $this->checkCharset();
+
+		if ($new['char'] == 'utf8mb4' && $new['data'] == 'longtext') {
+			echo ", great success! :D\n";
+			return;
+		}
+
+        echo ", process failed. :(\n";
+        echo "  Your database may need to be altered manually. Contact us on github if you need help.\n";
+    }
+
+    /**
+     * Checks current charset
+     */
+    public function checkCharset() {
+    	$db_name = $this->container->getParameter('database_name');
+
+    	$sql1 = "SELECT character_set_name
+    		FROM information_schema.columns
+    		WHERE table_schema = '$db_name'
+    		AND table_name = 'social_media'
+    		AND column_name = 'postText';";
+
+    	$query = $this->em->getConnection()->prepare($sql1);
+        $query->execute();
+        $answer['char'] = $query->fetchAll();
+
+        $sql2 = "SELECT data_type
+            FROM information_schema.columns
+            WHERE table_schema = '$db_name'
+            AND table_name = 'social_media'
+            AND column_name = 'postText';";
+
+        $query = $this->em->getConnection()->prepare($sql2);
+        $query->execute();
+        $answer['data'] = $query->fetchAll();
+
+    	$array['char'] = $answer['char'][0]['character_set_name'];
+        $array['data'] = $answer['data'][0]['data_type'];
+		echo "  Current character set is ".$array['char'].", data type is ".$array['data'];
+		return $array;
+    }
+
+    /**
+     * Converts charset to 4-byte compatible utf8mb4
+     */
+    public function fixCharset() {
+    	$sql = "ALTER TABLE social_media
+    		CHANGE postText postText LONGTEXT
+    		CHARACTER SET utf8mb4
+    		COLLATE utf8mb4_unicode_ci;";
+
+        $query = $this->em->getConnection()->prepare($sql);
+        $query->execute();
+    }
+
+
+/////
+// Twitter images
 /////
 
     /**
@@ -63,7 +302,7 @@ class PatchCommand extends ContainerAwareCommand
 		}
 
 		$this->em->flush();
-		echo "All done.\n";
+		echo "  All done.\n";
 	}
 
 	/**
@@ -73,7 +312,7 @@ class PatchCommand extends ContainerAwareCommand
 	public function getPostIdFromUrl($post)
 	{
 		$oldId = $post->getPostId();
-		echo "postId = ".$oldId;
+		echo "  postId = ".$oldId;
 		$postData = $post->getPostData();
 		$postUrl = $postData['url'];
 		$newId = substr($postUrl, -18);

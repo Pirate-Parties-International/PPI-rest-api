@@ -3,14 +3,30 @@
 namespace AppBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
-
-use AppBundle\Entity\Metadata;
-use AppBundle\Entity\Statistic as Stat;
-use AppBundle\Entity\SocialMedia as Sm;
 
 class BaseController extends Controller
 {
+    /**
+     * Queries for a single party
+     * @param  string $code
+     * @return Party
+     */
+    public function getOneParty($code) {
+        $party = $this->getDoctrine()
+            ->getRepository('AppBundle:Party')
+            ->findOneByCode($code);
+
+        return $party;
+    }
+
+
+    /**
+     * Queries for all parties
+     * @param  bool   $showDefunct      <optional>
+     * @param  string $membershipFilter <optional>
+     * @param  string $orderBy          <optional>
+     * @return array
+     */
     public function getAllParties($showDefunct = false, $membershipFilter = null, $orderBy = 'code') {
         $parties = $this->getDoctrine()
             ->getRepository('AppBundle:Party');
@@ -18,14 +34,14 @@ class BaseController extends Controller
         $query = $parties->createQueryBuilder('qb')
             ->select('p')->from('AppBundle:Party', 'p');
 
-        if (!is_null($membershipFilter)) {
+        if (!is_null($membershipFilter)) { // filter by intOrg membership, 'ppi', 'ppeu' etc.
             $query->join('p.intMemberships', 'm')
                 ->innerJoin('m.intOrg', 'o')
-                ->where(sprintf("o.code = '%s'", $membershipFilter)); // show only 'ppi', 'ppeu' etc.
+                ->where(sprintf("o.code = '%s'", $membershipFilter));
         } // else do nothing, i.e. show all
 
-        if (!is_null($showDefunct)) {
-            $query->andwhere(sprintf("p.defunct = '%s'", $showDefunct)); // true = show only defunct, false = only non-defunct
+        if (!is_null($showDefunct)) { // true = show only defunct, false = only non-defunct
+            $query->andwhere(sprintf("p.defunct = '%s'", $showDefunct));
         } // else do nothing, i.e. show all
 
         switch ($orderBy) {
@@ -50,106 +66,102 @@ class BaseController extends Controller
     }
 
 
-	public function getOneParty($code) {
-		$party = $this->getDoctrine()
-            ->getRepository('AppBundle:Party')
-            ->findOneByCode($code);
+    /**
+    * Queries for a single type of social media post
+    * @param  string $code
+    * @param  string $type
+    * @param  string $subType
+    * @return SocialMedia
+    */
+    public function getOneSocial($code, $type, $subType) {
+        $socialMedia = $this->getDoctrine()
+            ->getRepository('AppBundle:SocialMedia')
+            ->findBy(['code' => $code, 'type' => $type, 'subType' => $subType]);
 
-        return $party;
-	}
-
-
-    public function getCoverImage($code) {
-        $meta = $this->getMeta($code, Metadata::TYPE_FACEBOOK_COVER);
-
-        if(!$meta) {
-            return '/img/generic_cover.jpg';
+        if (!$socialMedia) {
+            return false;
         }
 
-        return $meta;
+        return $socialMedia;
     }
 
 
-    public function getFacebookLikes($code) {
-        return $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES);
-    }
+    /**
+    * Queries for all social media posts
+    * @param  string $code    <optional>
+    * @param  string $type    <optional>
+    * @param  string $subType <optional>
+    * @param  string $fields  <optional>
+    * @param  string $orderBy <optional>
+    * @param  int    $limit   <optional>
+    * @param  int    $offset  <optional>
+    * @return array
+    */
+    public function getAllSocial($code = null, $type = null, $subType = null, $fields = null, $orderBy = null, $limit = 100, $offset = 0) {
+        $social = $this->getDoctrine()
+            ->getRepository('AppBundle:SocialMedia');
 
-    public function getFacebookData($code) {
-        $out = [
-            'likes'        => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES),
-            'talkingAbout' => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_TALKING),
-            'postCount'    => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_POSTS),
-            'photoCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_IMAGES),
-            'videoCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_VIDEOS),
-            'eventCount'   => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_EVENTS),
-        ];
-        $out['pageInfo'] = $this->getMeta($code, Metadata::TYPE_FACEBOOK_INFO);
+        $terms = [];
+        $orderBy = is_null($orderBy) ? 'postTime' : $orderBy;
+        $direction = ($orderBy == 'code') ? 'ASC' : 'DESC';
 
-        $posts  = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_TEXT);
-        if (!empty($posts)) {
-            $out['posts'] = $posts;
+        if ($code) {
+            $terms['code'] = $code;
         }
-        $photos = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_IMAGE);
-        if (!empty($photos)) {
-            $out['photos'] = $photos;
+        if ($type) {
+            $terms['type'] = $type;
         }
-        $videos = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_VIDEO);
-        if (!empty($videos)) {
-            $out['videos'] = $videos;
-        }
-        $events = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_EVENT);
-        if (!empty($events)) {
-            $out['events'] = $events;
+        if ($subType) {
+            $terms['subType'] = $subType;
         }
 
-        return $out;
-    }
+        $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
 
-
-    public function getTwitterFollowers($code) {
-        return $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWERS);
-    }
-
-    public function getTwitterData($code) {
-        $out = [
-            'likes'      => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_LIKES),
-            'followers'  => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWERS),
-            'following'  => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWING),
-            'tweetCount' => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_POSTS),
-        ];
-        $out['pageInfo']['about'] = $this->getMeta($code, Metadata::TYPE_TWITTER_INFO);
-
-        $tweets = $this->getOneSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_TEXT);
-        if (!empty($tweets)) {
-            $out['tweets'] = $tweets;
-        }
-        $images = $this->getOneSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_IMAGE);
-        if (!empty($images)) {
-            $out['images'] = $images;
-        }
-        $videos = $this->getOneSocial($code, Sm::TYPE_TWITTER, Sm::SUBTYPE_VIDEO);
-        if (!empty($videos)) {
-            $out['videos'] = $videos;
+        if ($fields) {
+            $socialMedia = $this->getSelectSocial($socialMedia, $fields);
         }
 
-        return $out;
+        return $socialMedia;
     }
 
 
-    public function getGooglePlusFollowers($code) {
-        return $this->getStat($code, Stat::TYPE_GOOGLEPLUS, Stat::SUBTYPE_FOLLOWERS);
-    }
+    /**
+    * Builds an array of select fields to return to the API
+    * @param  object $socialMedia
+    * @param  string $fields
+    * @return array
+    */
+    public function getSelectSocial($socialMedia, $fields) {
 
-    public function getYoutubeData($code) {
-        $out = [
-            'subscribers' => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_SUBSCRIBERS),
-            'views'       => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_VIEWS),
-            'videoCount'  => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_VIDEOS),
-        ];
+        $fields = str_replace(' ', '', $fields);
+        $terms  = explode(',', $fields);
 
-        $videos = $this->getOneSocial($code, Sm::TYPE_YOUTUBE, Sm::SUBTYPE_VIDEO);
-        if (!empty($videos)) {
-            $out['videos'] = $videos;
+        foreach ($socialMedia as $social) {
+            $data = $social->getPostData();
+            $temp = [
+                'code'     => $social->getCode(),
+                'type'     => $social->getType(),
+                'sub_type' => $social->getSubType(),
+                'post_id'  => $data['id'],
+                // 'postData' => $data
+                ];
+
+            foreach ($terms as $field) {
+
+                if ($field == 'time') {
+                    if ($temp['sub_type'] != 'E') {
+                        $temp['post_'.$field] = isset($data['posted']) ? $data['posted'] : null;
+
+                    } else $temp['post_'.$field] = isset($data['start_time']) ? $data['start_time'] : null;
+
+                } else if ($field == 'shares' && $temp['type'] == 'tw') {
+                    $temp['post_'.$field] = isset($data['retweets']) ? $data['retweets'] : null;
+
+                } else $temp['post_'.$field] = isset($data[$field]) ? $data[$field] : null;
+
+            }
+
+            $out[] = $temp;
         }
 
         return $out;
@@ -203,59 +215,6 @@ class BaseController extends Controller
         }
 
         return $meta->getValue();
-    }
-
-
-    /**
-    * Queries for a single type of social media (used on this page)
-    * @param  string $code
-    * @param  string $type
-    * @param  string $subType
-    * @return SocialMedia
-    */
-    public function getOneSocial($code, $type, $subType) {
-        $socialMedia = $this->getDoctrine()
-            ->getRepository('AppBundle:SocialMedia')
-            ->findBy(['code' => $code, 'type' => $type, 'subType' => $subType]);
-
-        if (!$socialMedia) {
-            return false;
-        }
-
-        return $socialMedia;
-    }
-
-
-    /**
-    * Queries for all social media (used by ApiController)
-    * @param  string $code
-    * @param  string $type
-    * @param  string $subType
-    * @param  string $orderBy
-    * @param  int    $limit
-    * @param  int    $offset
-    * @return array
-    */
-    public function getAllSocial($code = null, $type = null, $subType = null, $orderBy = 'code', $limit = 100, $offset = 0) {
-        $social = $this->getDoctrine()
-            ->getRepository('AppBundle:SocialMedia');
-
-        $terms = [];
-        $direction = ($orderBy == 'code') ? 'ASC' : 'DESC';
-
-        if ($code) {
-            $terms['code'] = $code;
-        }
-        if ($type) {
-            $terms['type'] = $type;
-        }
-        if ($subType) {
-            $terms['subType'] = $subType;
-        }
-
-        $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
-
-        return $socialMedia;
     }
 
 }

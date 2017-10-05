@@ -14,8 +14,9 @@
 
     "minimum-stability": "alpha",
     "require": {
-        "php": ">=5.5.0",
+        "php": ">=7.0.0",
         "ext-imagick": "*",
+        "deployer/deployer": "^5.0",
         "symfony/symfony": "2.8.*",
         "doctrine/orm": "^2.4.8",
         "doctrine/doctrine-bundle": "~1.4",
@@ -66,7 +67,7 @@
     "config": {
         "bin-dir": "bin",
         "platform": {
-            "php": "5.6.18"
+            "php": "7.0.0"
         }
 
     },

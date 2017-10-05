@@ -11,7 +11,7 @@ This repo includes all the data that the API serves. All data updates go through
 
 ## 1) Prerequesits
 
-Nginx, php5-fpm, MySQL
+Nginx, php5-fpm, MySQL >5.5
 
 ## 2) Deployment (development)
 
@@ -76,7 +76,7 @@ Run fixtures import
 
     php app/console doctrine:fixtures:load
 
-Than run the data import:
+Then run the data import:
 
     php app/console papi:loadData
 
@@ -84,8 +84,8 @@ Than run the data import:
 
 ## Production deploy
 
-Install capistrano & caponify
-http://capifony.org/
+Install capistrano & capifony
+http://everzet.github.io/capifony/
 
 Install rest via manual deploy
 

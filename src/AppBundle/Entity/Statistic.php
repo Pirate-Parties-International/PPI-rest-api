@@ -18,8 +18,8 @@ class Statistic
     const TYPE_YOUTUBE    = 'yt';
 
     const SUBTYPE_LIKES       = 'L';
-    const SUBTYPE_TALKING     = 'T';
-    const SUBTYPE_POSTS       = 'P';
+    const SUBTYPE_TALKING     = 'A';
+    const SUBTYPE_POSTS       = 'T';
     const SUBTYPE_IMAGES      = 'I';
     const SUBTYPE_EVENTS      = 'E';
     const SUBTYPE_FOLLOWERS   = 'F';
@@ -61,7 +61,7 @@ class Statistic
     /**
      * @var int
      *
-     * @ORM\Column(name="value", type="integer")
+     * @ORM\Column(name="value", type="integer", nullable=true)
      */
     private $value;
 
@@ -140,7 +140,7 @@ class Statistic
      */
     public function setValue($value)
     {
-        $this->value = $value;
+        $this->value = is_int($value) ? $value : null;
 
         return $this;
     }

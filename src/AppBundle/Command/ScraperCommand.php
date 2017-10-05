@@ -22,7 +22,7 @@ class ScraperCommand extends ContainerAwareCommand
             ->setDescription('Scrapes FB, TW and G+ data. Should be run once per day.')
             ->addOption('party',  'p', InputOption::VALUE_OPTIONAL, 'Choose a single party to scrape, by code (i.e. ppse, ppsi)')
             ->addOption('site',   'w', InputOption::VALUE_OPTIONAL, 'Choose a single website to scrape (fb, tw, g+ or yt)')
-            ->addOption('data',   'd', InputOption::VALUE_OPTIONAL, 'Choose a single data type to scrape, fb only (info, posts or events)')
+            ->addOption('data',   'd', InputOption::VALUE_OPTIONAL, 'Choose a single data type to scrape, fb only (info, posts, images or events)')
             ->addOption('resume', 'r', InputOption::VALUE_OPTIONAL, 'Choose a point to resume scraping, by party code (e.g. if previously interrupted)')
             ->addOption('full',   'f', InputOption::VALUE_NONE,     'Scrape all data, overwriting db (by default, only posts more recent than the latest db entry are scraped)')
         ;
@@ -33,21 +33,8 @@ class ScraperCommand extends ContainerAwareCommand
         $full  = $input->getOption('full');   // if null, get most recent posts only
         $who   = $input->getOption('party');  // if null, get all
         $where = $input->getOption('site');   // if null, get all
-        $when  = $input->getOption('resume'); // if null, get all
         $what  = $input->getOption('data');   // if null, get all
-        switch ($what) {
-            case 'text':
-                $what = 'posts';
-                break;
-            case 'photos':
-                $what = 'images';
-                break;
-            case 'data':
-            case 'basic':
-            case 'stats':
-                $what = 'info';
-                break;
-        }
+        $when  = $input->getOption('resume'); // if null, get all
 
         $this->container = $this->getContainer();
         $this->em = $this->container->get('doctrine')->getManager();
@@ -61,6 +48,13 @@ class ScraperCommand extends ContainerAwareCommand
         $output->writeln("##### Starting scraper #####");
         $startTime = new \DateTime('now');
 
+        // Verify argument search terms
+        $verified = $this->verifySearchTerms($what, $where);
+        if (isset($verified)) {
+            $what  = $verified;
+            $where = 'fb';
+        }
+
         if (empty($who)) {
             $output->writeln("# Getting all parties");
             $parties = $scraperService->getAllParties();
@@ -71,23 +65,11 @@ class ScraperCommand extends ContainerAwareCommand
             $output->writeln("Done");
         }
 
-        // Verify argument search terms
-        if ($where != null && $where != 'yt' && $where != 'g+' && $where != 'tw' && $where != 'fb') {
-            $output->writeln("   + ERROR - Search term \"". $where ."\" not recognised");
-            $output->writeln("# Process halted");
-            die;
-        }
-        if ($what != null && $where != 'fb') {
-            $output->writeln("   + ERROR - Search term \"". $what ."\" only valid when limited to Facebook");
-            $output->writeln("# Process halted");
-            die;
-        }
-
         foreach ($parties as $code => $party) {
             if (!empty($when) && $code < $when) {
                 echo " - ".$code." skipped...\n";
             } else {
-                $output->writeln(" - Processing " . $code);
+                $output->writeln(" + Processing " . $code);
                 $sn = $party->getSocialNetworks();
                 $midTime = new \DateTime('now');
 
@@ -129,6 +111,86 @@ class ScraperCommand extends ContainerAwareCommand
         
     }
 
+    public function verifySearchTerms($data, $site) {
+        $out = null;
+
+        switch ($site) {
+            case null:
+                $siteName = null;
+                break;
+            case 'fb':
+                $siteName = "Facebook";
+                break;
+            case 'tw':
+                $siteName = "Twitter";
+                break;
+            case 'g+':
+                $siteName = "Google+";
+                break;
+            case 'yt':
+                $siteName = "YouTube";
+                break;
+            default:
+                echo "   - ERROR: Search term \"". $site ."\" not recognised\n";
+                echo "# Process halted\n";
+                exit;
+        }
+
+        if ($data) {
+            switch ($data) {
+                case 'info':
+                case 'data':
+                case 'basic':
+                case 'stats':
+                    $out = 'info';
+                    $dataName = "basic information";
+                    break;
+                case 'posts':
+                case 'text':
+                case 'statuses':
+                    $out = 'posts';
+                    $dataName = "text posts and videos";
+                    break;
+                case 'photos':
+                case 'images':
+                case 'pictures':
+                    $out = 'images';
+                    $dataName = "images";
+                    break;
+                case 'events':
+                    $out = 'events';
+                    $dataName = "events";
+                    break;
+                case 'videos':
+                    echo "   - ERROR: Videos are included with text posts and can not be scraped separately\n";
+                    echo "# Process halted\n";
+                    exit;
+                default:
+                    echo "   - ERROR: Search term \"". $data ."\" is not valid\n";
+                    echo "# Process halted\n";
+                    exit;
+            }
+
+            switch ($site) {
+                case 'fb':
+                case null:
+                    break;
+                default:
+                    echo "   - ERROR: Search term \"". $data ."\" is only valid for Facebook\n";
+                    echo "# Process halted\n";
+                    exit;
+            }
+
+            echo "### Scraping Facebook for ".$dataName." only\n";
+        } else if ($siteName) {
+            echo "### Scraping ".$siteName." for all data\n";
+        } else {
+            echo "### Scraping all sites for all data\n";
+        }
+
+        return $out;
+    }
+
 
     //
     // FACEBOOK
@@ -143,7 +205,7 @@ class ScraperCommand extends ContainerAwareCommand
 
             if ($what == null || $what == 'info') {
                 if ($fd == false || empty($fd['likes'])) {
-                    $output->writeln("     + ERROR while retrieving FB data");
+                    $output->writeln("     - ERROR while retrieving FB data");
                     $sn['errors'][] = [$code => 'fb'];
                 } else {
                     $output->writeln("   + Facebook data retrieved");
@@ -205,7 +267,7 @@ class ScraperCommand extends ContainerAwareCommand
                     $output->writeln("   + All statistics added");
 
                     if (is_null($fd['cover'])) {
-                        $output->writeln("     + No cover found");
+                        $output->writeln("     - No cover found");
                         $sn['errors'][] = [$code => 'fb cover not found'];
                     } else {
                         $cover = $facebookService->getFacebookCover($code, $fd['cover']);
@@ -223,7 +285,7 @@ class ScraperCommand extends ContainerAwareCommand
 
             if ($what == null || $what == 'posts') {
                 if (empty($fd['posts'])) {
-                    $output->writeln("     + No posts found");
+                    $output->writeln("     - No posts found");
                     $sn['errors'][] = [$code => 'fb posts not found'];
                 } else {
                     $output->writeln("     + Adding text posts");
@@ -237,14 +299,14 @@ class ScraperCommand extends ContainerAwareCommand
                             $post['postText'],
                             $post['postImage'],
                             $post['postLikes'],
-                            json_encode($post['postData'])
+                            $post['postData']
                         );
                     }
                     $output->writeln("       + Text posts added");
                 }
 
                 if (empty($fd['videos'])) {
-                    $output->writeln("     + No videos found");
+                    $output->writeln("     - No videos found");
                 } else {
                     $output->writeln("     + Adding videos");
                     foreach ($fd['videos'] as $key => $image) {
@@ -257,7 +319,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $image['postText'],
                             $image['postImage'],
                             $image['postLikes'],
-                            json_encode($image['postData'])
+                            $image['postData']
                         );
                     }
                     $output->writeln("       + Videos added");
@@ -266,7 +328,7 @@ class ScraperCommand extends ContainerAwareCommand
 
             if ($what == null || $what == 'images') {
                 if (empty($fd['photos'])) {
-                    $output->writeln("     + No photos found");
+                    $output->writeln("     - No photos found");
                     $sn['errors'][] = [$code => 'fb photos not found'];
                 } else {
                     $output->writeln("     + Adding photos");
@@ -280,7 +342,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $image['postText'],
                             $image['postImage'],
                             $image['postLikes'],
-                            json_encode($image['postData'])
+                            $image['postData']
                         );
                     }
                     $output->writeln("       + Photos added");
@@ -289,7 +351,7 @@ class ScraperCommand extends ContainerAwareCommand
 
             if ($what == null || $what == 'events') {
                 if (empty($fd['events'])) {
-                    $output->writeln("     + Event data not found");
+                    $output->writeln("     - Event data not found");
                     $sn['errors'][] = [$code => 'fb events not found'];
                 } else {
                     foreach ($fd['events'] as $key => $event) {
@@ -302,7 +364,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $event['postText'],
                             $event['postImage'],
                             $event['postLikes'],
-                            json_encode($event['postData'])
+                            $event['postData']
                         );
                     }
                     $output->writeln("     + Events added");
@@ -326,7 +388,7 @@ class ScraperCommand extends ContainerAwareCommand
             $td = $twitterService->getTwitterData($sn['twitter']['username'], $code, $full);
 
             if ($td == false || empty($td['followers']) || empty($td['tweets'])) {
-                $output->writeln("     + ERROR while retrieving TW data");
+                $output->writeln("     - ERROR while retrieving TW data");
                 $sn['errors'][] = [$code => 'tw'];
             } else {
                 $output->writeln("   + Twitter data retrieved");
@@ -372,9 +434,10 @@ class ScraperCommand extends ContainerAwareCommand
                 $output->writeln("   + All statistics added");
 
                 if (empty($td['posts'])) {
-                    $output->writeln("     + Tweet data not found");
+                    $output->writeln("     - Tweet data not found");
                     $sn['errors'][] = [$code => 'tw posts'];
                 } else {
+                    $output->writeln("     + Adding text tweets");
                     foreach ($td['posts'] as $key => $post) {
                         $scraperService->addSocial(
                             $code,
@@ -385,16 +448,17 @@ class ScraperCommand extends ContainerAwareCommand
                             $post['postText'],
                             $post['postImage'],
                             $post['postLikes'],
-                            json_encode($post['postData'])
+                            $post['postData']
                         );
                     }
-                    $output->writeln("     + Tweets added");
+                    $output->writeln("       + Text tweets added");
                 }
 
                 if (empty($td['images'])) {
-                    $output->writeln("     + Image data not found");
+                    $output->writeln("     - Image data not found");
                     $sn['errors'][] = [$code => 'tw images'];
                 } else {
+                    $output->writeln("     + Adding images");
                     foreach ($td['images'] as $key => $image) {
                         $scraperService->addSocial(
                             $code,
@@ -405,11 +469,13 @@ class ScraperCommand extends ContainerAwareCommand
                             $image['postText'],
                             $image['postImage'],
                             $image['postLikes'],
-                            json_encode($image['postData'])
+                            $image['postData']
                         );
                     }
+                    $output->writeln("       + Images added");
 
                     if (!empty($td['videos'])) {
+                        $output->writeln("     + Adding videos");
                         foreach ($td['videos'] as $key => $video) {
                             $scraperService->addSocial(
                                 $code,
@@ -420,11 +486,11 @@ class ScraperCommand extends ContainerAwareCommand
                                 $image['postText'],
                                 $image['postImage'],
                                 $image['postLikes'],
-                                json_encode($image['postData'])
+                                $image['postData']
                             );
                         }
+                        $output->writeln("       + Videos added");
                     }
-                    $output->writeln("     + Images and videos added");
                 }
 
                 $output->writeln("   + All Twitter data added");
@@ -445,7 +511,7 @@ class ScraperCommand extends ContainerAwareCommand
             $gd = $googleService->getGooglePlusData($sn['googlePlus']);
 
             if ($gd == false || empty($gd)) {
-                $output->writeln("     + ERROR while retrieving G+ data");
+                $output->writeln("     - ERROR while retrieving G+ data");
                 $sn['errors'][] = [$code => 'g+'];
             } else {
                 $output->writeln("     + GooglePlus data retrieved");
@@ -475,7 +541,7 @@ class ScraperCommand extends ContainerAwareCommand
             $yd = $googleService->getYoutubeData($sn['youtube'], $code);
 
             if ($yd == false || empty($yd)) {
-                $output->writeln("     + ERROR while retrieving Youtube data");
+                $output->writeln("     - ERROR while retrieving Youtube data");
                 $sn['errors'][] = [$code => 'yt'];
             } else {
                 $output->writeln("   + Youtube data retrieved");
@@ -506,7 +572,7 @@ class ScraperCommand extends ContainerAwareCommand
                 $output->writeln("   + All statistics added");
 
                 if (empty($yd['videos'])) {
-                    $output->writeln("     + Video data not found");
+                    $output->writeln("     - Video data not found");
                     $sn['errors'][] = [$code => 'yt'];
                 } else {
                     foreach ($yd['videos'] as $key => $video) {
@@ -519,7 +585,7 @@ class ScraperCommand extends ContainerAwareCommand
                             $video['postText'],
                             $video['postImage'],
                             $video['postLikes'],
-                            json_encode($video['postData'])
+                            $video['postData']
                         );
                     }
                     $output->writeln("     + Videos added");

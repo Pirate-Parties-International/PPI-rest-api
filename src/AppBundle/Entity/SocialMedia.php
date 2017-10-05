@@ -74,7 +74,7 @@ class SocialMedia
     /**
      * @var string
      *
-     * @ORM\Column(name="postText", type="string", nullable=true)
+     * @ORM\Column(name="postText", type="text", nullable=true)
      */
     private $postText;
 
@@ -88,7 +88,7 @@ class SocialMedia
     /**
     * @var integer
     *
-    * @ORM\Column(name="postLikes", type="integer")
+    * @ORM\Column(name="postLikes", type="integer", nullable=true)
     */
     private $postLikes;
 
@@ -330,7 +330,7 @@ class SocialMedia
      */
     public function setPostData($postData)
     {
-        $this->postData = $postData;
+        $this->postData = json_encode($postData);
 
         return $this;
     }
