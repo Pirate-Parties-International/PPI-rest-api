@@ -582,6 +582,14 @@ class FacebookService extends ScraperServices
                             $imgBkp = null;
                         }
 
+                        if ($imgSrc && strpos($imgSrc, 'external.xx.fbcdn.net')) {
+                            $stPos  = strpos($imgSrc, '&url=')+5;
+                            $edPos  = strpos($imgSrc, '&cfs=');
+                            $length = $edPos - $stPos;
+                            $temp   = substr($imgSrc, $stPos, $length);
+                            $imgSrc = urldecode($temp);
+                        }
+
                         $img  = $imgSrc ? $scraper->saveImage('fb', $code, $imgSrc, $post->getField('id'), $imgBkp) :  null;
                         $text = !empty($post->getField('message')) ? $post->getField('message') : $post->getField('story');
 
