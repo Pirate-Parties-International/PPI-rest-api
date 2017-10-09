@@ -566,8 +566,18 @@ class FacebookService extends ScraperServices
                         // $img = null;
                         if ($type == 'video') {
                             $temp = $post->getField('link');
-                            if (strpos($temp, 'youtube')) {
-                                $idPos  = strpos($temp, 'v=') ? strpos($temp, 'v=')+2 : strpos($temp, 'v%3')+3;
+                            if (strpos($temp, 'youtu')) { // youtube.com or youtu.be
+
+                                $temp = urldecode($temp);
+                                switch (true) {
+                                    case strpos($temp, 'v='):
+                                        $idPos = strpos($temp, 'v=')+2;
+                                        break;
+                                    case strpos($temp, 'youtu.be/'):
+                                        $idPos = strpos($temp, '.be/')+4;
+                                        break;
+                                    }
+
                                 $vidId  = substr($temp, $idPos, 11);
                                 $imgSrc = "https://img.youtube.com/vi/".$vidId."/mqdefault.jpg"; // 320x180 (only 16:9 option)
                                 // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480 (all 4:3 w/ letterbox)
