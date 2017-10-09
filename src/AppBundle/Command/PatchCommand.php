@@ -12,8 +12,7 @@ use Pirates\PapiInfo\Compile;
 
 class PatchCommand extends ContainerAwareCommand
 {
-	protected function configure()
-	{
+	protected function configure() {
 		$this
 			->setName('papi:patch')
 			->setDescription('Patches existing db entries')
@@ -24,8 +23,7 @@ class PatchCommand extends ContainerAwareCommand
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
+    protected function execute(InputInterface $input, OutputInterface $output) {
         $this->container = $this->getContainer();
         $this->em = $this->container->get('doctrine')->getManager();
 
@@ -73,7 +71,12 @@ class PatchCommand extends ContainerAwareCommand
 
 
 /////
-// stat codes
+// stat codes (--stats, -x)
+//
+// The scraper originally logged stats for tw-T (for 'Tweets').
+// When we started scraping Facebook too, this was changed to P (for 'Posts') as fb-T was used for the 'Talking About' stat.
+// The scraper has been altered to log them as T again (for 'Text') to make them consistent with the older stats.
+// This patch changes those stats that are already in the database back to T, and changes fb-T to fb-A.
 /////
     public function patchStatCodes() {
         $posts = $this->em->getRepository('AppBundle:Statistic')->findBy(['subType' => 'P']);
@@ -133,7 +136,12 @@ class PatchCommand extends ContainerAwareCommand
 
 
 /////
-// postData array keys
+// postData array keys (--postdata, -p)
+//
+// The scraper originally logged data from different sources using each site's original term for the fields.
+// e.g. Twitter has 'text' where Facebook has 'message', 'story' or 'caption', depending on the post type.
+// The scraper has been updated to use consistent field names for all sites, making it easier for the api.
+// This patch alters these fields for posts already in the database.
 /////
     public function patchPostData() {
         echo "  Getting posts from DB...\n";
@@ -210,7 +218,12 @@ class PatchCommand extends ContainerAwareCommand
 
 
 /////
-// Charset for 'postText' field
+// Charset for 'postText' field (--charset, -c)
+//
+// The database was originally encoded to utf8, which is the standard.
+// This made it impossible to log 4-byte characters, such as emojis or certain languages like Japanese and Chinese.
+// This meant that the scraper often failed when trying to save social media posts.
+// This patch alters the social media postText field to use utf8mb4, which supports 4-byte characters.
 /////
     public function patchCharset() {
     	$old = $this->checkCharset();
@@ -281,14 +294,13 @@ class PatchCommand extends ContainerAwareCommand
 
 
 /////
-// Twitter images
+// Twitter images (--twitter, -t)
+//
+// The scraper originally logged incorrect IDs for linking back to Twitter images and videos.
+// The scraper has been updated to correct this issue.
+// This patch fixes old databse entries by taking the correct data from the postUrl and applying it to the postId.
 /////
-
-    /**
-     * Finds all Twitter images and videos to patch
-     */
-    public function patchTwitterImages()
-    {
+    public function patchTwitterImages() {
         $smRepo = $this->em->getRepository('AppBundle:SocialMedia');
         $twImgs = $smRepo->findBy(['type' => 'tw', 'subType' => 'i']);
         $twVids = $smRepo->findBy(['type' => 'tw', 'subType' => 'v']);
@@ -309,8 +321,7 @@ class PatchCommand extends ContainerAwareCommand
 	 * Validates postId by comparing to postUrl
 	 * Replaces postId if invalid
 	 */
-	public function getPostIdFromUrl($post)
-	{
+	public function getPostIdFromUrl($post) {
 		$oldId = $post->getPostId();
 		echo "  postId = ".$oldId;
 		$postData = $post->getPostData();
