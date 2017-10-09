@@ -20,6 +20,7 @@ class PatchCommand extends ContainerAwareCommand
             ->addOption('charset',  'c', InputOption::VALUE_NONE, "Convert 'postText' field to utf8mb4 character set")
             ->addOption('postdata', 'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
             ->addOption('stats',    'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
+            ->addOption('decode',   'd', InputOption::VALUE_NONE, "Decodes Facebook's external urls for img_source field")
         ;
     }
 
@@ -50,6 +51,10 @@ class PatchCommand extends ContainerAwareCommand
                 $output->writeln("##### Patching stat codes #####");
                 $this->patchStatCodes();
                 break;
+            case $input->getOption('decode');
+                $output->writeln("##### Patching encoded urls #####");
+                $this->patchEncodedUrls();
+                break;
             default:
                 $output->writeln("Invalid option.");
         }
@@ -67,6 +72,52 @@ class PatchCommand extends ContainerAwareCommand
             echo "  Process aborted.\n";
             exit;
         }
+    }
+
+
+/////
+// decoding urls (--decode, -d)
+//
+// Facebook's external image urls are encoded by default.
+// The scraper has been updated to decode these before saving them to the database.
+// This patch finds encoded urls in the database and decodes them.
+/////
+    public function patchEncodedUrls () {
+        $this->getConfirmation();
+
+        echo "  Checking database... ";
+        $posts = $this->em->getRepository('AppBundle:SocialMedia')->findBy(['type' => 'fb']);
+
+        echo "patching...";
+        $patchCount = 0;
+        foreach ($posts as $post) {
+            $data   = $post->getPostData();
+            $imgSrc = $data['img_source'];
+
+            if ($imgSrc && strpos($imgSrc, 'external.xx.fbcdn.net')) {
+                $stPos  = strpos($imgSrc, '&url=')+5;
+                $edPos  = strpos($imgSrc, '&cfs=');
+                $length = $edPos - $stPos;
+                $temp   = substr($imgSrc, $stPos, $length);
+                $imgSrc = urldecode($temp);
+
+                $data['img_source'] = $imgSrc;
+                $post->setPostData($data);
+                $this->em->persist($post);
+
+                $patchCount++;
+                echo ".";
+            }
+        }
+
+        if (!$patchCount) {
+            echo "\n  The database is up to date. No patch needed.\n";
+            exit;
+        }
+
+        echo "\n  ".$patchCount." entries patched... saving to DB...\n";
+        $this->em->flush();
+        echo "  All done.\n";
     }
 
 
