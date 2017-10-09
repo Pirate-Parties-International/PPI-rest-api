@@ -97,13 +97,16 @@ class BaseController extends Controller
     * @param  int    $offset  <optional>
     * @return array
     */
-    public function getAllSocial($code = null, $type = null, $subType = null, $fields = null, $orderBy = null, $limit = 100, $offset = 0) {
+    public function getAllSocial($code = null, $type = null, $subType = null, $fields = null, $orderBy = null, $direction = null, $limit = 100, $offset = 0) {
         $social = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia');
 
-        $terms = [];
+        $terms   = [];
         $orderBy = is_null($orderBy) ? 'postTime' : $orderBy;
-        $direction = ($orderBy == 'code') ? 'ASC' : 'DESC';
+
+        if (!$direction) {
+            $direction = ($orderBy == 'code') ? 'ASC' : 'DESC';
+        }
 
         if ($code) {
             $terms['code'] = $code;
