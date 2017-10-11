@@ -8,7 +8,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 class TemplateController extends Controller
 {
     /**
-     * @Route("/template/listPictures")
+     * @Route("/social/pictures")
      */
     public function listPicturesAction()
     {
@@ -18,7 +18,7 @@ class TemplateController extends Controller
     }
 
     /**
-     * @Route("template/listPosts")
+     * @Route("social/posts")
      */
     public function listPostsAction()
     {
