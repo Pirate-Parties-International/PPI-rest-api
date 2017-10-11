@@ -140,6 +140,7 @@ class ApiController extends DataController
      *      {"name"="fields", "dataType"="string", "requied"="false", "description"="Choose specific fields to be returned, separated by commas (e.g. 'text,time,img_source')",
      *          "pattern"="time | updated | text | description | image | img_source | album | link | url | likes | reactions | comments | shares | views | place | address | attending | interested"},
      *      {"name"="order_by", "dataType"="string", "required"="false", "description"="Order to return results", "pattern"="code | likes | date"},
+     *      {"name"="direction", "dataType"="string", "required"="false", "description"="Order to sort results", "pattern"="asc | desc"},
      *      {"name"="limit", "dataType"="int", "required"="false", "description"="Number of results to return (default 100)"},
      *      {"name"="offset", "dataType"="int", "required"="false", "description"="Start point of results"}
      *  },
@@ -152,13 +153,14 @@ class ApiController extends DataController
      */
     public function socialAction() {
 
-        $code    = isset($_GET['code'])     ? $_GET['code']     : null;
-        $type    = isset($_GET['type'])     ? $_GET['type']     : null;
-        $subType = isset($_GET['sub_type']) ? $_GET['sub_type'] : null;
-        $fields  = isset($_GET['fields'])   ? $_GET['fields']   : null;
-        $orderBy = isset($_GET['order_by']) ? $_GET['order_by'] : null;
-        $limit   = isset($_GET['limit'])    ? $_GET['limit']    : 100;
-        $offset  = isset($_GET['offset'])   ? $_GET['offset']   : 0;
+        $code      = isset($_GET['code'])      ? $_GET['code']      : null;
+        $type      = isset($_GET['type'])      ? $_GET['type']      : null;
+        $subType   = isset($_GET['sub_type'])  ? $_GET['sub_type']  : null;
+        $fields    = isset($_GET['fields'])    ? $_GET['fields']    : null;
+        $orderBy   = isset($_GET['order_by'])  ? $_GET['order_by']  : null;
+        $direction = isset($_GET['direction']) ? $_GET['direction'] : null;
+        $limit     = isset($_GET['limit'])     ? $_GET['limit']     : 100;
+        $offset    = isset($_GET['offset'])    ? $_GET['offset']    : 0;
 
         switch ($orderBy) {
             case null:
@@ -177,8 +179,18 @@ class ApiController extends DataController
                 return new JsonResponse(array("error"=>"Bad request: '".$orderBy."' is not a valid parameter for the field 'order_by'."), 400);
         }
 
+        $direction = isset($direction) ? strtoupper($direction) : null;
+        switch ($direction) {
+            case null;
+            case 'ASC':
+            case 'DESC':
+                break;
+            default:
+                return new JsonResponse(array("error"=>"Bad request: '".$direction."' is not a valid parameter for the field 'direction'."), 400);
+        }
+
         // run through BaseController
-        $data = $this->getAllSocial($code, $type, $subType, $fields, $orderBy, $limit, $offset);
+        $data = $this->getAllSocial($code, $type, $subType, $fields, $orderBy, $direction, $limit, $offset);
 
         if (empty($data)) {
             return new JsonResponse(array("error"=>"No data found."), 404);
