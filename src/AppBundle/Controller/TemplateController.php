@@ -8,7 +8,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 class TemplateController extends Controller
 {
     /**
-     * @Route("/template/listPictures")
+     * @Route("/social/pictures", name="papi_social_pictures")
      */
     public function listPicturesAction()
     {
@@ -18,13 +18,26 @@ class TemplateController extends Controller
     }
 
     /**
-     * @Route("template/listPosts")
+     * @Route("social/posts", name="papi_social_posts")
      */
     public function listPostsAction()
     {
         return $this->render('AppBundle:Template:list_posts.html.twig', array(
             // ...
         ));
+    }
+
+    /**
+     * @Route("template/{id}")
+     */
+    public function redirectAction($id)
+    {
+        switch ($id) {
+            case 'listPictures':
+                return $this->redirectToRoute('papi_social_pictures');
+            case 'listPosts':
+                return $this->redirectToRoute('papi_social_posts');
+            }
     }
 
 }
