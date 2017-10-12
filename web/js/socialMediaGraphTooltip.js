@@ -3,7 +3,7 @@
         sessionStorage.clear();
 
         // address of the api 
-        var partyApiAddress = "/api/v1/history/party/" + partyCode;
+        var partyApiAddress = "http://api.piratetimes.net/api/v1/history/party/" + partyCode;
         //get data through the api
         var getData = $.get(partyApiAddress)
             .done(function(data) {
@@ -12,21 +12,30 @@
         //data is gotten with a delay as such a promise
         $.when(getData).done(function(socialMediaStats) {
             var selectedDataType;
-            var currentDate = new Date();
+            var currentDate = new Date()
+            //get month (becuase .getMonth() gives you a number between 0 and 11)
+            var month = parseInt(currentDate.getMonth()) + 1
             //current date in yyyy-mm-dd
-            var formatedCurrentDate = currentDate.getFullYear() + "-" + currentDate.getMonth() + "-" + currentDate.getDay();
+            var formatedCurrentDate = currentDate.getFullYear() + "-" + month + "-" + currentDate.getDate();
             //transforms current date into unix time
             var parsedDate = Date.parse(formatedCurrentDate);
             // roughly half a year in miliseconds, not accountig for leap years;
-            var HalfAyearInMS = 15778463000;
+            var HalfAyearInMS = 15778463000*2;
             var objectIndex = 0;
-
             var socialMediaDates = [];
+            var isoDate
+
+             
+            //turns the object int an array
+            var socialMediaStatsArray = $.map(socialMediaStats, function(value, index) {
+                return [value];
+            }); 
+            var statsArrayLength = socialMediaStatsArray.length -1
+
             //goes though the entire object
-            for (date in socialMediaStats) {
-                //converts the date property in the object into unix time
-                var isoDate = Date.parse(date);
-                //we are only interested in data from the last half year and only one each week
+            for (var i = statsArrayLength; i > 0; i--){
+                isoDate = Date.parse(socialMediaStatsArray[i]["date"]);
+
                 if ((isoDate >= (parsedDate - HalfAyearInMS)) && (objectIndex === 0)) {
                     //converts date to iso string
                     isoDate = new Date(isoDate).toISOString();
@@ -39,12 +48,15 @@
                 if (objectIndex === 7) {
                     objectIndex = 0;
                 };
+
             }
+            console.log(socialMediaDates)
+
             sessionStorage["socialMediaDates"] = JSON.stringify(socialMediaDates);
             sessionStorage["allSocialMediaStats"] = JSON.stringify(socialMediaStats);
             //function sets css for one of the three buttons above the graph
             function settingButtonCSS(selectedDataType) {
-                $('#' + selectedDataType + '-stat').addClass("white-text blue-grey lighten-3").removeClass("white grey-text");
+                $("#" + selectedDataType + "-stat").addClass("white-text blue-grey lighten-3").removeClass("white grey-text");
                 //if there is no info for twitter, facebook or youtube, the area remains hidden
                 $("#scm-graph-area").removeClass("hide");
             };
@@ -99,10 +111,13 @@
                     break;
             };
 
-            google.charts.load('current', { packages: ['corechart', 'line'] });
+            google.charts.load("current", { packages: ["corechart", "line"] });
             // calls function that creates graph
             google.charts.setOnLoadCallback(function() { drawBasic(dataset, SocialMediaType[0], SocialMediaType[1]) });
-
+            //adds responsivness to the graph
+            window.addEventListener("resize", function() {
+                google.charts.setOnLoadCallback(function() { drawBasic(dataset, SocialMediaType[0], SocialMediaType[1]) });
+            });
         };
         // calls function that creates graphs data and changes the clicked button so that we know what is selected
         $(".SocialMediaStatsButton").on("click", function() {
@@ -121,26 +136,26 @@
         function drawBasic(dataset, SocialMediaType, SocialMediaTitle) {
             var data = new google.visualization.DataTable();
             var graphWidth;
-            data.addColumn('date', 'date');
-            data.addColumn('number', SocialMediaType);
+            data.addColumn("date", "date");
+            data.addColumn("number", SocialMediaType);
             data.addRows(dataset);
 
             var options = {
                 hAxis: {
-                    title: 'Time'
+                    title: "Time"
                 },
                 vAxis: {
-                    title: 'Popularity',
-                    format: '0'
+                    title: "Popularity",
+                    format: "0"
                 },
-                legend: 'none',
+                legend: "none",
                 'title': SocialMediaTitle,
                 chartArea: {
                     left: 100,
                     right: 10
                 }
             };
-            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+            var chart = new google.visualization.LineChart(document.getElementById("chart_div"));
             chart.draw(data, options);
         };
 
