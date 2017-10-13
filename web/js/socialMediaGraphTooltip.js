@@ -1,7 +1,7 @@
 (function($) {
     $(function() {
         sessionStorage.clear();
-        var partyApiAddress = "http://api.piratetimes.net/api/v1/history/party/" + partyCode;
+        var partyApiAddress = "/api/v1/history/party/" + partyCode;
         var selectedSocialMediaPlatform;
          // roughly half a year in miliseconds, not accountig for leap years;
         var HalfAyearInMS = 15778463000;
