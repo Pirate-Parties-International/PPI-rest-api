@@ -1,5 +1,6 @@
 (function($) {
     $(function() {
+        google.charts.load("current", { packages: ["corechart", "line"] });
         sessionStorage.clear();
         var partyApiAddress = "/api/v1/history/party/" + partyCode;
         var selectedSocialMediaPlatform;
@@ -12,7 +13,6 @@
 
         var getData = $.get(partyApiAddress)
             .done(function(data) {
-                console.log("TEST")
                 return data;
             });
 
@@ -23,7 +23,7 @@
             day = date.getDate()
 
             return Date.parse([year, month, day].join("-"));
-        } 
+        };
 
         function getExactDatesForLastSixMonths(socialMediaStats) {
             everySeventhDateCounter = 0
@@ -43,15 +43,15 @@
                     //change the date into YYYY-MM-DD format, by only showing the first 10 letters
                     isoDate = isoDate.substring(0, 10);
                     socialMediaDates.push(isoDate);
-                };
+                }
                 everySeventhDateCounter ++;
                 if (everySeventhDateCounter === 7) {
                     everySeventhDateCounter = 0;
-                };
+                }
 
             }
             return socialMediaDates
-        }
+        };
 
         function settingButtonCSS(selectedSocialMediaPlatform) {
             $("#" + selectedSocialMediaPlatform + "-stat").addClass("white-text blue-grey lighten-3").removeClass("white grey-text");
@@ -59,7 +59,7 @@
             $("#scm-graph-area").removeClass("hide");
         };
 
-        function prepareSocialMediaGraphDate (dataType) {
+        function prepareSocialMediaGraphData (dataType) {
             // will contain dataset of the graph
             var dataset = [];
             var socialMediaStats = [];
@@ -92,14 +92,19 @@
                     SocialMediaType = ["views", "Youtube subscribers"]
                     break;
             };
-
-            google.charts.load("current", { packages: ["corechart", "line"] });
             // calls function that creates graph
-            google.charts.setOnLoadCallback(function() { drawBasic(dataset, SocialMediaType[0], SocialMediaType[1]) });
+            callGraphCreationFunction(dataset, SocialMediaType[0], SocialMediaType[1])
             //adds responsivness to the graph
-            $(window).resize(function() {
-                google.charts.setOnLoadCallback(function() { drawBasic(dataset, SocialMediaType[0], SocialMediaType[1]) });
+            $(window).off("resize")
+            $(window).on("resize", function() {
+                callGraphCreationFunction(dataset, SocialMediaType[0], SocialMediaType[1])
             })
+
+        };
+
+        function callGraphCreationFunction(dataset, SocialMediaType, SocialMediaTitle) {
+            google.charts.setOnLoadCallback(function() { drawBasic(dataset, SocialMediaType, SocialMediaTitle) });
+            console.log("test")
         };
 
         // calls function that creates graphs data and changes the clicked button so that we know what is selected
@@ -135,7 +140,7 @@
             $(".SocialMediaStatsButton").addClass("white grey-text").removeClass("white-text blue-grey lighten-3");
             $(this).addClass("white-text blue-grey lighten-3").removeClass("white grey-text");
 
-            createSocialMediaGraph(selectedSocialMediaPlatform);
+           prepareSocialMediaGraphData(selectedSocialMediaPlatform);
         });
 
 
@@ -143,23 +148,24 @@
             var socialMediaDates = getExactDatesForLastSixMonths(socialMediaStats);
             sessionStorage["socialMediaDates"] = JSON.stringify(socialMediaDates);
             sessionStorage["allSocialMediaStats"] = JSON.stringify(socialMediaStats);
+            socialMediaStatsPropertyName = socialMediaDates.splice(-1).pop()
             //function sets css for one of the three buttons above the graph
 
             //this checks if the party is present on social media
-            if (socialMediaStats[socialMediaDates[socialMediaDates.length - 1]]["fb-L"] != undefined) {
+            if (socialMediaStats[socialMediaStatsPropertyName]["fb-L"] != undefined) {
                 selectedSocialMediaPlatform = "fb-L";
                 //sets which button should be highlighted
                 settingButtonCSS(selectedSocialMediaPlatform);
                 //calls the function, which creates the initial graph
-                prepareSocialMediaGraphDate(selectedSocialMediaPlatform);
-            } else if (socialMediaStats[socialMediaDates[socialMediaDates.length - 1]]["tw-F"] != undefined) {
+                prepareSocialMediaGraphData(selectedSocialMediaPlatform);
+            } else if (socialMediaStats[socialMediaStatsPropertyName]["tw-F"] != undefined) {
                 selectedSocialMediaPlatform = "tw-f";
                 settingButtonCSS(selectedSocialMediaPlatform);
-                prepareSocialMediaGraphDate(selectedSocialMediaPlatform);
-            } else if (socialMediaStats[socialMediaDates[socialMediaDates.length - 1]]["yt-S"] != undefined) {
+                prepareSocialMediaGraphData(selectedSocialMediaPlatform);
+            } else if (socialMediaStats[socialMediaStatsPropertyName]["yt-S"] != undefined) {
                 selectedSocialMediaPlatform = "yt-S";
                 settingButtonCSS(selectedSocialMediaPlatform);
-                prepareSocialMediaGraphDate(selectedSocialMediaPlatform);
+                prepareSocialMediaGraphData(selectedSocialMediaPlatform);
             };
         });
     }); // end of document ready
