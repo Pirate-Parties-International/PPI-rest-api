@@ -94,7 +94,7 @@ class TwitterService extends ScraperServices
      */
     public function getTweetDetails($settings, $requestMethod, $username, $code, $full) {
         $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
-        $getfield = '?screen_name='.str_replace("@", "", $username);
+        $getfield = '?screen_name='.str_replace("@", "", $username).'&count=100';
         try {
             $twitter = new TwitterAPIExchange($settings);
             $tweetData = $twitter->setGetField($getfield)
@@ -198,7 +198,7 @@ class TwitterService extends ScraperServices
                     }
 
                     // make new request to get next page of results
-                    $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id).'&count=50';
+                    $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id).'&count=100';
                     $tweetData = json_decode($twitter->setGetField($nextField)
                         ->buildOauth($tweetUrl, $requestMethod)
                         ->performRequest());
