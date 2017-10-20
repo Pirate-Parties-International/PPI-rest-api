@@ -93,7 +93,7 @@ class TwitterService extends ScraperServices
      * @return int
      */
     public function getTweetDetails($settings, $requestMethod, $username, $code, $full) {
-        $tweetUrl  = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+        $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
         $getfield = '?screen_name='.str_replace("@", "", $username);
         try {
             $twitter = new TwitterAPIExchange($settings);
@@ -177,15 +177,20 @@ class TwitterService extends ScraperServices
                                 ]
                             ];
                     }
+                    // echo '.';
                 }
 
                 $timeCheck = $twTime->getTimestamp(); // check time of last tweet scraped
 
                 try {
-                    // check rate limit
-                    $limitUrl   = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
-                    $limitData  = json_decode($twitter->buildOauth($limitUrl, $requestMethod)->performRequest(), true);
+                    $limitData = null;
+                    do { // check rate limit
+                        $limitUrl  = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
+                        $limitData = json_decode($twitter->buildOauth($limitUrl, $requestMethod)->performRequest(), true);
+                    } while (!isset($limitData['resources'])); // make sure we have a response before continuing
+
                     $limitCheck = $limitData['resources']['application']['/application/rate_limit_status'];
+                    // echo "(".$limitCheck['remaining']." remaining, resetting at ".date('H:i:s', $limitCheck['reset']).") ";
 
                     if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
                         echo "...Rate limit reached! Resuming at ".date('H:i:s', $limitCheck['reset'])."... ";
