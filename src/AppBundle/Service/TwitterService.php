@@ -94,7 +94,7 @@ class TwitterService extends ScraperServices
      */
     public function getTweetDetails($settings, $requestMethod, $username, $code, $full) {
         $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
-        $getfield = '?screen_name='.str_replace("@", "", $username).'&count=100';
+        $getfield = '?screen_name='.str_replace("@", "", $username).'&count=100&tweet_mode=extended';
         try {
             $twitter = new TwitterAPIExchange($settings);
             $tweetData = $twitter->setGetField($getfield)
@@ -126,6 +126,12 @@ class TwitterService extends ScraperServices
                     $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
                     // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
 
+                    if (!empty($item->full_text)) {
+                        $twText = $item->full_text;
+                    } else if (!empty($item->text)) {
+                        $twText = $item->text;
+                    } else $twText = null;
+
                     if (!empty($item->entities->media)) { // if tweet contains media
                         $media = $item->extended_entities->media;
                         foreach ($media as $photo) { // if tweet contains multiple images
@@ -144,13 +150,13 @@ class TwitterService extends ScraperServices
                             $out[$postType][] = [
                                 'postId'    => $item->id,
                                 'postTime'  => $twTime, // DateTime
-                                'postText'  => $item->text,
+                                'postText'  => $twText,
                                 'postImage' => $img,
                                 'postLikes' => $item->favorite_count,
                                 'postData'  => [
                                     'id'         => $imgId,
                                     'posted'     => $twTime->format('Y-m-d H:i:s'), // string
-                                    'text'       => $item->text,
+                                    'text'       => $twText,
                                     'image'      => $img,
                                     'img_source' => $imgSrc,
                                     'url'        => 'https://twitter.com/statuses/'.$item->id,
@@ -164,13 +170,13 @@ class TwitterService extends ScraperServices
                         $out['posts'][] = [
                             'postId'    => $item->id,
                             'postTime'  => $twTime, // DateTime
-                            'postText'  => $item->text,
+                            'postText'  => $twText,
                             'postImage' => null,
                             'postLikes' => $item->favorite_count,
                             'postData'  => [
                                 'id'       => $item->id,
                                 'posted'   => $twTime->format('Y-m-d H:i:s'), // string
-                                'text'     => $item->text,
+                                'text'     => $twText,
                                 'url'      => 'https://twitter.com/statuses/'.$item->id,
                                 'likes'    => $item->favorite_count,
                                 'retweets' => $item->retweet_count
