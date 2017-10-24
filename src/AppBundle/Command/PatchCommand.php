@@ -7,6 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+
 use AppBundle\Entity\SocialMedia;
 use Pirates\PapiInfo\Compile;
 
@@ -16,11 +17,12 @@ class PatchCommand extends ContainerAwareCommand
 		$this
 			->setName('papi:patch')
 			->setDescription('Patches existing db entries')
-            ->addOption('twitter',  't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
-            ->addOption('charset',  'c', InputOption::VALUE_NONE, "Convert 'postText' field to utf8mb4 character set")
-            ->addOption('postdata', 'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
-            ->addOption('stats',    'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
-            ->addOption('decode',   'd', InputOption::VALUE_NONE, "Decodes Facebook's external urls for img_source field")
+            ->addOption('twitter',    't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
+            ->addOption('charset',    'c', InputOption::VALUE_NONE, "Convert 'postText' field to utf8mb4 character set")
+            ->addOption('postdata',   'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
+            ->addOption('stats',      'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
+            ->addOption('exturls',    'u', InputOption::VALUE_NONE, "Decode Facebook's external image urls")
+            ->addOption('duplicates', 'd', InputOption::VALUE_NONE, "Scan the social media database for duplicate entries")
         ;
     }
 
@@ -51,9 +53,13 @@ class PatchCommand extends ContainerAwareCommand
                 $output->writeln("##### Patching stat codes #####");
                 $this->patchStatCodes();
                 break;
-            case $input->getOption('decode');
-                $output->writeln("##### Patching encoded urls #####");
+            case $input->getOption('exturls');
+                $output->writeln("##### Patching external image urls #####");
                 $this->patchEncodedUrls();
+                break;
+            case $input->getOption('duplicates');
+                $output->writeln('##### Patching duplicate social media posts #####');
+                $this->patchDuplicateEntries();
                 break;
             default:
                 $output->writeln("Invalid option.");
@@ -76,7 +82,46 @@ class PatchCommand extends ContainerAwareCommand
 
 
 /////
-// decoding urls (--decode, -d)
+// duplicate entries (--duplicates, -d)
+//
+// Occasionally the scraper will bug out and add duplicate entries of the same social media posts.
+// This patch locates those posts in the database and deletes the duplicates, leaving only the most recent copy.
+// Only run this if you know there are duplicate entries. It takes too long to waste time running it needlessly.
+/////
+    public function patchDuplicateEntries() {
+        $this->getConfirmation();
+        $time = new \DateTime('now');
+        echo "# NOTE: This will take a long time. Go and make yourself a cup of tea. The time is now ".$time->format('H:i:s').".\n";
+        echo "  Checking database... ";
+        $posts = $this->em->getRepository('AppBundle:SocialMedia')->findAll();
+        echo "patching...";
+
+        foreach ($posts as $prime) {
+            $dupes = $this->em->getRepository('AppBundle:SocialMedia')->findBy([
+                'postId'    => $prime->getPostId(),
+                'postText'  => $prime->getPostText(),
+                'postImage' => $prime->getPostImage(),
+                ]);
+
+            foreach ($dupes as $dupe) {
+                if ($dupe->getId() < $prime->getId()) {
+                    echo " duplicate found, deleting...";
+                    // echo "\nprime id = ".$prime->getId().", dupe id = ".$dupe->getId();
+                    // echo ", prime post id = ".$prime->getPostId().", dupe post id = ".$dupe->getPostId();
+                    // echo ", prime text = ".$prime->getPostText().", dupe text = ".$dupe->getPostText();
+                    // echo ", prime image = ".$prime->getPostImage().", dupe image = ".$dupe->getPostImage();
+                    $this->em->remove($dupe);
+                    $this->em->flush();
+                    echo " done...";
+                } else echo ".";
+            }
+        }
+        echo "\n  All done.";
+    }
+
+
+/////
+// external image urls (--exturls, -e)
 //
 // Facebook's external image urls are encoded by default.
 // The scraper has been updated to decode these before saving them to the database.
