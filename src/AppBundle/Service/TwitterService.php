@@ -93,8 +93,8 @@ class TwitterService extends ScraperServices
      * @return int
      */
     public function getTweetDetails($settings, $requestMethod, $username, $code, $full) {
-        $tweetUrl  = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
-        $getfield = '?screen_name='.str_replace("@", "", $username);
+        $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+        $getfield = '?screen_name='.str_replace("@", "", $username).'&count=100&tweet_mode=extended';
         try {
             $twitter = new TwitterAPIExchange($settings);
             $tweetData = $twitter->setGetField($getfield)
@@ -126,6 +126,12 @@ class TwitterService extends ScraperServices
                     $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
                     // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
 
+                    if (!empty($item->full_text)) {
+                        $twText = $item->full_text;
+                    } else if (!empty($item->text)) {
+                        $twText = $item->text;
+                    } else $twText = null;
+
                     if (!empty($item->entities->media)) { // if tweet contains media
                         $media = $item->extended_entities->media;
                         foreach ($media as $photo) { // if tweet contains multiple images
@@ -144,13 +150,13 @@ class TwitterService extends ScraperServices
                             $out[$postType][] = [
                                 'postId'    => $item->id,
                                 'postTime'  => $twTime, // DateTime
-                                'postText'  => $item->text,
+                                'postText'  => $twText,
                                 'postImage' => $img,
                                 'postLikes' => $item->favorite_count,
                                 'postData'  => [
                                     'id'         => $imgId,
                                     'posted'     => $twTime->format('Y-m-d H:i:s'), // string
-                                    'text'       => $item->text,
+                                    'text'       => $twText,
                                     'image'      => $img,
                                     'img_source' => $imgSrc,
                                     'url'        => 'https://twitter.com/statuses/'.$item->id,
@@ -164,28 +170,33 @@ class TwitterService extends ScraperServices
                         $out['posts'][] = [
                             'postId'    => $item->id,
                             'postTime'  => $twTime, // DateTime
-                            'postText'  => $item->text,
+                            'postText'  => $twText,
                             'postImage' => null,
                             'postLikes' => $item->favorite_count,
                             'postData'  => [
                                 'id'       => $item->id,
                                 'posted'   => $twTime->format('Y-m-d H:i:s'), // string
-                                'text'     => $item->text,
+                                'text'     => $twText,
                                 'url'      => 'https://twitter.com/statuses/'.$item->id,
                                 'likes'    => $item->favorite_count,
                                 'retweets' => $item->retweet_count
                                 ]
                             ];
                     }
+                    // echo '.';
                 }
 
                 $timeCheck = $twTime->getTimestamp(); // check time of last tweet scraped
 
                 try {
-                    // check rate limit
-                    $limitUrl   = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
-                    $limitData  = json_decode($twitter->buildOauth($limitUrl, $requestMethod)->performRequest(), true);
+                    $limitData = null;
+                    do { // check rate limit
+                        $limitUrl  = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
+                        $limitData = json_decode($twitter->buildOauth($limitUrl, $requestMethod)->performRequest(), true);
+                    } while (!isset($limitData['resources'])); // make sure we have a response before continuing
+
                     $limitCheck = $limitData['resources']['application']['/application/rate_limit_status'];
+                    // echo "(".$limitCheck['remaining']." remaining, resetting at ".date('H:i:s', $limitCheck['reset']).") ";
 
                     if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
                         echo "...Rate limit reached! Resuming at ".date('H:i:s', $limitCheck['reset'])."... ";
@@ -193,7 +204,7 @@ class TwitterService extends ScraperServices
                     }
 
                     // make new request to get next page of results
-                    $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id).'&count=50';
+                    $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id).'&count=100';
                     $tweetData = json_decode($twitter->setGetField($nextField)
                         ->buildOauth($tweetUrl, $requestMethod)
                         ->performRequest());
