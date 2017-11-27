@@ -27,17 +27,17 @@ class GoogleService extends ScraperServices
 
     /**
      * Queries Youtube for stats and videos
-     * @param  string $id
-     * @param  string $code     party code
+     * @param  string $googleId
+     * @param  string $partyCode
      * @return array
      */
-    public function getYoutubeData($id, $code) {
+    public function getYoutubeData($googleId, $partyCode) {
     	$scraper = $this->container->get('ScraperServices');
 
         $apikey  = $this->container->getParameter('gplus_api_key');
         $youtube = new Youtube(array('key' => $apikey));
 
-        $data = $youtube->getChannelByName($id);
+        $data = $youtube->getChannelByName($googleId);
 
         if (empty($data)) {
             return false;
@@ -46,7 +46,7 @@ class GoogleService extends ScraperServices
             return false;
         }
 
-        // these stats are strings, so we need to force them to int to save them to db
+        // these stats are strings, so we need to cast them to int to save them to db
         $out['stats']['viewCount']       = (int)$data->statistics->viewCount;
         $out['stats']['subscriberCount'] = (int)$data->statistics->subscriberCount;
         $out['stats']['videoCount']      = (int)$data->statistics->videoCount;
@@ -66,7 +66,7 @@ class GoogleService extends ScraperServices
                 // deafult=120x90, medium=320x180, high=480x360, standard=640x480, maxres=1280x720
 
                 // save thumbnail to disk
-                $img = $scraper->saveImage('yt', $code, $imgSrc, $vidId);
+                $img = $scraper->saveImage('yt', $partyCode, $imgSrc, $vidId);
 
                 $vidTime = \DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $vid->snippet->publishedAt);
                 // original ISO 8601, e.g. '2015-04-30T21:45:59.000Z'
@@ -108,16 +108,16 @@ class GoogleService extends ScraperServices
 
     /**
      * Queries Google+ for followers
-     * @param  string $id
+     * @param  string $googleId
      * @return int
      */
-    public function getGooglePlusData($id) {
+    public function getGooglePlusData($googleId) {
     	$scraper = $this->container->get('ScraperServices');
 
         $apikey = $this->container->getParameter('gplus_api_key');
         $google = $scraper->curl(
             sprintf('https://www.googleapis.com/plus/v1/people/%s?key=%s',
-                $id, $apikey)
+                $googleId, $apikey)
             );
         $data = json_decode( $google );
         if (empty($data) || !isset($data->circledByCount)) {

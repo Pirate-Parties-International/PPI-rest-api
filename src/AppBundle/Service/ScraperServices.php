@@ -26,8 +26,7 @@ class ScraperServices
 
 
     public function exception_handler($e) {
-        echo $e->getMessage()."\n";
-        $out['errors'][] = ["Exception" => $e->getMessage()];
+        $output->writeln($e->getMessage());
     }
 
 

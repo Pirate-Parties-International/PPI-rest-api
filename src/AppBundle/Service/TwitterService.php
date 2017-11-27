@@ -28,10 +28,11 @@ class TwitterService extends ScraperServices
     /**
      * Queries Twitter for stats and tweets
      * @param  string $username
-     * @param  string $code     party code
+     * @param  string $partyCode
+     * @param  bool   $scrapeFull
      * @return array
      */
-    public function getTwitterData($username, $code, $full = null) {
+    public function getTwitterData($username, $partyCode, $scrapeFull = false) {
         $settings = array(
             'oauth_access_token'        => $this->container->getParameter('tw_oauth_access_token'),
             'oauth_access_token_secret' => $this->container->getParameter('tw_oauth_access_token_secret'),
@@ -70,7 +71,7 @@ class TwitterService extends ScraperServices
         ];
         echo "     + Info and stats... ok... total ".$out['tweets']." tweets found\n";
 
-        $temp = $this->getTweetDetails($settings, $requestMethod, $username, $code, $full);
+        $temp = $this->getTweetDetails($settings, $requestMethod, $username, $partyCode, $scrapeFull);
         $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : null;
         $out['images'] = isset($temp['images']) ? $temp['images'] : null;
         $out['videos'] = isset($temp['videos']) ? $temp['videos'] : null;
@@ -88,11 +89,11 @@ class TwitterService extends ScraperServices
      * @param  array  $settings
      * @param  string $requetMethod
      * @param  string $username
-     * @param  string $code
-     * @param  bool   $full
+     * @param  string $partyCode
+     * @param  bool   $scrapeFull
      * @return int
      */
-    public function getTweetDetails($settings, $requestMethod, $username, $code, $full) {
+    public function getTweetDetails($settings, $requestMethod, $username, $partyCode, $scrapeFull = false) {
         $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
         $getfield = '?screen_name='.str_replace("@", "", $username).'&count=100&tweet_mode=extended';
         try {
@@ -102,7 +103,7 @@ class TwitterService extends ScraperServices
                 ->performRequest();
         } catch (\Exception $e) {
             echo $e->getMessage()."\n";
-            $out['errors'][] = [$code => $e->getMessage()];
+            $out['errors'][] = [$partyCode => $e->getMessage()];
             return false;
         }
 
@@ -113,7 +114,7 @@ class TwitterService extends ScraperServices
             return false;
         } else {
             $tweetData = json_decode($tweetData);
-            $timeLimit = $scraper->getTimeLimit('tw', 'T', $code, $full);
+            $timeLimit = $scraper->getTimeLimit('tw', 'T', $partyCode, $scrapeFull);
             $pageCount = 0;
             echo "page ";
 
@@ -145,7 +146,7 @@ class TwitterService extends ScraperServices
                             }
 
                             // save image to disk
-                            $img = $scraper->saveImage('tw', $code, $imgSrc, $imgId);
+                            $img = $scraper->saveImage('tw', $partyCode, $imgSrc, $imgId);
 
                             $out[$postType][] = [
                                 'postId'    => $item->id,
@@ -210,7 +211,7 @@ class TwitterService extends ScraperServices
                         ->performRequest());
                 } catch (\Exception $e) {
                     echo $e->getMessage()."\n";
-                    $out['errors'][] = [$code => $e->getMessage()];
+                    $out['errors'][] = [$partyCode => $e->getMessage()];
                     return false;
                 }
 
