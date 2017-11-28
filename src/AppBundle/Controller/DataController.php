@@ -10,6 +10,11 @@ use AppBundle\Entity\SocialMedia as Sm;
 
 class DataController extends BaseController
 {
+    /**
+     * Returns local path to a party's cover image, if available
+     * @param  string $code    party code
+     * @return string
+     */
     public function getCoverImage($code) {
         $meta = $this->getMeta($code, Meta::TYPE_FACEBOOK_COVER);
 
@@ -21,10 +26,20 @@ class DataController extends BaseController
     }
 
 
+    /**
+     * Returns a party's number of Facebook likes
+     * @param  string $code    party code
+     * @return int
+     */
     public function getFacebookLikes($code) {
         return $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES);
     }
 
+    /**
+     * Returns all Facebook stats for a party
+     * @param  string $code    party code
+     * @return array
+     */
     public function getFacebookStats($code) {
         $out = [
             'likes'         => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES),
@@ -38,6 +53,11 @@ class DataController extends BaseController
         return $out;
     }
 
+    /**
+     * Returns all Facebook data for a party, inc. posts
+     * @param  string $code    party code
+     * @return array
+     */
     public function getFacebookData($code) {
         $out = [
             'likes'        => $this->getStat($code, Stat::TYPE_FACEBOOK, Stat::SUBTYPE_LIKES),
@@ -49,7 +69,7 @@ class DataController extends BaseController
         ];
         $out['pageInfo'] = $this->getMeta($code, Meta::TYPE_FACEBOOK_INFO);
 
-        $posts  = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_TEXT);
+        $posts = $this->getOneSocial($code, Sm::TYPE_FACEBOOK, Sm::SUBTYPE_TEXT);
         if (!empty($posts)) {
             $out['posts'] = $posts;
         }
@@ -70,10 +90,20 @@ class DataController extends BaseController
     }
 
 
+    /**
+     * Returns a party's Twitter followers
+     * @param  string $code    party code
+     * @return int
+     */
     public function getTwitterFollowers($code) {
         return $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_FOLLOWERS);
     }
 
+    /**
+     * Returns all Twitter stats for a party
+     * @param  string $code    party code
+     * @return array
+     */
     public function getTwitterStats($code) {
         $out = [
             'likes'     => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_LIKES),
@@ -87,6 +117,11 @@ class DataController extends BaseController
         return $out;
     }
 
+    /**
+     * Returns all Twitter data for a party, inc. tweets
+     * @param  string $code    party code
+     * @return array
+     */
     public function getTwitterData($code) {
         $out = [
             'likes'      => $this->getStat($code, Stat::TYPE_TWITTER, Stat::SUBTYPE_LIKES),
@@ -115,10 +150,20 @@ class DataController extends BaseController
     }
 
 
+    /**
+     * Returns a party's Google+ followers
+     * @param  string $code    party code
+     * @return int
+     */
     public function getGooglePlusFollowers($code) {
         return $this->getStat($code, Stat::TYPE_GOOGLEPLUS, Stat::SUBTYPE_FOLLOWERS);
     }
 
+    /**
+     * Returns all YouTube stats for a party
+     * @param  string $code    party code
+     * @return array
+     */
     public function getYoutubeStats($code) {
         $out = [
             'subscribers' => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_SUBSCRIBERS),
@@ -129,6 +174,11 @@ class DataController extends BaseController
         return $out;
     }
 
+    /**
+     * Returns all YouTube data for a party, inc. videos
+     * @param  string $code    party code
+     * @return array
+     */
     public function getYoutubeData($code) {
         $out = [
             'subscribers' => $this->getStat($code, Stat::TYPE_YOUTUBE, Stat::SUBTYPE_SUBSCRIBERS),
