@@ -18,12 +18,14 @@ use Facebook\FacebookResponseException;
 class FacebookService extends ScraperServices
 {
     protected $em;
+    protected $scService;
     private   $container;
 
     public function __construct(EntityManager $entityManager, Container $container) {
-        $this->em = $entityManager;
+        $this->em        = $entityManager;
         $this->container = $container;
-        @set_exception_handler(array($scraper, 'exception_handler'));
+        $this->scService = $this->container->get('ScraperServices');
+        @set_exception_handler([$this->scService, 'exception_handler']);
     }
 
 
@@ -129,6 +131,56 @@ class FacebookService extends ScraperServices
     }
 
 
+    /**
+     * Builds a new Facebook object
+     * @return object
+     */
+    public function getNewFacebook() {
+        $fb = new Facebook([
+            'app_id' => $this->container->getParameter('fb_app_id'),
+            'app_secret' => $this->container->getParameter('fb_app_secret'),
+            'default_graph_version' => 'v2.7',
+        ]);
+        $fb->setDefaultAccessToken($this->container->getParameter('fb_access_token'));
+
+        return $fb;
+    }
+
+
+    /**
+     * Sends request to Facebook API and returns graph node
+     * @param  object $fb
+     * @param  string $fbPageId
+     * @param  string $fields
+     * @return object
+     */
+    public function getGraphNode($fb, $fbPageId, $fields) {
+        $request = $fb->request('GET', $fbPageId, ['fields' => $fields]);
+
+        try {
+            $response = $fb->getClient()->sendRequest($request);
+
+        } catch(Facebook\Exceptions\FacebookResponseException $e) {
+            // When Graph returns an error
+            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
+            exit;
+
+        } catch(Facebook\Exceptions\FacebookSDKException $e) {
+            // When validation fails or other local issues
+            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
+            exit;
+
+        } catch(\Exception $e) {
+            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
+            return false;
+        }
+
+        $graphNode = $response->getGraphNode();
+
+        return $graphNode;
+    }
+
+
 //
 // Getting info
 //
@@ -142,12 +194,7 @@ class FacebookService extends ScraperServices
      * @return array
      */
     public function getFBData($fbPageId, $partyCode, $scrapeData = null, $scrapeFull = false) {
-        $fb = new Facebook([
-            'app_id' => $this->container->getParameter('fb_app_id'),
-            'app_secret' => $this->container->getParameter('fb_app_secret'),
-            'default_graph_version' => 'v2.7',
-        ]);
-        $fb->setDefaultAccessToken($this->container->getParameter('fb_access_token'));
+        $fb = $this->getNewFacebook();
 
         $requestFields = [
             'basic'        => 'cover,engagement,talking_about_count,about,emails,single_line_address',
@@ -165,22 +212,7 @@ class FacebookService extends ScraperServices
     //
         if ($scrapeData == null || $scrapeData == 'info') {
 
-            $request = $fb->request('GET', $fbPageId, ['fields' => $requestFields['basic']]);
-            try {
-                $response = $fb->getClient()->sendRequest($request);
-            } catch(Facebook\Exceptions\FacebookResponseException $e) {
-                // When Graph returns an error
-                echo 'Graph returned an error: ' . $e->getMessage() . "\n";
-                exit;
-            } catch(Facebook\Exceptions\FacebookSDKException $e) {
-                // When validation fails or other local issues
-                echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
-                exit;
-            } catch(\Exception $e) {
-                echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
-                return false;
-            }
-            $graphNode = $response->getGraphNode();
+            $graphNode = $this->getGraphNode($fb, $fbPageId, $requestFields['basic']);
 
             echo "     + Info and stats.... ";
             $out['info'] = [
@@ -196,7 +228,7 @@ class FacebookService extends ScraperServices
             }
 
             $coverId = !empty($graphNode->getField('cover')) ? $graphNode->getField('cover')->getField('cover_id') : null;
-            $out['cover'] = !is_null($coverId) ? $this->getImageSource($fbPageId, $fb, $coverId, true) : null;
+            $out['cover'] = !is_null($coverId) ? $this->getImageSource($fb, $coverId, true) : null;
 
             $out['likes']   = !empty($graphNode->getField('engagement')) ? $graphNode->getField('engagement')->getField('count') : '?';
             $out['talking'] = !empty($graphNode->getField('talking_about_count')) ? $graphNode->getField('talking_about_count') : '?';
@@ -206,29 +238,29 @@ class FacebookService extends ScraperServices
             } else echo "ok";
             echo "\n";
 
-            $out['postCount']  = $this->getPostCount($fbPageId, $fb, $requestFields['postStats']);
-            $out['videoCount'] = $this->getVideoCount($fbPageId, $fb, $requestFields['videoStats']);
+            $out['postCount']  = $this->getPostCount($fb, $fbPageId, $requestFields['postStats']);
+            $out['videoCount'] = $this->getVideoCount($fb, $fbPageId, $requestFields['videoStats']);
         }
 
         if ($scrapeData == 'info') {
-            $out['photoCount'] = $this->getImageCount($fbPageId, $fb, $requestFields['imageStats']);
-            $out['eventCount'] = $this->getEventCount($fbPageId, $fb, $requestFields['eventStats']);
+            $out['photoCount'] = $this->getImageCount($fb, $fbPageId, $requestFields['imageStats']);
+            $out['eventCount'] = $this->getEventCount($fb, $fbPageId, $requestFields['eventStats']);
         }
 
         if ($scrapeData == null || $scrapeData == 'posts') {
-            $temp = $this->getPostDetails($fbPageId, $fb, $requestFields['postDetails'], $partyCode, $scrapeFull);
+            $temp = $this->getPostDetails($fb, $fbPageId, $requestFields['postDetails'], $partyCode, $scrapeFull);
             $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : null;
             $out['videos'] = isset($temp['videos']) ? $temp['videos'] : null;
         }
 
         if ($scrapeData == null || $scrapeData == 'images') {
-            $temp = $this->getImageDetails($fbPageId, $fb, $requestFields['imageDetails'], $partyCode, $scrapeFull);
+            $temp = $this->getImageDetails($fb, $fbPageId, $requestFields['imageDetails'], $partyCode, $scrapeFull);
             $out['photoCount'] = isset($temp['photoCount']) ? $temp['photoCount'] : null;
             $out['photos']     = isset($temp['photos'])     ? $temp['photos']     : null;
         }
 
         if ($scrapeData == null || $scrapeData == 'events') {
-            $temp = $this->getEventDetails($fbPageId, $fb, $requestFields['eventDetails'], $partyCode, $scrapeFull);
+            $temp = $this->getEventDetails($fb, $fbPageId, $requestFields['eventDetails'], $partyCode, $scrapeFull);
             $out['eventCount'] = isset($temp['eventCount']) ? $temp['eventCount'] : null;
             $out['events']     = isset($temp['events'])     ? $temp['events']     : null;
         }
@@ -239,29 +271,13 @@ class FacebookService extends ScraperServices
 
     /**
      * Finds best resolution of an image
-     * @param  string $fbPageId
      * @param  string $fb
      * @param  string $imgId
      * @param  bool   $cover
      * @return string
      */
-    public function getImageSource($fbPageId, $fb, $imgId, $cover = false) {
-        $request = $fb->request('GET', $imgId, ['fields' => 'height,width,album,images']);
-        try {
-            $response = $fb->getClient()->sendRequest($request);
-        } catch(Facebook\Exceptions\FacebookResponseException $e) {
-            // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(Facebook\Exceptions\FacebookSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
-            return false;
-        }
-        $graphNode = $response->getGraphNode();
+    public function getImageSource($fb, $imgId, $cover = false) {
+        $graphNode = $this->getGraphNode($fb, $imgId, 'height,width,album,images');
         $images    = $graphNode->getField('images');
 
         $tmpI = [];
@@ -306,28 +322,13 @@ class FacebookService extends ScraperServices
 
     /**
      * Post count
-     * @param  string $fbPageId
      * @param  string $fb
+     * @param  string $fbPageId
      * @param  string $requestFields
      * @return int
      */
-    public function getPostCount($fbPageId, $fb, $requestFields) {
-        $request = $fb->request('GET', $fbPageId, ['fields' => $requestFields]);
-        try {
-            $response = $fb->getClient()->sendRequest($request);
-        } catch(Facebook\Exceptions\FacebookResponseException $e) {
-            // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(Facebook\Exceptions\FacebookSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
-            return false;
-        }
-        $graphNode = $response->getGraphNode();
+    public function getPostCount($fb, $fbPageId, $requestFields) {
+        $graphNode = $this->getGraphNode($fb, $fbPageId, $requestFields);
         $fdPcount  = $graphNode->getField('posts');
 
         if (!empty($fdPcount)) {
@@ -361,28 +362,13 @@ class FacebookService extends ScraperServices
 
     /**
      * Image count
-     * @param  string $fbPageId
      * @param  string $fb
+     * @param  string $fbPageId
      * @param  string $requestFields
      * @return int
      */
-    public function getImageCount($fbPageId, $fb, $requestFields) {
-        $request = $fb->request('GET', $fbPageId, ['fields' => $requestFields]);
-        try {
-            $response = $fb->getClient()->sendRequest($request);
-        } catch(Facebook\Exceptions\FacebookResponseException $e) {
-            // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(Facebook\Exceptions\FacebookSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
-            return false;
-        }
-        $graphNode = $response->getGraphNode();
+    public function getImageCount($fb, $fbPageId, $requestFields) {
+        $graphNode = $this->getGraphNode($fb, $fbPageId, $requestFields);
         $fdAlbums  = $graphNode->getField('albums');
 
         if (!empty($fdAlbums)) {
@@ -410,28 +396,13 @@ class FacebookService extends ScraperServices
 
     /**
      * Video count
-     * @param  string $fbPageId
      * @param  string $fb
+     * @param  string $fbPageId
      * @param  string $requestFields
      * @return int
      */
-    public function getVideoCount($fbPageId, $fb, $requestFields) {
-        $request = $fb->request('GET', $fbPageId, ['fields' => $requestFields]);
-        try {
-            $response = $fb->getClient()->sendRequest($request);
-        } catch(Facebook\Exceptions\FacebookResponseException $e) {
-            // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(Facebook\Exceptions\FacebookSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
-            return false;
-        }
-        $graphNode = $response->getGraphNode();
+    public function getVideoCount($fb, $fbPageId, $requestFields) {
+        $graphNode = $this->getGraphNode($fb, $fbPageId, $requestFields);
         $fdVcount  = $graphNode->getField('videos');
 
         if (!empty($fdVcount)) {
@@ -465,28 +436,13 @@ class FacebookService extends ScraperServices
 
     /**
      * Event count
-     * @param  string $fbPageId
      * @param  string $fb
+     * @param  string $fbPageId
      * @param  string $requestFields
      * @return int
      */
-    public function getEventCount($fbPageId, $fb, $requestFields) {
-        $request = $fb->request('GET', $fbPageId, ['fields' => $requestFields]);
-        try {
-            $response = $fb->getClient()->sendRequest($request);
-        } catch(Facebook\Exceptions\FacebookResponseException $e) {
-            // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(Facebook\Exceptions\FacebookSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
-            return false;
-        }
-        $graphNode = $response->getGraphNode();
+    public function getEventCount($fb, $fbPageId, $requestFields) {
+        $graphNode = $this->getGraphNode($fb, $fbPageId, $requestFields);
         $fdEvents  = $graphNode->getField('events');
 
         if (!empty($fdEvents)) {
@@ -520,38 +476,21 @@ class FacebookService extends ScraperServices
 
     /**
      * Gets post details (inc. videos)
-     * @param  string $fbPageId
      * @param  string $fb
+     * @param  string $fbPageId
      * @param  string $requestFields
      * @param  string $partyCode
      * @param  bool   $scrapeFull
      * @return array
      */
-    public function getPostDetails($fbPageId, $fb, $requestFields, $partyCode, $scrapeFull = false) {
-        $scraper = $this->container->get('ScraperServices');
-
-        $request = $fb->request('GET', $fbPageId, ['fields' => $requestFields]);
-        try {
-            $response = $fb->getClient()->sendRequest($request);
-        } catch(Facebook\Exceptions\FacebookResponseException $e) {
-            // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(Facebook\Exceptions\FacebookSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
-            return false;
-        }
-        $graphNode = $response->getGraphNode();
+    public function getPostDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
+        $graphNode = $this->getGraphNode($fb, $fbPageId, $requestFields);
         $fdPosts   = $graphNode->getField('posts');
 
         echo "     + Post details.... ";
         if (!empty($fdPosts)) {
 
-            $timeLimit = $scraper->getTimeLimit('fb', 'T', $partyCode, $scrapeFull);
+            $timeLimit = $this->scService->getTimeLimit('fb', 'T', $partyCode, $scrapeFull);
             echo "page ";
             $pageCount = 0;
 
@@ -600,7 +539,7 @@ class FacebookService extends ScraperServices
                             $imgSrc = urldecode($temp);
                         }
 
-                        $img  = $imgSrc ? $scraper->saveImage('fb', $partyCode, $imgSrc, $post->getField('id'), $imgBkp) :  null;
+                        $img  = $imgSrc ? $this->scService->saveImage('fb', $partyCode, $imgSrc, $post->getField('id'), $imgBkp) :  null;
                         $text = !empty($post->getField('message')) ? $post->getField('message') : $post->getField('story');
 
                         $likeCount     = $this->getStatCount($post->getField('likes'));
@@ -656,37 +595,20 @@ class FacebookService extends ScraperServices
 
     /**
      * Gets image details
-     * @param  string $fbPageId
      * @param  string $fb
+     * @param  string $fbPageId
      * @param  string $requestFields
      * @param  string $partyCode
      * @param  bool   $scrapeFull
      * @return array
      */
-    public function getImageDetails($fbPageId, $fb, $requestFields, $partyCode, $scrapeFull = false) {
-        $scraper = $this->container->get('ScraperServices');
-
-        $request = $fb->request('GET', $fbPageId, ['fields' => $requestFields]);
-        try {
-            $response = $fb->getClient()->sendRequest($request);
-        } catch(Facebook\Exceptions\FacebookResponseException $e) {
-            // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(Facebook\Exceptions\FacebookSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
-            return false;
-        }
-        $graphNode = $response->getGraphNode();
+    public function getImageDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
+        $graphNode = $this->getGraphNode($fb, $fbPageId, $requestFields);
         $fdAlbums  = $graphNode->getField('albums');
         echo "     + Photo details... ";
 
         if (!empty($fdAlbums)) {
-            $timeLimit = $scraper->getTimeLimit('fb', 'I', $partyCode, $scrapeFull);
+            $timeLimit = $this->scService->getTimeLimit('fb', 'I', $partyCode, $scrapeFull);
             echo "page ";
             $pageCount = 0;
             foreach ($fdAlbums as $key => $album) {
@@ -697,9 +619,9 @@ class FacebookService extends ScraperServices
                         echo $pageCount .', ';
                         foreach ($fdPhotos as $key => $photo) {
 
-                            $imgSrc = $this->getImageSource($fbPageId, $fb, $photo->getField('id')); // ~480x480 (or closest)
+                            $imgSrc = $this->getImageSource($fb, $photo->getField('id')); // ~480x480 (or closest)
                             $imgBkp = $photo->getField('picture'); // 130x130 thumbnail
-                            $img    = $scraper->saveImage('fb', $partyCode, $imgSrc, $photo->getField('id'), $imgBkp);
+                            $img    = $this->scService->saveImage('fb', $partyCode, $imgSrc, $photo->getField('id'), $imgBkp);
 
                             $likeCount     = $this->getStatCount($photo->getField('likes'));
                             $reactionCount = $this->getStatCount($photo->getField('reactions'));
@@ -750,38 +672,21 @@ class FacebookService extends ScraperServices
 
     /**
      * Gets event details
-     * @param  string $fbPageId
      * @param  string $fb
+     * @param  string $fbPageId
      * @param  string $requestFields
      * @param  string $partyCode
      * @param  bool   $scrapeFull
      * @return array
      */
-    public function getEventDetails($fbPageId, $fb, $requestFields, $partyCode, $scrapeFull = false) {
-        $scraper = $this->container->get('ScraperServices');
-
-        $request = $fb->request('GET', $fbPageId, ['fields' => $requestFields]);
-        try {
-            $response = $fb->getClient()->sendRequest($request);
-        } catch(Facebook\Exceptions\FacebookResponseException $e) {
-            // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(Facebook\Exceptions\FacebookSDKException $e) {
-            // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
-            exit;
-        } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
-            return false;
-        }
-        $graphNode = $response->getGraphNode();
+    public function getEventDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
+        $graphNode = $this->getGraphNode($fb, $fbPageId, $requestFields);
         $fdEvents  = $graphNode->getField('events');
         echo "     + Event details... ";
 
         if (!empty($fdEvents)) {
 
-            $timeLimit = $scraper->getTimeLimit('fb', 'E', $partyCode, $scrapeFull);
+            $timeLimit = $this->scService->getTimeLimit('fb', 'E', $partyCode, $scrapeFull);
             echo "page ";
             $pageCount = 0;
 
@@ -815,7 +720,7 @@ class FacebookService extends ScraperServices
 
                         // save cover image to disk
                         if (!empty($imgSrc)) {
-                            $img = $scraper->saveImage('fb', $partyCode, $imgSrc, $imgId);
+                            $img = $this->scService->saveImage('fb', $partyCode, $imgSrc, $imgId);
                         } else {
                             $img = null;
                         }
