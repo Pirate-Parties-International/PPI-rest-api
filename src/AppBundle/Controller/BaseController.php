@@ -38,11 +38,11 @@ class BaseController extends Controller
             $query->join('p.intMemberships', 'm')
                 ->innerJoin('m.intOrg', 'o')
                 ->where(sprintf("o.code = '%s'", $membershipFilter));
-        } // else do nothing, i.e. show all
+        }
 
-        if (!is_null($showDefunct)) { // true = show only defunct, false = only non-defunct
+        if (!is_null($showDefunct)) { // true = show only defunct, false = only non-defunct, null = show all
             $query->andwhere(sprintf("p.defunct = '%s'", $showDefunct));
-        } // else do nothing, i.e. show all
+        }
 
         switch ($orderBy) {
             case 'name':
@@ -146,7 +146,6 @@ class BaseController extends Controller
                 'type'     => $social->getType(),
                 'sub_type' => $social->getSubType(),
                 'post_id'  => $data['id'],
-                // 'postData' => $data
                 ];
 
             foreach ($terms as $field) {

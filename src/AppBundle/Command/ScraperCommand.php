@@ -24,7 +24,7 @@ class ScraperCommand extends ContainerAwareCommand
     protected $scrapeSite  = null;
     protected $scrapeData  = null;
     protected $scrapeStart = null;
-    protected $scrapeFull  = null;
+    protected $scrapeFull  = false;
 
 
     protected function configure()
@@ -58,6 +58,7 @@ class ScraperCommand extends ContainerAwareCommand
         foreach ($parties as $partyCode => $party) {
             if ($this->scrapeStart && ($partyCode < $this->scrapeStart)) {
                 $output->writeln(" - " . $partyCode . " skipped...");
+
             } else {
                 $output->writeln(" + Processing " . $partyCode);
 
@@ -77,7 +78,7 @@ class ScraperCommand extends ContainerAwareCommand
 
 
     /**
-     * Verifies the input arguments and gets relevant party objects
+     * Verifies the input arguments and returns an array of the relevant party objects
      * @param  InputInterface
      * @return array
      */
@@ -90,7 +91,7 @@ class ScraperCommand extends ContainerAwareCommand
 
         switch ($this->scrapeSite) {
             case null:
-                $siteName = null;
+                $siteName = "all sites";
                 break;
             case 'fb':
                 $siteName = "Facebook";
@@ -111,6 +112,16 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         if ($this->scrapeData) {
+            switch ($this->scrapeSite) {
+                case 'fb':
+                case null:
+                    break;
+                default:
+                    $this->output->writeln("   - ERROR: Search term \"" . $this->scrapeData . "\" is only valid for Facebook");
+                    $this->output->writeln("# Process halted");
+                    exit;
+            }
+
             switch ($this->scrapeData) {
                 case 'info':
                 case 'data':
@@ -145,21 +156,9 @@ class ScraperCommand extends ContainerAwareCommand
                     exit;
             }
 
-            switch ($this->scrapeSite) {
-                case 'fb':
-                case null:
-                    break;
-                default:
-                    $this->output->writeln("   - ERROR: Search term \"" . $this->scrapeData . "\" is only valid for Facebook");
-                    $this->output->writeln("# Process halted");
-                    exit;
-            }
-
             $this->output->writeln("### Scraping Facebook for " . $dataName . " only");
-        } else if ($siteName) {
-            $this->output->writeln("### Scraping " . $siteName . " for all data");
         } else {
-            $this->output->writeln("### Scraping all sites for all data");
+            $this->output->writeln("### Scraping " . $siteName . " for all data");
         }
 
         if (!$this->scrapeParty) {
