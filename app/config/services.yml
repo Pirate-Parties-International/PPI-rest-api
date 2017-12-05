@@ -11,19 +11,23 @@ services:
     ScraperServices:
         class: AppBundle\Service\ScraperServices
         autowire: true
-        # arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
+
+    ConnectionService:
+        class: AppBundle\Service\ConnectionService
+        autowire: true
+
+    ImageService:
+        class: AppBundle\Service\ImageService
+        autowire: true
 
     FacebookService:
         class: AppBundle\Service\FacebookService
         autowire: true
-        # arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
 
     TwitterService:
         class: AppBundle\Service\TwitterService
         autowire: true
-        # arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
 
     GoogleService:
         class: AppBundle\Service\GoogleService
         autowire: true
-        # arguments: [ @doctrine.orm.entity_manager, '@service_container' ]

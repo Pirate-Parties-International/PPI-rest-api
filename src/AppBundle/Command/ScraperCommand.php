@@ -289,7 +289,7 @@ class ScraperCommand extends ContainerAwareCommand
                         $this->output->writeln("     - No cover found");
                     } else {
                         $cover = $this->container
-                            ->get('FacebookService')
+                            ->get('ImageService')
                             ->getFacebookCover($partyCode, $fbData['cover']);
                         $this->output->writeln("     + Cover retrieved");
 

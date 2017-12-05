@@ -173,17 +173,18 @@ class ScraperServices
      * Queries DB for a party's latest social media entry of a specified type
      * @param  string $type
      * @param  string $subType
-     * @param  string $code
-     * @param  bool   $full
+     * @param  string $partyCode
+     * @param  bool   $scrapeFull
      * @return int
      */
-    public function getTimeLimit($type, $subType, $code, $full = false) {
+    public function getTimeLimit($type, $subType, $partyCode, $scrapeFull = false) {
 
         $limited   = strtotime("-1 year"); // set age limit for fb text posts and tweets
         $unlimited = strtotime("-20 years"); // practically no limit, get all
 
-        if ($full) { // if user requested a full scrape
+        if ($scrapeFull) { // if user requested a full scrape
             echo "getting all... ";
+
             switch ($type) {
                 case 'tw':
                     $time = $limited; // age limit for all tweets
@@ -195,133 +196,38 @@ class ScraperServices
                     $time = $unlimited; // no limit for yt videos, get all
             }
 
-        } else {
-            echo "checking database...";
-            $p = $this->container->get('doctrine')
-                ->getRepository('AppBundle:SocialMedia')
-                ->findOneBy(['code' => $code, 'type' => $type, 'subType' => $subType],['postTime' => 'DESC']);
+            return $time;
+        }
 
-            if (empty($p)) { // if there are no entries in the database, populate fully
-                echo " empty, getting all... ";
-                switch ($type) {
-                    case 'tw':
-                        $time = $limited; // age limit for all tweets
-                        break;
-                    case 'fb':
-                        $time = ($subType == 'T') ? $limited : $unlimited; // limit for text posts only
-                        break;
-                    default:
-                        $time = $unlimited; // no limit for yt videos, get all
-                }
+        echo "checking database...";
+        $p = $this->container->get('doctrine')
+            ->getRepository('AppBundle:SocialMedia')
+            ->findOneBy([
+                'code' => $partyCode,
+                'type' => $type,
+                'subType' => $subType
+                ],['postTime' => 'DESC']
+            );
 
-            } else { // if there are entries already in the db, only get updates since the latest one
-                echo " !empty, updating... ";
-                $time = $p->getPostTime()->getTimestamp();
-            }
+        if (!empty($p)) {
+            echo " !empty, updating... ";
+            $time = $p->getPostTime()->getTimestamp();
+            return $time;
+        }
+
+        echo " empty, getting all... ";
+        switch ($type) {
+            case 'tw':
+                $time = $limited; // age limit for all tweets
+                break;
+            case 'fb':
+                $time = ($subType == 'T') ? $limited : $unlimited; // limit for text posts only
+                break;
+            default:
+                $time = $unlimited; // no limit for yt videos, get all
         }
 
         return $time;
     }
-
-
-    /**
-     * Saves uploaded images to disk
-     * @param  string $site
-     * @param  string $code
-     * @param  string $imgSrc
-     * @param  string $imgId
-     * @param  string $imgBkp
-     * @return string
-     */
-    public function saveImage($site, $code, $imgSrc, $imgId, $imgBkp = null) {
-
-        $appRoot = $this->container->get('kernel')->getRootDir().'/..';
-        $imgRoot = $appRoot.'/web/img/uploads/'.$code.'/'.$site.'/';
-        preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
-
-        if (empty($matches)) {
-            return null;
-        }
-
-        $imgFmt  = $matches[1];
-        $imgName = $imgId.'.'.$imgFmt;
-        $imgPath = $imgRoot.$imgName;
-
-        if (!is_dir($imgRoot)) { // check if directory exists, else create
-            mkdir($imgRoot, 0755, true);
-        }
-
-        $ctx = stream_context_create(array(
-            'http' => array(
-                'timeout' => 15
-                )
-            )
-        );
-
-        if (!file_exists($imgPath)) { // check if file exists on disk before saving
-            try {
-                $imgData = file_get_contents($imgSrc, false, $ctx);
-            } catch (\Exception $e) {
-                echo $e->getMessage();
-                $out['errors'][] = [$code => $imgPath];
-                if ($imgBkp) { // try backup if available
-                    echo " trying backup... ";
-                    try {
-                        $imgData = file_get_contents($imgBkp, false, $ctx);
-                        echo "successful";
-                    } catch (\Exception $e) {
-                        echo "unsuccessful";
-                    }
-                    echo ", ";
-                }
-            }
-        }
-
-        if (!empty($imgData)) {
-            try {
-                file_put_contents($imgPath, $imgData);
-            } catch (\Exception $e) {
-                echo $e->getMessage();
-                $out['errors'][] = [$code => $imgPath];
-            }
-        }
-
-        return $imgName;
-
-    }
-
-
-    public function curl($url) {
-        // Get cURL resource
-        $curl = curl_init();
-        // Set some options - we are passing in a useragent too here
-        curl_setopt_array($curl, array(
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_TIMEOUT => 15,
-            CURLOPT_URL => $url,
-            CURLOPT_USERAGENT => 'PAPI'
-        ));
-
-        $connected = false;
-        $tryCount  = 0;
-        do {
-            try {
-                // Send the request & save response to $resp
-                $resp = curl_exec($curl);
-                $connected = true;
-            } catch (\Exception $e) {
-                echo $e->getMessage()."\n";
-                $out['errors'][] = [$code => $e->getMessage()];
-                $tryCount++;
-                return false;
-            }
-        } while ($connected == false && $tryCount < 5);
-
-        // Close request to clear up some resources
-        curl_close($curl);
-
-        return $resp;
-    }
-
 
 }
