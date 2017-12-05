@@ -6,7 +6,7 @@ use Symfony\Component\DependencyInjection\Container;
 use Facebook\Facebook;
 use Facebook\FacebookSDKException;
 use Facebook\FacebookResponseException;
-
+use Madcoda\Youtube;
 use TwitterAPIExchange;
 
 class ConnectionService extends ScraperServices
@@ -132,7 +132,7 @@ class ConnectionService extends ScraperServices
      * @return array
      */
     public function getTwRateLimit($tw) {
-        $limitData = null;
+        $limitData     = null;
         $requestMethod = 'GET';
 
         do { // check rate limit
@@ -154,6 +154,28 @@ class ConnectionService extends ScraperServices
         }
 
     	return $limitCheck;
+    }
+
+
+    /**
+     * Builds a new Google/Youtube API object
+     * @param  string $googleId
+     * @param  bool   $yt
+     * @return object
+     */
+    public function getNewGoogle($googleId, $yt = false) {
+        $apikey = $this->container->getParameter('gplus_api_key');
+
+        if ($yt) {
+	        $youtube = new Youtube(['key' => $apikey]);
+    	    return $youtube;
+		}
+
+		$url = 'https://www.googleapis.com/plus/v1/people/';
+		$url .= $googleId . '?key=' . $apikey;
+        $google = $this->curl($url);
+
+        return json_decode($google);
     }
 
 

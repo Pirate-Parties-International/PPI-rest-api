@@ -11,8 +11,6 @@ use Symfony\Component\Validator\Constraints\DateTime;
 use AppBundle\Command\ScraperCommand;
 use AppBundle\Service\ScraperServices;
 
-use Madcoda\Youtube;
-
 class GoogleService extends ScraperServices
 {
     protected $em;
@@ -36,9 +34,9 @@ class GoogleService extends ScraperServices
      * @return array
      */
     public function getYoutubeData($googleId, $partyCode) {
-        $apikey  = $this->container->getParameter('gplus_api_key');
-
-        $youtube = new Youtube(array('key' => $apikey));
+        $youtube = $this->container
+            ->get('ConnectionService')
+            ->getNewGoogle($googleId, true);
         $data = $youtube->getChannelByName($googleId);
 
         if (empty($data)) {
@@ -59,24 +57,24 @@ class GoogleService extends ScraperServices
         echo "     + Videos... ";
 
         if (!empty($videos)) {
-            $out['videos'] = $this->getVideoData($partyCode, $youtube, $videos);
+            $out['videos'] = $this->getVideoDetails($partyCode, $youtube, $videos);
             echo "processed\n";
         } else {
             echo "not found\n";
         }
 
         return $out;
-
     }
 
 
     /**
-     * Retrieves video data
-     * @param  $youtube
-     * @param  $videos
+     * Retrieves video details
+     * @param  string $partyCode
+     * @param  object $youtube
+     * @param  array  $videos
      * @return array
      */
-    public function getVideoData($partyCode, $youtube, $videos) {
+    public function getVideoDetails($partyCode, $youtube, $videos) {
         $out = [];
 
         foreach ($videos as $key => $vid) {
@@ -118,7 +116,6 @@ class GoogleService extends ScraperServices
         }
 
         return $out;
-
     }
 
 
@@ -128,22 +125,15 @@ class GoogleService extends ScraperServices
      * @return int
      */
     public function getGooglePlusData($googleId) {
-        $apikey = $this->container->getParameter('gplus_api_key');
-        $google = $this->container
+        $data = $this->container
             ->get('ConnectionService')
-            ->curl(
-            sprintf('https://www.googleapis.com/plus/v1/people/%s?key=%s',
-                $googleId, $apikey)
-            );
-
-        $data = json_decode($google);
+            ->getNewGoogle($googleId);
 
         if (empty($data) || !isset($data->circledByCount)) {
             return false;
         }
 
         return $data->circledByCount;
-
     }
 
 }
