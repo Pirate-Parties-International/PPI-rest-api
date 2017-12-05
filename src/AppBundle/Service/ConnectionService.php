@@ -12,7 +12,6 @@ use TwitterAPIExchange;
 class ConnectionService extends ScraperServices
 {
 	protected $parent;
-    // protected $twRequestMethod = 'GET';
     private   $container;
 
     public function __construct(Container $container) {
@@ -101,27 +100,27 @@ class ConnectionService extends ScraperServices
      * @return object
      */
     public function getTwRequest($tw, $username, $tweets = false, $maxId = null) {
-		$field = '?screen_name='.str_replace("@", "", $username);
-    	$requestMethod = 'GET';
+    	$method = 'GET';
+		$field  = '?screen_name='.str_replace("@", "", $username);
 
     	if (!$tweets) {
-			$url   = 'https://api.twitter.com/1.1/users/show.json';
+			$url = 'https://api.twitter.com/1.1/users/show.json';
 		} else {
-	        $url   = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
-	        $id    = $maxId ? '&max_id=' . $maxId : null;
-	        $field .= '&tweet_mode=extended&count=1000' . $id;
+	        $url = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+	        $field .= '&tweet_mode=extended&count=1000';
+	        $field .= $maxId ? ('&max_id=' . $maxId) : null;
     	}
     	// echo "\n" . $url . $field;
 
     	try {
 		    $data = $tw
 		    	->setGetfield($field)
-		    	->buildOauth($url, $requestMethod)
+		    	->buildOauth($url, $method)
 		        ->performRequest();
 		    return json_decode($data);
 
         } catch (\Exception $e) {
-            echo $e->getMessage()."\n";
+            echo $e->getMessage() . "\n";
             return false;
         }
     }
