@@ -32,7 +32,6 @@ class ImageService extends ScraperServices
      * @return string
      */
     public function saveImage($site, $code, $imgSrc, $imgId, $imgBkp = null) {
-
         $appRoot = $this->container->get('kernel')->getRootDir() . '/..';
         $imgRoot = $appRoot . '/web/img/uploads/' . $code . '/' . $site . '/';
         preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
@@ -182,6 +181,10 @@ class ImageService extends ScraperServices
             ->get('ConnectionService')
             ->getFbGraphNode($fb, $imgId, 'height,width,album,images');
         $images = $graphNode->getField('images');
+
+        if (!$images) {
+            return false;
+        }
 
         if (!$cover) {
             foreach ($images as $key => $img) {

@@ -89,6 +89,10 @@ class ScraperCommand extends ContainerAwareCommand
         $this->scrapeStart = $input->getOption('resume'); // if null, get all
         $this->scrapeFull  = $input->getOption('full');   // if null, get most recent posts only
 
+        if ($this->scrapeFull) {
+            $this->output->writeln("### Full scrape requested, will overwrite database!");
+        }
+
         switch ($this->scrapeSite) {
             case null:
                 $siteName = "all sites";
@@ -162,13 +166,13 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         if (!$this->scrapeParty) {
-            $msg = "# Getting all parties...";
+            $this->output->write("# Getting all parties...");
             $parties = $this->scService->getAllParties();
         } else {
-            $msg = "# Getting one party (" . $this->scrapeParty . ")...";
+            $this->output->write("# Getting one party (" . $this->scrapeParty . ")...");
             $parties = $this->scService->getOneParty($this->scrapeParty);
         }
-        $this->output->writeln($msg . " Done");
+        $this->output->write(" Done\n");
 
         return $parties;
     }

@@ -7,6 +7,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Validator\Constraints\DateTime;
+use Symfony\Component\Console\Output\OutputInterface;
 
 use AppBundle\Command\ScraperCommand;
 use AppBundle\Entity\Party;
@@ -24,16 +25,15 @@ class ScraperServices
     protected $em;
     private   $container;
 
-
-    public function exception_handler($e) {
-        $output->writeln($e->getMessage());
+    public function __construct(EntityManager $entityManager, Container $container) {
+        $this->em        = $entityManager;
+        $this->container = $container;
+        @set_exception_handler(array($this, 'exception_handler'));
     }
 
 
-    public function __construct(EntityManager $entityManager, Container $container) {
-        $this->em = $entityManager;
-        $this->container = $container;
-        @set_exception_handler(array($this, 'exception_handler'));
+    public function exception_handler($e) {
+        $this->output->writeln($e->getMessage());
     }
 
 
@@ -179,24 +179,25 @@ class ScraperServices
      */
     public function getTimeLimit($type, $subType, $partyCode, $scrapeFull = false) {
 
-        $limited   = strtotime("-1 year"); // set age limit for fb text posts and tweets
-        $unlimited = strtotime("-20 years"); // practically no limit, get all
+        $fbLaunch  = strtotime("04 February 2004"); // Facebook launch date
+        $ytLaunch  = strtotime("14 February 2005"); // YouTube launch date
+        $twLaunch  = strtotime("15 July 2006");     // Twitter launch date
+        $gpLaunch  = strtotime("28 June 2011");     // Google+ launch date
+        $timeLimit = strtotime("-1 year");          // current date -1 year
 
         if ($scrapeFull) { // if user requested a full scrape
             echo "getting all... ";
-
             switch ($type) {
                 case 'tw':
-                    $time = $limited; // age limit for all tweets
+                    $limit = $twLaunch;
                     break;
                 case 'fb':
-                    $time = ($subType == 'T') ? $limited : $unlimited; // limit for text posts only
+                    $limit = $fbLaunch;
                     break;
                 default:
-                    $time = $unlimited; // no limit for yt videos, get all
+                    $limit = $ytLaunch;
             }
-
-            return $time;
+            return $limit;
         }
 
         echo "checking database...";
@@ -206,28 +207,29 @@ class ScraperServices
                 'code' => $partyCode,
                 'type' => $type,
                 'subType' => $subType
-                ],['postTime' => 'DESC']
+                ],[
+                'postTime' => 'DESC'
+                ]
             );
 
         if (!empty($p)) {
             echo " !empty, updating... ";
-            $time = $p->getPostTime()->getTimestamp();
-            return $time;
+            $limit = $p->getPostTime()->getTimestamp();
+            return $limit;
         }
 
         echo " empty, getting all... ";
         switch ($type) {
             case 'tw':
-                $time = $limited; // age limit for all tweets
+                $limit = $timeLimit;
                 break;
             case 'fb':
-                $time = ($subType == 'T') ? $limited : $unlimited; // limit for text posts only
+                $limit = ($subType == 'T') ? $timeLimit : $fbLaunch;
                 break;
             default:
-                $time = $unlimited; // no limit for yt videos, get all
+                $limit = $ytLaunch;
         }
-
-        return $time;
+        return $limit;
     }
 
 }

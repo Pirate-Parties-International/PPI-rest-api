@@ -59,7 +59,7 @@ class FacebookService extends ScraperServices
      * @param  bool   $scrapeFull
      * @return array
      */
-    public function getFBData($fbPageId, $partyCode, $scrapeData = null, $scrapeFull = false) {
+    public function getFBData($fbPageId, $partyCode, $scrapeFull = false, $scrapeData = null) {
         $fb = $this->connect->getNewFacebook();
 
         $requestFields = [
@@ -112,12 +112,19 @@ class FacebookService extends ScraperServices
 
     /**
      * Basic info about a FB page
-     * @param  $graphNode
+     * @param  object $fb
+     * @param  string $fbPageId
+     * @param  stting $requestFields
      * @return array
      */
     public function getPageInfo($fb, $fbPageId, $requestFields) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
+
         echo "     + Info and stats.... ";
+        if (!$graphNode->getField('engagement')) {
+            echo "not found\n";
+            return false;
+        }
 
         $out['info'] = [
             'about'   => $graphNode->getField('about'),
@@ -137,8 +144,7 @@ class FacebookService extends ScraperServices
         $out['likes']   = !empty($graphNode->getField('engagement')) ? $graphNode->getField('engagement')->getField('count') : null;
         $out['talking'] = !empty($graphNode->getField('talking_about_count')) ? $graphNode->getField('talking_about_count') : null;
 
-        $statCheck = !is_null($out['likes']) ? 'ok' : 'not found';
-        echo $statCheck . "\n";
+        echo "ok\n";
 
         return $out;
     }
@@ -146,7 +152,7 @@ class FacebookService extends ScraperServices
 
     /**
      * Post count for stats only
-     * @param  string $fb
+     * @param  object $fb
      * @param  string $fbPageId
      * @param  string $requestFields
      * @return int
@@ -155,30 +161,26 @@ class FacebookService extends ScraperServices
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
         $fdPcount  = $graphNode->getField('posts');
 
-        if (!empty($fdPcount)) {
-            echo "     + Counting posts.... page ";
-            $pageCount = 0;
-
-            do {
-                echo $pageCount . ', ';
-
-                foreach ($fdPcount as $key => $post) {
-                    $temp['posts'][] = ['id' => $post->getField('id')]; // count all posts
-                }
-
-                $pageCount++;
-
-            } while ($fdPcount = $fb->next($fdPcount)); // while next page is not null
-
-            $out['postCount'] = count($temp['posts']);
-            echo "...total " . $out['postCount'] . " found";
-
-        } else {
-            echo "     - Posts not found";
-            $out['postCount'] = 0;
+        echo "     + Counting posts.... ";
+        if (!$fdPcount) {
+            echo "not found\n";
+            return false;
         }
 
-        echo "\n";
+        echo "page ";
+        $pageCount = 0;
+
+        do {
+            echo $pageCount . ', ';
+            foreach ($fdPcount as $key => $post) {
+                $temp['posts'][] = ['id' => $post->getField('id')]; // count all posts
+            }
+            $pageCount++;
+        } while ($fdPcount = $fb->next($fdPcount)); // while next page is not null
+
+        $out['postCount'] = count($temp['posts']);
+        echo "...total " . $out['postCount'] . " found\n";
+
         return $out['postCount'];
     }
 
@@ -194,25 +196,24 @@ class FacebookService extends ScraperServices
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
         $fdAlbums  = $graphNode->getField('albums');
 
-        if (!empty($fdAlbums)) {
-            echo "     + Counting photos... page ";
-            $pageCount = 0;
-
-            foreach ($fdAlbums as $key => $album) {
-                echo $pageCount . ", ";
-                $photoCount[] = $album->getField('photo_count');
-                $pageCount++;
-            }
-
-            $out['photoCount'] = array_sum($photoCount);
-            echo "...total " . $out['photoCount'] . " found";
-
-        } else {
-            echo "     - Photos not found";
-            $out['photoCount'] = 0;
+        echo "     + Counting photos... ";
+        if (!$fdAlbums) {
+            echo "not found\n";
+            return false;
         }
 
-        echo "\n";
+        echo "page ";
+        $pageCount = 0;
+
+        foreach ($fdAlbums as $key => $album) {
+            echo $pageCount . ", ";
+            $photoCount[] = $album->getField('photo_count');
+            $pageCount++;
+        }
+
+        $out['photoCount'] = array_sum($photoCount);
+        echo "...total " . $out['photoCount'] . " found\n";
+
         return $out['photoCount'];
     }
 
@@ -228,30 +229,26 @@ class FacebookService extends ScraperServices
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
         $fdVcount  = $graphNode->getField('videos');
 
-        if (!empty($fdVcount)) {
-            echo "     + Counting videos... page ";
-            $pageCount = 0;
-
-            do {
-                echo $pageCount . ', ';
-
-                foreach ($fdVcount as $key => $post) {
-                    $temp['videos'][] = ['id' => $post->getField('id')]; // count all posts
-                }
-
-                $pageCount++;
-
-            } while ($fdVcount = $fb->next($fdVcount)); // while next page is not null
-
-            $out['videoCount'] = count($temp['videos']);
-            echo "...total " . $out['videoCount'] . " found";
-
-        } else {
-            echo "     - Videos not found";
-            $out['videoCount'] = 0;
+        echo "     + Counting videos... ";
+        if (!$fdVcount) {
+            echo "not found\n";
+            return false;
         }
 
-        echo "\n";
+        echo "page ";
+        $pageCount = 0;
+
+        do {
+            echo $pageCount . ', ';
+            foreach ($fdVcount as $key => $post) {
+                $temp['videos'][] = ['id' => $post->getField('id')]; // count all posts
+            }
+            $pageCount++;
+        } while ($fdVcount = $fb->next($fdVcount)); // while next page is not null
+
+        $out['videoCount'] = count($temp['videos']);
+        echo "...total " . $out['videoCount'] . " found\n";
+
         return $out['videoCount'];
     }
 
@@ -267,26 +264,26 @@ class FacebookService extends ScraperServices
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
         $fdEvents  = $graphNode->getField('events');
 
-        if (!empty($fdEvents)) {
-            echo "     + Counting events... page ";
-            $pageCount = 0;
-            do {
-                echo $pageCount . ", ";
-                foreach ($fdEvents as $key => $event) {
-                    $temp['events'][] = ['id' => $event->getField('id')];
-                }
-                $pageCount++;
-            } while ($fdEvents = $fb->next($fdEvents)); // while next page is not null
-
-            $out['eventCount'] = count($temp['events']);
-            echo "...total " . $out['eventCount'] . " found";
-
-        } else {
-            echo "     - Events not found";
-            $out['eventCount'] = 0;
+        echo "     + Counting events... ";
+        if (!$fdEvents) {
+            echo "not found.\n";
+            return false;
         }
 
-        echo "\n";
+        echo "page ";
+        $pageCount = 0;
+
+        do {
+            echo $pageCount . ", ";
+            foreach ($fdEvents as $key => $event) {
+                $temp['events'][] = ['id' => $event->getField('id')];
+            }
+            $pageCount++;
+        } while ($fdEvents = $fb->next($fdEvents)); // while next page is not null
+
+        $out['eventCount'] = count($temp['events']);
+        echo "...total " . $out['eventCount'] . " found\n";
+
         return $out['eventCount'];
     }
 
@@ -309,107 +306,106 @@ class FacebookService extends ScraperServices
         $fdPosts   = $graphNode->getField('posts');
 
         echo "     + Post details.... ";
-        if (!empty($fdPosts)) {
+        if (!$fdPosts) {
+            echo "not found\n";
+            return false;
+        }
 
-            $timeLimit = $this->parent->getTimeLimit('fb', 'T', $partyCode, $scrapeFull);
-            echo "page ";
-            $pageCount = 0;
+        $timeLimit = $this->parent->getTimeLimit('fb', 'T', $partyCode, $scrapeFull);
+        echo "page ";
+        $pageCount = 0;
 
-            do {
-                echo $pageCount . ', ';
+        do {
+            echo $pageCount . ', ';
 
-                foreach ($fdPosts as $key => $post) {
+            foreach ($fdPosts as $key => $post) {
 
-                    $type = $post->getField('type'); // types = 'status', 'link', 'photo', 'video', 'event'
-                    if ($type != 'photo' && $type != 'event') { // get photos and events separately to get all details
+                $type = $post->getField('type'); // types = 'status', 'link', 'photo', 'video', 'event'
+                if ($type != 'photo' && $type != 'event') { // get photos and events separately to get all details
 
-                        // $img = null;
-                        if ($type == 'video') {
-                            $temp = $post->getField('link');
-                            if (strpos($temp, 'youtu')) { // youtube.com or youtu.be
+                    // $img = null;
+                    if ($type == 'video') {
+                        $temp = $post->getField('link');
+                        if (strpos($temp, 'youtu')) { // youtube.com or youtu.be
 
-                                $temp = urldecode($temp);
-                                switch (true) {
-                                    case strpos($temp, 'v='):
-                                        $idPos = strpos($temp, 'v=')+2;
-                                        break;
-                                    case strpos($temp, 'youtu.be/'):
-                                        $idPos = strpos($temp, '.be/')+4;
-                                        break;
-                                    }
+                            $temp = urldecode($temp);
+                            switch (true) {
+                                case strpos($temp, 'v='):
+                                    $idPos = strpos($temp, 'v=')+2;
+                                    break;
+                                case strpos($temp, 'youtu.be/'):
+                                    $idPos = strpos($temp, '.be/')+4;
+                                    break;
+                                }
 
-                                $vidId  = substr($temp, $idPos, 11);
-                                $imgSrc = "https://img.youtube.com/vi/".$vidId."/mqdefault.jpg"; // 320x180 (only 16:9 option)
-                                // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480 (all 4:3 w/ letterbox)
-                                $imgBkp = $post->getField('picture'); // 130x130 thumbnail
-                            } else {
-                                $imgSrc = $post->getField('picture');
-                                $imgBkp = null;
-                            }
+                            $vidId  = substr($temp, $idPos, 11);
+                            $imgSrc = "https://img.youtube.com/vi/".$vidId."/mqdefault.jpg"; // 320x180 (only 16:9 option)
+                            // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480 (all 4:3 w/ letterbox)
+                            $imgBkp = $post->getField('picture'); // 130x130 thumbnail
                         } else {
-                            $type   = 'post';
-                            $imgSrc = $post->getField('picture') ? $post->getField('picture'): null;
+                            $imgSrc = $post->getField('picture');
                             $imgBkp = null;
                         }
-
-                        if ($imgSrc && strpos($imgSrc, 'external.xx.fbcdn.net')) {
-                            $stPos  = strpos($imgSrc, '&url=')+5;
-                            $edPos  = strpos($imgSrc, '&cfs=');
-                            $length = $edPos - $stPos;
-                            $temp   = substr($imgSrc, $stPos, $length);
-                            $imgSrc = urldecode($temp);
-                        }
-
-                        $img  = $imgSrc ? $this->images->saveImage('fb', $partyCode, $imgSrc, $post->getField('id'), $imgBkp) :  null;
-                        $text = !empty($post->getField('message')) ? $post->getField('message') : $post->getField('story');
-
-                        $likeCount     = $this->getStatCount($post->getField('likes'));
-                        $reactionCount = $this->getStatCount($post->getField('reactions'));
-                        $commentCount  = $this->getStatCount($post->getField('comments'));
-                        $shareCount    = !empty($post->getField('shares')) ? json_decode($post->getField('shares')->getField('count'), true) : null;
-
-                        $out[$type.'s'][] = [
-                            'postId'    => $post->getField('id'),
-                            'postTime'  => $post->getField('updated_time'), // DateTime
-                            'postText'  => $text,
-                            'postImage' => $img,
-                            'postLikes' => $reactionCount,
-                            'postData'  => [
-                                'id'         => $post->getField('id'),
-                                'posted'     => $post->getField('created_time')->format('Y-m-d H:i:s'), // string
-                                'updated'    => $post->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                                'text'       => $text,
-                                'image'      => $img,
-                                'img_source' => $imgSrc,
-                                'link'       => [
-                                    'url'        => $post->getField('link'),
-                                    'name'       => $post->getField('name'),
-                                    'caption'    => $post->getField('caption'),
-                                    ],
-                                'url'        => $post->getField('permalink_url'),
-                                'likes'      => $likeCount,
-                                'reactions'  => $reactionCount,
-                                'comments'   => $commentCount,
-                                'shares'     => $shareCount
-                                ],
-                            ];
+                    } else {
+                        $type   = 'post';
+                        $imgSrc = $post->getField('picture') ? $post->getField('picture') : null;
+                        $imgBkp = null;
                     }
+
+                    if ($imgSrc && strpos($imgSrc, 'external.xx.fbcdn.net')) {
+                        $stPos  = strpos($imgSrc, '&url=')+5;
+                        $edPos  = strpos($imgSrc, '&cfs=');
+                        $length = $edPos - $stPos;
+                        $temp   = substr($imgSrc, $stPos, $length);
+                        $imgSrc = urldecode($temp);
+                    }
+
+                    $img  = $imgSrc ? $this->images->saveImage('fb', $partyCode, $imgSrc, $post->getField('id'), $imgBkp) :  null;
+                    $text = !empty($post->getField('message')) ? $post->getField('message') : $post->getField('story');
+
+                    $likeCount     = $this->getStatCount($post->getField('likes'));
+                    $reactionCount = $this->getStatCount($post->getField('reactions'));
+                    $commentCount  = $this->getStatCount($post->getField('comments'));
+                    $shareCount    = !empty($post->getField('shares')) ? json_decode($post->getField('shares')->getField('count'), true) : null;
+
+                    $out[$type.'s'][] = [
+                        'postId'    => $post->getField('id'),
+                        'postTime'  => $post->getField('updated_time'), // DateTime
+                        'postText'  => $text,
+                        'postImage' => $img,
+                        'postLikes' => $reactionCount,
+                        'postData'  => [
+                            'id'         => $post->getField('id'),
+                            'posted'     => $post->getField('created_time')->format('Y-m-d H:i:s'), // string
+                            'updated'    => $post->getField('updated_time')->format('Y-m-d H:i:s'), // string
+                            'text'       => $text,
+                            'image'      => $img,
+                            'img_source' => $imgSrc,
+                            'link'       => [
+                                'url'        => $post->getField('link'),
+                                'name'       => $post->getField('name'),
+                                'caption'    => $post->getField('caption'),
+                                ],
+                            'url'        => $post->getField('permalink_url'),
+                            'likes'      => $likeCount,
+                            'reactions'  => $reactionCount,
+                            'comments'   => $commentCount,
+                            'shares'     => $shareCount
+                            ],
+                        ];
                 }
+            }
 
-                $timeCheck = $post->getField('created_time')->getTimestamp(); // check time of last scraped post
-                $pageCount++;
+            $timeCheck = $post->getField('created_time')->getTimestamp(); // check time of last scraped post
+            $pageCount++;
 
-            } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
-            // while next page is not null and within our time limit
+        } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
+        // while next page is not null and within our time limit
 
-            $txtCount = array_key_exists('posts',  $out) ? count($out['posts'])  : 0;
-            $vidCount = array_key_exists('videos', $out) ? count($out['videos']) : 0;
-            echo "..." . $txtCount . " text posts and " . $vidCount . " videos since " . date('d/m/Y', $timeCheck) . " processed";
+        $txtCount = array_key_exists('posts',  $out) ? count($out['posts'])  : 0;
+        $vidCount = array_key_exists('videos', $out) ? count($out['videos']) : 0;
+        echo "..." . $txtCount . " text posts and " . $vidCount . " videos since " . date('d/m/Y', $timeCheck) . " processed\n";
 
-        } else {
-            echo "not found";
-        }
-        echo "\n";
         return (isset($out)) ? $out : null;
     }
 
@@ -426,67 +422,68 @@ class FacebookService extends ScraperServices
     public function getImageDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
         $fdAlbums  = $graphNode->getField('albums');
+
         echo "     + Photo details... ";
-
-        if (!empty($fdAlbums)) {
-            $timeLimit = $this->parent->getTimeLimit('fb', 'I', $partyCode, $scrapeFull);
-            echo "page ";
-            $pageCount = 0;
-            foreach ($fdAlbums as $key => $album) {
-                $photoCount[] = $album->getField('photo_count');
-                $fdPhotos     = $album->getField('photos');
-                if (!empty($fdPhotos)) {
-                    do {
-                        echo $pageCount . ', ';
-                        foreach ($fdPhotos as $key => $photo) {
-
-                            $imgSrc = $this->images->getFbImageSource($fb, $photo->getField('id')); // ~480x480 (or closest)
-                            $imgBkp = $photo->getField('picture'); // 130x130 thumbnail
-                            $img    = $this->images->saveImage('fb', $partyCode, $imgSrc, $photo->getField('id'), $imgBkp);
-
-                            $likeCount     = $this->getStatCount($photo->getField('likes'));
-                            $reactionCount = $this->getStatCount($photo->getField('reactions'));
-                            $commentCount  = $this->getStatCount($photo->getField('comments'));
-                            $shareCount    = count(json_decode($photo->getField('sharedposts'), true));
-                            $out['photos'][] = [
-                                'postId'    => $photo->getField('id'),
-                                'postTime'  => $photo->getField('updated_time'), // DateTime
-                                'postText'  => $photo->getField('name'),
-                                'postImage' => $img,
-                                'postLikes' => $reactionCount,
-                                'postData'  => [
-                                    'id'         => $photo->getField('id'),
-                                    'posted'     => $photo->getField('created_time')->format('Y-m-d H:i:s'), // string
-                                    'updated'    => $photo->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                                    'text'       => $photo->getField('name'),
-                                    'image'      => $img,
-                                    'img_source' => $imgSrc,
-                                    'url'        => $photo->getField('link'),
-                                    'album'      => [
-                                        'name'       => $album->getField('name'),
-                                        'id'         => $album->getField('id'),
-                                        ],
-                                    'likes'      => $likeCount,
-                                    'reactions'  => $reactionCount,
-                                    'comments'   => $commentCount,
-                                    'shares'     => $shareCount
-                                    ]
-                                ];
-                        }
-                        $timeCheck = $photo->getField('updated_time')->getTimestamp(); // check time of last scraped post
-                        $pageCount++;
-                    } while ($timeCheck > $timeLimit && $fdPhotos = $fb->next($fdPhotos));
-                    // while next page is not null and within our time limit
-                }
-            }
-            $out['photoCount'] = array_sum($photoCount);
-
-            echo "..." . $out['photoCount'] . " found, " . count($out['photos']) . " since " . date('d/m/Y', $timeCheck) . " processed";
-        } else {
-            $out['photoCount'] = 0;
-            echo "not found";
+        if (!$fdAlbums) {
+            echo "not found\n";
+            return false;
         }
-        echo "\n";
+
+        $timeLimit = $this->parent->getTimeLimit('fb', 'I', $partyCode, $scrapeFull);
+        echo "page ";
+        $pageCount = 0;
+
+        foreach ($fdAlbums as $key => $album) {
+            $photoCount[] = $album->getField('photo_count');
+            $fdPhotos     = $album->getField('photos');
+            if (!empty($fdPhotos)) {
+                do {
+                    echo $pageCount . ', ';
+                    foreach ($fdPhotos as $key => $photo) {
+
+                        $imgSrc = $this->images->getFbImageSource($fb, $photo->getField('id')); // ~480x480 (or closest)
+                        $imgBkp = $photo->getField('picture'); // 130x130 thumbnail
+                        $img    = $this->images->saveImage('fb', $partyCode, $imgSrc, $photo->getField('id'), $imgBkp);
+
+                        $likeCount     = $this->getStatCount($photo->getField('likes'));
+                        $reactionCount = $this->getStatCount($photo->getField('reactions'));
+                        $commentCount  = $this->getStatCount($photo->getField('comments'));
+                        $shareCount    = count(json_decode($photo->getField('sharedposts'), true));
+                        $out['photos'][] = [
+                            'postId'    => $photo->getField('id'),
+                            'postTime'  => $photo->getField('updated_time'), // DateTime
+                            'postText'  => $photo->getField('name'),
+                            'postImage' => $img,
+                            'postLikes' => $reactionCount,
+                            'postData'  => [
+                                'id'         => $photo->getField('id'),
+                                'posted'     => $photo->getField('created_time')->format('Y-m-d H:i:s'), // string
+                                'updated'    => $photo->getField('updated_time')->format('Y-m-d H:i:s'), // string
+                                'text'       => $photo->getField('name'),
+                                'image'      => $img,
+                                'img_source' => $imgSrc,
+                                'url'        => $photo->getField('link'),
+                                'album'      => [
+                                    'name'       => $album->getField('name'),
+                                    'id'         => $album->getField('id'),
+                                    ],
+                                'likes'      => $likeCount,
+                                'reactions'  => $reactionCount,
+                                'comments'   => $commentCount,
+                                'shares'     => $shareCount
+                                ]
+                            ];
+                    }
+                    $timeCheck = $photo->getField('updated_time')->getTimestamp(); // check time of last scraped post
+                    $pageCount++;
+                } while ($timeCheck > $timeLimit && $fdPhotos = $fb->next($fdPhotos));
+                // while next page is not null and within our time limit
+            }
+        }
+
+        $out['photoCount'] = array_sum($photoCount);
+        echo "..." . $out['photoCount'] . " found, " . count($out['photos']) . " since " . date('d/m/Y', $timeCheck) . " processed\n";
+
         return $out;
     }
 
@@ -503,88 +500,78 @@ class FacebookService extends ScraperServices
     public function getEventDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
         $fdEvents  = $graphNode->getField('events');
+
         echo "     + Event details... ";
-
-        if (!empty($fdEvents)) {
-
-            $timeLimit = $this->parent->getTimeLimit('fb', 'E', $partyCode, $scrapeFull);
-            echo "page ";
-            $pageCount = 0;
-
-            do { // process current page of results
-                echo $pageCount . ', ';
-                if (!empty($fdEvents)) {
-                    foreach ($fdEvents as $key => $event) {
-
-                        $place = $event->getField('place');
-                        if (!empty($place)) { // must be checked in advance, else will break if null
-                            $placeName = $place->getField('name');
-                            $location  = $place->getField('location');
-                        } else $placeName = null;
-
-                        if (!empty($location)) { // must be checked in advance, else will break if null
-                            $placeAddress = [
-                                'street'    => $location->getField('street'),
-                                'city'      => $location->getField('city'),
-                                'zip'       => $location->getField('zip'),
-                                'country'   => $location->getField('country'),
-                                'longitude' => $location->getField('longitude'),
-                                'latitude'  => $location->getField('latitude')
-                                ];
-                        } else $placeAddress = null;
-
-                        $commentCount = $this->getStatCount($event->getField('comments'));
-                        $coverData    = json_decode($event->getField('cover'), true);
-
-                        $imgId  = $coverData['id'];
-                        $imgSrc = $coverData['source'];
-
-                        if (!empty($imgSrc)) {
-                            $img = $this->images->saveImage('fb', $partyCode, $imgSrc, $imgId);
-                        } else {
-                            $img = null;
-                        }
-
-                        $out['events'][] = [
-                            'postId'    => $event->getField('id'),
-                            'postTime'  => $event->getField('updated_time'), // DateTime
-                            'postText'  => $event->getField('name'),
-                            'postImage' => $img,
-                            'postLikes' => $event->getField('interested_count'),
-                            'postData'  => [
-                                'id'          => $event->getField('id'),
-                                'start_time'  => $event->getField('start_time')->format('Y-m-d H:i:s'), // string
-                                'updated'     => $event->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                                'text'        => $event->getField('name'),
-                                'description' => $event->getField('description'),
-                                'image'       => $img,
-                                'img_source'  => $imgSrc,
-                                'place'       => $placeName,
-                                'address'     => $placeAddress,
-                                'url'         => 'https://www.facebook.com/events/'.$event->getField('id'),
-                                'attending'   => $event->getField('attending_count'),
-                                'interested'  => $event->getField('interested_count'),
-                                'comments'    => $commentCount
-                                ]
-                            ];
-                    }
-
-                    $timeCheck = $event->getField('updated_time')->getTimestamp(); // check time of last scraped post
-                    $pageCount++;
-                }
-
-            } while ($timeCheck > $timeLimit && $fdEvents = $fb->next($fdEvents));
-            // while next page is not null and within our time limit
-
-            $out['eventCount'] = count($out['events']);
-            echo "..." . $out['eventCount'] . " found and processed";
-
-        } else {
-            echo "not found";
-            $out['eventCount'] = 0;
+        if (!$fdEvents) {
+            echo "not found\n";
+            return false;
         }
 
-        echo "\n";
+        $timeLimit = $this->parent->getTimeLimit('fb', 'E', $partyCode, $scrapeFull);
+        echo "page ";
+        $pageCount = 0;
+
+        do { // process current page of results
+            echo $pageCount . ', ';
+            foreach ($fdEvents as $key => $event) {
+
+                $place = $event->getField('place');
+                if (!empty($place)) { // must be checked in advance, else will break if null
+                    $placeName = $place->getField('name');
+                    $location  = $place->getField('location');
+                } else $placeName = null;
+
+                if (!empty($location)) { // must be checked in advance, else will break if null
+                    $placeAddress = [
+                        'street'    => $location->getField('street'),
+                        'city'      => $location->getField('city'),
+                        'zip'       => $location->getField('zip'),
+                        'country'   => $location->getField('country'),
+                        'longitude' => $location->getField('longitude'),
+                        'latitude'  => $location->getField('latitude')
+                        ];
+                } else $placeAddress = null;
+
+                $commentCount = $this->getStatCount($event->getField('comments'));
+                $coverData    = json_decode($event->getField('cover'), true);
+
+                $imgId  = $coverData['id'];
+                $imgSrc = $coverData['source'];
+                $img    = $imgSrc ? $this->images->saveImage('fb', $partyCode, $imgSrc, $imgId) : null;
+
+                $out['events'][] = [
+                    'postId'    => $event->getField('id'),
+                    'postTime'  => $event->getField('updated_time'), // DateTime
+                    'postText'  => $event->getField('name'),
+                    'postImage' => $img,
+                    'postLikes' => $event->getField('interested_count'),
+                    'postData'  => [
+                        'id'          => $event->getField('id'),
+                        'start_time'  => $event->getField('start_time')->format('Y-m-d H:i:s'), // string
+                        'updated'     => $event->getField('updated_time')->format('Y-m-d H:i:s'), // string
+                        'text'        => $event->getField('name'),
+                        'description' => $event->getField('description'),
+                        'image'       => $img,
+                        'img_source'  => $imgSrc,
+                        'place'       => $placeName,
+                        'address'     => $placeAddress,
+                        'url'         => 'https://www.facebook.com/events/'.$event->getField('id'),
+                        'attending'   => $event->getField('attending_count'),
+                        'interested'  => $event->getField('interested_count'),
+                        'comments'    => $commentCount
+                        ]
+                    ];
+            }
+
+            $timeCheck = $event->getField('updated_time')->getTimestamp(); // check time of last scraped post
+            $pageCount++;
+
+        } while ($timeCheck > $timeLimit && $fdEvents = $fb->next($fdEvents));
+        // while next page is not null and within our time limit
+
+        $out['eventCount'] = count($out['events']);
+        echo "..." . $out['eventCount'] . " found and processed\n";
+
         return $out;
     }
 

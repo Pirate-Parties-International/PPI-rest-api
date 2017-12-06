@@ -35,18 +35,12 @@ class TwitterService extends ScraperServices
      * @return array
      */
     public function getTwitterData($username, $partyCode, $scrapeFull = false) {
-
-    //
-    // Basic info and stats
-    //
         $tw   = $this->connect->getNewTwitter();
         $data = $this->connect->getTwRequest($tw, $username);
 
-        if (empty($data)) {
-            return false;
-        }
-
-        if (empty($data->followers_count)) {
+        echo "     + Info and stats... ";
+        if (empty($data) || empty($data->followers_count)) {
+            echo "not found\n";
             return false;
         }
 
@@ -57,7 +51,7 @@ class TwitterService extends ScraperServices
             'followers'   => $data->followers_count,
             'following'   => $data->friends_count,
         ];
-        echo "     + Info and stats... ok... total " . $out['tweets'] . " tweets found\n";
+        echo "ok... total " . $out['tweets'] . " tweets found\n";
 
         $temp = $this->getTweetDetails($tw, $username, $partyCode, $scrapeFull);
         $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : null;
@@ -83,9 +77,9 @@ class TwitterService extends ScraperServices
      * @return int
      */
     public function getTweetDetails($tw, $username, $partyCode, $scrapeFull = false) {
-        echo "     + Tweet details.... ";
         $tweetData = $this->connect->getTwRequest($tw, $username, true);
 
+        echo "     + Tweet details.... ";
         if (empty($tweetData)) {
             echo "not found\n";
             return false;
@@ -166,7 +160,7 @@ class TwitterService extends ScraperServices
             }
 
             $timeCheck  = $twTime->getTimestamp(); // check time of last tweet scraped
-            $limitCheck = $this->connect->getTwRateLimit($tw);
+            $this->connect->getTwRateLimit($tw);
 
             // make new request to get next page of results
             $tweetData = $this->connect->getTwRequest($tw, $username, true, $item->id);

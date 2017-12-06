@@ -39,10 +39,13 @@ class GoogleService extends ScraperServices
             ->getNewGoogle($googleId, true);
         $data = $youtube->getChannelByName($googleId);
 
+        echo "     + Info and stats... ";
         if (empty($data)) {
+            echo "not found\n";
             return false;
         }
         if (empty($data->statistics) || empty($data->statistics->viewCount)) {
+            echo "not found\n";
             return false;
         }
 
@@ -55,7 +58,6 @@ class GoogleService extends ScraperServices
         $videos   = $youtube->getPlaylistItemsByPlaylistId($playlist);
 
         echo "     + Videos... ";
-
         if (!empty($videos)) {
             $out['videos'] = $this->getVideoDetails($partyCode, $youtube, $videos);
             echo "processed\n";
