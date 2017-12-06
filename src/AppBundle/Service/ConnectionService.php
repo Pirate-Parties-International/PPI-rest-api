@@ -6,6 +6,7 @@ use Symfony\Component\DependencyInjection\Container;
 use Facebook\Facebook;
 use Facebook\FacebookSDKException;
 use Facebook\FacebookResponseException;
+use Facebook\FacebookThrottleException;
 use Madcoda\Youtube;
 use TwitterAPIExchange;
 
@@ -48,7 +49,6 @@ class ConnectionService extends ScraperServices
      */
     public function getFbGraphNode($fb, $fbPageId, $fields) {
         $request = $fb->request('GET', $fbPageId, ['fields' => $fields]);
-
         try {
             $response = $fb->getClient()->sendRequest($request);
 
@@ -62,14 +62,44 @@ class ConnectionService extends ScraperServices
             echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
             exit;
 
+        } catch(Facebook\Exceptions\FacebookThrottleException $e) {
+            // When the app hits the rate limit
+            echo $e->getMessage() . "\n";
+            $response = $this->getFbRateLimit($request);
+
         } catch(\Exception $e) {
             echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
             return false;
         }
 
+        $graphNode = null;
         $graphNode = $response->getGraphNode();
 
         return $graphNode;
+    }
+
+
+    /**
+     * Stops sending requests if the app hits Facebook's rate limit (untested)
+     * @param  object $request
+     * @return object
+     */
+    public function getFbRateLimit($request) {
+        $connected = false;
+        $waitUntil = strtotime("+15 minutes");
+
+        do {
+            try {
+                echo "Please wait until " . date('H:i:s', $waitUntil) . "... ";
+                time_sleep_until($waitUntil);
+                $response = $fb->getClient()->sendRequest($request);
+                $connected = true;
+            } catch(\Exception $e) {
+                echo "Still waiting... ";
+            }
+        } while ($connected == false);
+
+        return $response;
     }
 
 

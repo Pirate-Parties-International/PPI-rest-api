@@ -121,7 +121,7 @@ class FacebookService extends ScraperServices
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
 
         echo "     + Info and stats.... ";
-        if (!$graphNode->getField('engagement')) {
+        if (!$graphNode) {
             echo "not found\n";
             return false;
         }
@@ -159,14 +159,14 @@ class FacebookService extends ScraperServices
      */
     public function getPostCount($fb, $fbPageId, $requestFields) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-        $fdPcount  = $graphNode->getField('posts');
 
         echo "     + Counting posts.... ";
-        if (!$fdPcount) {
+        if (!$graphNode) {
             echo "not found\n";
             return false;
         }
 
+        $fdPcount  = $graphNode->getField('posts');
         echo "page ";
         $pageCount = 0;
 
@@ -194,14 +194,14 @@ class FacebookService extends ScraperServices
      */
     public function getImageCount($fb, $fbPageId, $requestFields) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-        $fdAlbums  = $graphNode->getField('albums');
 
         echo "     + Counting photos... ";
-        if (!$fdAlbums) {
+        if (!$graphNode) {
             echo "not found\n";
             return false;
         }
 
+        $fdAlbums  = $graphNode->getField('albums');
         echo "page ";
         $pageCount = 0;
 
@@ -227,14 +227,14 @@ class FacebookService extends ScraperServices
      */
     public function getVideoCount($fb, $fbPageId, $requestFields) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-        $fdVcount  = $graphNode->getField('videos');
 
         echo "     + Counting videos... ";
-        if (!$fdVcount) {
+        if (!$graphNode) {
             echo "not found\n";
             return false;
         }
 
+        $fdVcount  = $graphNode->getField('videos');
         echo "page ";
         $pageCount = 0;
 
@@ -262,14 +262,14 @@ class FacebookService extends ScraperServices
      */
     public function getEventCount($fb, $fbPageId, $requestFields) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-        $fdEvents  = $graphNode->getField('events');
 
         echo "     + Counting events... ";
-        if (!$fdEvents) {
+        if (!$graphNode) {
             echo "not found.\n";
             return false;
         }
 
+        $fdEvents  = $graphNode->getField('events');
         echo "page ";
         $pageCount = 0;
 
@@ -303,14 +303,14 @@ class FacebookService extends ScraperServices
      */
     public function getPostDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-        $fdPosts   = $graphNode->getField('posts');
 
         echo "     + Post details.... ";
-        if (!$fdPosts) {
+        if (!$graphNode) {
             echo "not found\n";
             return false;
         }
 
+        $fdPosts   = $graphNode->getField('posts');
         $timeLimit = $this->parent->getTimeLimit('fb', 'T', $partyCode, $scrapeFull);
         echo "page ";
         $pageCount = 0;
@@ -421,14 +421,14 @@ class FacebookService extends ScraperServices
      */
     public function getImageDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-        $fdAlbums  = $graphNode->getField('albums');
 
         echo "     + Photo details... ";
-        if (!$fdAlbums) {
+        if (!$graphNode) {
             echo "not found\n";
             return false;
         }
 
+        $fdAlbums  = $graphNode->getField('albums');
         $timeLimit = $this->parent->getTimeLimit('fb', 'I', $partyCode, $scrapeFull);
         echo "page ";
         $pageCount = 0;
@@ -499,14 +499,14 @@ class FacebookService extends ScraperServices
      */
     public function getEventDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-        $fdEvents  = $graphNode->getField('events');
 
         echo "     + Event details... ";
-        if (!$fdEvents) {
+        if (!$graphNode) {
             echo "not found\n";
             return false;
         }
 
+        $fdEvents  = $graphNode->getField('events');
         $timeLimit = $this->parent->getTimeLimit('fb', 'E', $partyCode, $scrapeFull);
         echo "page ";
         $pageCount = 0;
