@@ -95,13 +95,13 @@ class FacebookService extends ScraperServices
         }
 
         if ($scrapeData == null || $scrapeData == 'images') {
-            $temp = $this->getImageDetails($fb, $fbPageId, $requestFields['imageDetails'], $partyCode, $scrapeFull);
+            $temp = $this->getImages($fb, $fbPageId, $requestFields['imageDetails'], $partyCode, $scrapeFull);
             $out['photoCount'] = isset($temp['photoCount']) ? $temp['photoCount'] : null;
             $out['photos']     = isset($temp['photos'])     ? $temp['photos']     : null;
         }
 
         if ($scrapeData == null || $scrapeData == 'events') {
-            $temp = $this->getEventDetails($fb, $fbPageId, $requestFields['eventDetails'], $partyCode, $scrapeFull);
+            $temp = $this->getEvents($fb, $fbPageId, $requestFields['eventDetails'], $partyCode, $scrapeFull);
             $out['eventCount'] = isset($temp['eventCount']) ? $temp['eventCount'] : null;
             $out['events']     = isset($temp['events'])     ? $temp['events']     : null;
         }
@@ -339,7 +339,6 @@ class FacebookService extends ScraperServices
                 }
 
                 $this->getPostDetails($post, $partyCode, $subType);
-
             }
 
             $timeCheck = $post->getField('created_time')->getTimestamp(); // check time of last scraped post
@@ -414,10 +413,10 @@ class FacebookService extends ScraperServices
      * @param  bool   $scrapeFull
      * @return array
      */
-    public function getImageDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
+    public function getImages($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
 
-        echo "     + Photo details... ";
+        echo "     + Image details... ";
         if (empty($graphNode)) {
             echo "not found\n";
             return false;
@@ -427,6 +426,7 @@ class FacebookService extends ScraperServices
         $timeLimit = $this->parent->getTimeLimit('fb', 'I', $partyCode, $scrapeFull);
         echo "page ";
         $pageCount = 0;
+        $imgCount  = 0;
 
         foreach ($fdAlbums as $key => $album) {
             $photoCount[] = $album->getField('photo_count');
@@ -439,39 +439,8 @@ class FacebookService extends ScraperServices
             do {
                 echo $pageCount . ', ';
                 foreach ($fdPhotos as $key => $photo) {
-
-                    $imgSrc = $this->images->getFbImageSource($fb, $photo->getField('id')); // ~480x480 (or closest)
-                    $imgBkp = $photo->getField('picture'); // 130x130 thumbnail
-                    $img    = $this->images->saveImage('fb', $partyCode, $imgSrc, $photo->getField('id'), $imgBkp);
-
-                    $likeCount     = $this->getStatCount($photo->getField('likes'));
-                    $reactionCount = $this->getStatCount($photo->getField('reactions'));
-                    $commentCount  = $this->getStatCount($photo->getField('comments'));
-                    $shareCount    = count(json_decode($photo->getField('sharedposts'), true));
-                    $out['photos'][] = [
-                        'postId'    => $photo->getField('id'),
-                        'postTime'  => $photo->getField('updated_time'), // DateTime
-                        'postText'  => $photo->getField('name'),
-                        'postImage' => $img,
-                        'postLikes' => $reactionCount,
-                        'postData'  => [
-                            'id'         => $photo->getField('id'),
-                            'posted'     => $photo->getField('created_time')->format('Y-m-d H:i:s'), // string
-                            'updated'    => $photo->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                            'text'       => $photo->getField('name'),
-                            'image'      => $img,
-                            'img_source' => $imgSrc,
-                            'url'        => $photo->getField('link'),
-                            'album'      => [
-                                'name'       => $album->getField('name'),
-                                'id'         => $album->getField('id'),
-                                ],
-                            'likes'      => $likeCount,
-                            'reactions'  => $reactionCount,
-                            'comments'   => $commentCount,
-                            'shares'     => $shareCount
-                            ]
-                        ];
+                    $this->getImageDetails($fb, $photo, $album, $partyCode);
+                    $imgCount++;
                 }
 
                 $timeCheck = $photo->getField('updated_time')->getTimestamp(); // check time of last scraped post
@@ -482,9 +451,60 @@ class FacebookService extends ScraperServices
         }
 
         $out['photoCount'] = array_sum($photoCount);
-        echo "..." . $out['photoCount'] . " found, " . count($out['photos']) . " since " . date('d/m/Y', $timeCheck) . " processed\n";
+        $out['images']     = $imgCount;
+        echo "..." . $out['photoCount'] . " found, " . $imgCount . " since " . date('d/m/Y', $timeCheck) . " processed\n";
 
         return $out;
+    }
+
+
+    /**
+     * Retrieves the details of a text post or video
+     * @param  object $fb
+     * @param  object $image
+     * @param  object $album
+     * @param  string $partyCode
+     * @return null
+     */
+    public function getImageDetails($fb, $photo, $album, $partyCode) {
+        $imgSrc = $this->images->getFbImageSource($fb, $photo->getField('id')); // ~480x480 (or closest)
+        $imgBkp = $photo->getField('picture'); // 130x130 thumbnail
+        $img    = $this->images->saveImage('fb', $partyCode, $imgSrc, $photo->getField('id'), $imgBkp);
+
+        $likeCount     = $this->getStatCount($photo->getField('likes'));
+        $reactionCount = $this->getStatCount($photo->getField('reactions'));
+        $commentCount  = $this->getStatCount($photo->getField('comments'));
+        $shareCount    = count(json_decode($photo->getField('sharedposts'), true));
+
+        $postData = [
+            'id'         => $photo->getField('id'),
+            'posted'     => $photo->getField('created_time')->format('Y-m-d H:i:s'), // string
+            'updated'    => $photo->getField('updated_time')->format('Y-m-d H:i:s'), // string
+            'text'       => $photo->getField('name'),
+            'image'      => $img,
+            'img_source' => $imgSrc,
+            'url'        => $photo->getField('link'),
+            'album'      => [
+                'name'       => $album->getField('name'),
+                'id'         => $album->getField('id'),
+                ],
+            'likes'      => $likeCount,
+            'reactions'  => $reactionCount,
+            'comments'   => $commentCount,
+            'shares'     => $shareCount
+        ];
+
+        $this->parent->addSocial(
+            $partyCode,
+            SocialMedia::TYPE_FACEBOOK,
+            SocialMedia::SUBTYPE_IMAGE,
+            $photo->getField('id'),
+            $photo->getField('updated_time'), // DateTime
+            $photo->getField('name'),
+            $img,
+            $reactionCount,
+            $postData
+        );
     }
 
 
@@ -497,7 +517,7 @@ class FacebookService extends ScraperServices
      * @param  bool   $scrapeFull
      * @return array
      */
-    public function getEventDetails($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
+    public function getEvents($fb, $fbPageId, $requestFields, $partyCode, $scrapeFull = false) {
         $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
 
         echo "     + Event details... ";
@@ -510,57 +530,13 @@ class FacebookService extends ScraperServices
         $timeLimit = $this->parent->getTimeLimit('fb', 'E', $partyCode, $scrapeFull);
         echo "page ";
         $pageCount = 0;
+        $eveCount  = 0;
 
         do { // process current page of results
             echo $pageCount . ', ';
             foreach ($fdEvents as $key => $event) {
-
-                $place = $event->getField('place');
-                if (!empty($place)) { // must be checked in advance, else will break if null
-                    $placeName = $place->getField('name');
-                    $location  = $place->getField('location');
-                } else $placeName = null;
-
-                if (!empty($location)) { // must be checked in advance, else will break if null
-                    $placeAddress = [
-                        'street'    => $location->getField('street'),
-                        'city'      => $location->getField('city'),
-                        'zip'       => $location->getField('zip'),
-                        'country'   => $location->getField('country'),
-                        'longitude' => $location->getField('longitude'),
-                        'latitude'  => $location->getField('latitude')
-                        ];
-                } else $placeAddress = null;
-
-                $commentCount = $this->getStatCount($event->getField('comments'));
-                $coverData    = json_decode($event->getField('cover'), true);
-
-                $imgId  = $coverData['id'];
-                $imgSrc = $coverData['source'];
-                $img    = $imgSrc ? $this->images->saveImage('fb', $partyCode, $imgSrc, $imgId) : null;
-
-                $out['events'][] = [
-                    'postId'    => $event->getField('id'),
-                    'postTime'  => $event->getField('updated_time'), // DateTime
-                    'postText'  => $event->getField('name'),
-                    'postImage' => $img,
-                    'postLikes' => $event->getField('interested_count'),
-                    'postData'  => [
-                        'id'          => $event->getField('id'),
-                        'start_time'  => $event->getField('start_time')->format('Y-m-d H:i:s'), // string
-                        'updated'     => $event->getField('updated_time')->format('Y-m-d H:i:s'), // string
-                        'text'        => $event->getField('name'),
-                        'description' => $event->getField('description'),
-                        'image'       => $img,
-                        'img_source'  => $imgSrc,
-                        'place'       => $placeName,
-                        'address'     => $placeAddress,
-                        'url'         => 'https://www.facebook.com/events/'.$event->getField('id'),
-                        'attending'   => $event->getField('attending_count'),
-                        'interested'  => $event->getField('interested_count'),
-                        'comments'    => $commentCount
-                        ]
-                    ];
+                $this->getEventDetails($event, $partyCode);
+                $eveCount++;
             }
 
             $timeCheck = $event->getField('updated_time')->getTimestamp(); // check time of last scraped post
@@ -569,10 +545,72 @@ class FacebookService extends ScraperServices
         } while ($timeCheck > $timeLimit && $fdEvents = $fb->next($fdEvents));
         // while next page is not null and within our time limit
 
-        $out['eventCount'] = count($out['events']);
-        echo "..." . $out['eventCount'] . " found and processed\n";
+        $out['events'] = $eveCount;
+        echo "..." . $out['events'] . " found and processed\n";
 
         return $out;
+    }
+
+
+    /**
+     * 
+     * @param  object $event
+     * @param  string partyCode
+     * @return null
+     */
+    public function getEventDetails($event, $partyCode) {
+        $place = $event->getField('place');
+
+        if (!empty($place)) { // must be checked in advance, else will break if null
+            $placeName = $place->getField('name');
+            $location  = $place->getField('location');
+        } else $placeName = null;
+
+        if (!empty($location)) { // must be checked in advance, else will break if null
+            $placeAddress = [
+                'street'    => $location->getField('street'),
+                'city'      => $location->getField('city'),
+                'zip'       => $location->getField('zip'),
+                'country'   => $location->getField('country'),
+                'longitude' => $location->getField('longitude'),
+                'latitude'  => $location->getField('latitude')
+                ];
+        } else $placeAddress = null;
+
+        $commentCount = $this->getStatCount($event->getField('comments'));
+        $coverData    = json_decode($event->getField('cover'), true);
+
+        $imgId  = $coverData['id'];
+        $imgSrc = $coverData['source'];
+        $img    = $imgSrc ? $this->images->saveImage('fb', $partyCode, $imgSrc, $imgId) : null;
+
+        $postData = [
+            'id'          => $event->getField('id'),
+            'start_time'  => $event->getField('start_time')->format('Y-m-d H:i:s'), // string
+            'updated'     => $event->getField('updated_time')->format('Y-m-d H:i:s'), // string
+            'text'        => $event->getField('name'),
+            'description' => $event->getField('description'),
+            'image'       => $img,
+            'img_source'  => $imgSrc,
+            'place'       => $placeName,
+            'address'     => $placeAddress,
+            'url'         => 'https://www.facebook.com/events/'.$event->getField('id'),
+            'attending'   => $event->getField('attending_count'),
+            'interested'  => $event->getField('interested_count'),
+            'comments'    => $commentCount
+        ];
+
+        $this->parent->addSocial(
+            $partyCode,
+            SocialMedia::TYPE_FACEBOOK,
+            SocialMedia::SUBTYPE_EVENT,
+            $event->getField('id'),
+            $event->getField('updated_time'), // DateTime
+            $event->getField('name'),
+            $img,
+            $event->getField('interested_count'),
+            $postData
+        );
     }
 
 }

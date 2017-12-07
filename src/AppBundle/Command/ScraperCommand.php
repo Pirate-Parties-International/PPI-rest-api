@@ -275,9 +275,9 @@ class ScraperCommand extends ContainerAwareCommand
                 $partyCode,
                 Statistic::TYPE_FACEBOOK,
                 Statistic::SUBTYPE_IMAGES,
-                $fbData['photoCount']
+                $fbData['imageCount']
             );
-            $this->output->writeln("     + Photo count added");
+            $this->output->writeln("     + Image count added");
 
             $this->scService->addStatistic(
                 $partyCode,
@@ -317,56 +317,29 @@ class ScraperCommand extends ContainerAwareCommand
             if (!empty($fbData['posts'])) {
                 $this->output->writeln("       + Text posts added");
             } else {
-                $this->output->writeln("       - No text posts found");
+                $this->output->writeln("     - No text posts found");
             }
 
             if (!empty($fbData['videos'])) {
                 $this->output->writeln("       + Videos added");
             } else {
-                $this->output->writeln("       - No videos found");
+                $this->output->writeln("     - No videos found");
             }
         }
 
         if ($this->scrapeData == null || $this->scrapeData == 'images') {
-            if (empty($fbData['photos'])) {
-                $this->output->writeln("     - No photos found");
+            if (!empty($fbData['images'])) {
+                $this->output->writeln("       + Images added");
             } else {
-                $this->output->writeln("     + Adding photos");
-                foreach ($fbData['photos'] as $key => $image) {
-                    $this->scService->addSocial(
-                        $partyCode,
-                        SocialMedia::TYPE_FACEBOOK,
-                        SocialMedia::SUBTYPE_IMAGE,
-                        $image['postId'],
-                        $image['postTime'],
-                        $image['postText'],
-                        $image['postImage'],
-                        $image['postLikes'],
-                        $image['postData']
-                    );
-                }
-                $this->output->writeln("       + Photos added");
+                $this->output->writeln("     - No images found");
             }
         }
 
         if ($this->scrapeData == null || $this->scrapeData == 'events') {
-            if (empty($fbData['events'])) {
-                $this->output->writeln("     - Event data not found");
-            } else {
-                foreach ($fbData['events'] as $key => $event) {
-                    $this->scService->addSocial(
-                        $partyCode,
-                        SocialMedia::TYPE_FACEBOOK,
-                        SocialMedia::SUBTYPE_EVENT,
-                        $event['postId'],
-                        $event['postTime'],
-                        $event['postText'],
-                        $event['postImage'],
-                        $event['postLikes'],
-                        $event['postData']
-                    );
-                }
+            if (!empty($fbData['events'])) {
                 $this->output->writeln("     + Events added");
+            } else {
+                $this->output->writeln("   - No events found");
             }
         }
 
