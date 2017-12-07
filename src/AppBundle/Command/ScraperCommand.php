@@ -160,6 +160,7 @@ class ScraperCommand extends ContainerAwareCommand
                     exit;
             }
 
+            $this->scrapeSite = 'fb';
             $this->output->writeln("### Scraping Facebook for " . $dataName . " only");
         } else {
             $this->output->writeln("### Scraping " . $siteName . " for all data");
@@ -221,183 +222,157 @@ class ScraperCommand extends ContainerAwareCommand
     */
     public function scrapeFacebook($partyCode, $socialNetworks)
     {
-        if (!empty($socialNetworks['facebook']) && !empty($socialNetworks['facebook']['username'])) {
-            $this->output->writeln("   + Starting Facebook import");
-            $fbData = $this->container
-                ->get('FacebookService')
-                ->getFBData($socialNetworks['facebook']['username'], $partyCode, $this->scrapeFull, $this->scrapeData);
-
-            if ($this->scrapeData == null || $this->scrapeData == 'info') {
-                if ($fbData == false || empty($fbData['likes'])) {
-                    $this->output->writeln("     - ERROR while retrieving FB data");
-                } else {
-                    $this->output->writeln("   + Facebook data retrieved");
-
-                    $this->scService->addMeta(
-                        $partyCode,
-                        Metadata::TYPE_FACEBOOK_INFO,
-                        json_encode($fbData['info'])
-                    );
-                    $this->output->writeln("     + General info added");
-
-                    $this->scService->addStatistic(
-                        $partyCode,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_LIKES,
-                        $fbData['likes']
-                    );
-                    $this->output->writeln("     + 'Like' count added");
-
-                    $this->scService->addStatistic(
-                        $partyCode,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_TALKING,
-                        $fbData['talking']
-                    );
-                    $this->output->writeln("     + 'Talking about' count added");
-
-                    $this->scService->addStatistic(
-                        $partyCode,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_POSTS,
-                        $fbData['postCount']
-                    );
-                    $this->output->writeln("     + Post count added");
-
-                    $this->scService->addStatistic(
-                        $partyCode,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_IMAGES,
-                        $fbData['photoCount']
-                    );
-                    $this->output->writeln("     + Photo count added");
-
-                    $this->scService->addStatistic(
-                        $partyCode,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_VIDEOS,
-                        $fbData['videoCount']
-                    );
-                    $this->output->writeln("     + Video count added");
-
-                    $this->scService->addStatistic(
-                        $partyCode,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_EVENTS,
-                        $fbData['eventCount']
-                    );
-                    $this->output->writeln("     + Event count added");
-                    $this->output->writeln("   + All statistics added");
-
-                    if (is_null($fbData['cover'])) {
-                        $this->output->writeln("     - No cover found");
-                    } else {
-                        $cover = $this->container
-                            ->get('ImageService')
-                            ->getFacebookCover($partyCode, $fbData['cover']);
-                        $this->output->writeln("     + Cover retrieved");
-
-                        $this->scService->addMeta(
-                            $partyCode,
-                            Metadata::TYPE_FACEBOOK_COVER,
-                            $cover
-                        );
-                        $this->output->writeln("       + Cover added");
-                    }
-                }
-            }
-
-            if ($this->scrapeData == null || $this->scrapeData == 'posts') {
-                if (empty($fbData['posts'])) {
-                    $this->output->writeln("     - No posts found");
-                } else {
-                    $this->output->writeln("     + Adding text posts");
-                    foreach ($fbData['posts'] as $key => $post) {
-                        $this->scService->addSocial(
-                            $partyCode,
-                            SocialMedia::TYPE_FACEBOOK,
-                            SocialMedia::SUBTYPE_TEXT,
-                            $post['postId'],
-                            $post['postTime'],
-                            $post['postText'],
-                            $post['postImage'],
-                            $post['postLikes'],
-                            $post['postData']
-                        );
-                    }
-                    $this->output->writeln("       + Text posts added");
-                }
-
-                if (empty($fbData['videos'])) {
-                    $this->output->writeln("     - No videos found");
-                } else {
-                    $this->output->writeln("     + Adding videos");
-                    foreach ($fbData['videos'] as $key => $image) {
-                        $this->scService->addSocial(
-                            $partyCode,
-                            SocialMedia::TYPE_FACEBOOK,
-                            SocialMedia::SUBTYPE_VIDEO,
-                            $image['postId'],
-                            $image['postTime'],
-                            $image['postText'],
-                            $image['postImage'],
-                            $image['postLikes'],
-                            $image['postData']
-                        );
-                    }
-                    $this->output->writeln("       + Videos added");
-                }
-            }
-
-            if ($this->scrapeData == null || $this->scrapeData == 'images') {
-                if (empty($fbData['photos'])) {
-                    $this->output->writeln("     - No photos found");
-                } else {
-                    $this->output->writeln("     + Adding photos");
-                    foreach ($fbData['photos'] as $key => $image) {
-                        $this->scService->addSocial(
-                            $partyCode,
-                            SocialMedia::TYPE_FACEBOOK,
-                            SocialMedia::SUBTYPE_IMAGE,
-                            $image['postId'],
-                            $image['postTime'],
-                            $image['postText'],
-                            $image['postImage'],
-                            $image['postLikes'],
-                            $image['postData']
-                        );
-                    }
-                    $this->output->writeln("       + Photos added");
-                }
-            }
-
-            if ($this->scrapeData == null || $this->scrapeData == 'events') {
-                if (empty($fbData['events'])) {
-                    $this->output->writeln("     - Event data not found");
-                } else {
-                    foreach ($fbData['events'] as $key => $event) {
-                        $this->scService->addSocial(
-                            $partyCode,
-                            SocialMedia::TYPE_FACEBOOK,
-                            SocialMedia::SUBTYPE_EVENT,
-                            $event['postId'],
-                            $event['postTime'],
-                            $event['postText'],
-                            $event['postImage'],
-                            $event['postLikes'],
-                            $event['postData']
-                        );
-                    }
-                    $this->output->writeln("     + Events added");
-                }
-            }
-
-            $this->output->writeln("   + All Facebook data added");
-        } else {
+        if (empty($socialNetworks['facebook']) || empty($socialNetworks['facebook']['username'])) {
             $this->output->writeln("   - Facebook data not found");
             return;
         }
+
+        $this->output->writeln("   + Starting Facebook import");
+        $fbData = $this->container
+            ->get('FacebookService')
+            ->getFBData($socialNetworks['facebook']['username'], $partyCode, $this->scrapeFull, $this->scrapeData);
+
+        if ($this->scrapeData == null || $this->scrapeData == 'info') {
+            if ($fbData == false || empty($fbData['likes'])) {
+                $this->output->writeln("     - ERROR while retrieving FB data");
+                return;
+            }
+
+            $this->output->writeln("   + Facebook data retrieved");
+
+            $this->scService->addMeta(
+                $partyCode,
+                Metadata::TYPE_FACEBOOK_INFO,
+                json_encode($fbData['info'])
+            );
+            $this->output->writeln("     + General info added");
+
+            $this->scService->addStatistic(
+                $partyCode,
+                Statistic::TYPE_FACEBOOK,
+                Statistic::SUBTYPE_LIKES,
+                $fbData['likes']
+            );
+            $this->output->writeln("     + 'Like' count added");
+
+            $this->scService->addStatistic(
+                $partyCode,
+                Statistic::TYPE_FACEBOOK,
+                Statistic::SUBTYPE_TALKING,
+                $fbData['talking']
+            );
+            $this->output->writeln("     + 'Talking about' count added");
+
+            $this->scService->addStatistic(
+                $partyCode,
+                Statistic::TYPE_FACEBOOK,
+                Statistic::SUBTYPE_POSTS,
+                $fbData['postCount']
+            );
+            $this->output->writeln("     + Post count added");
+
+            $this->scService->addStatistic(
+                $partyCode,
+                Statistic::TYPE_FACEBOOK,
+                Statistic::SUBTYPE_IMAGES,
+                $fbData['photoCount']
+            );
+            $this->output->writeln("     + Photo count added");
+
+            $this->scService->addStatistic(
+                $partyCode,
+                Statistic::TYPE_FACEBOOK,
+                Statistic::SUBTYPE_VIDEOS,
+                $fbData['videoCount']
+            );
+            $this->output->writeln("     + Video count added");
+
+            $this->scService->addStatistic(
+                $partyCode,
+                Statistic::TYPE_FACEBOOK,
+                Statistic::SUBTYPE_EVENTS,
+                $fbData['eventCount']
+            );
+            $this->output->writeln("     + Event count added");
+            $this->output->writeln("   + All statistics added");
+
+            if (is_null($fbData['cover'])) {
+                $this->output->writeln("     - No cover found");
+            } else {
+                $cover = $this->container
+                    ->get('ImageService')
+                    ->getFacebookCover($partyCode, $fbData['cover']);
+                $this->output->writeln("     + Cover retrieved");
+
+                $this->scService->addMeta(
+                    $partyCode,
+                    Metadata::TYPE_FACEBOOK_COVER,
+                    $cover
+                );
+                $this->output->writeln("       + Cover added");
+            }
+        }
+
+        if ($this->scrapeData == null || $this->scrapeData == 'posts') {
+            if (!empty($fbData['posts'])) {
+                $this->output->writeln("       + Text posts added");
+            } else {
+                $this->output->writeln("       - No text posts found");
+            }
+
+            if (!empty($fbData['videos'])) {
+                $this->output->writeln("       + Videos added");
+            } else {
+                $this->output->writeln("       - No videos found");
+            }
+        }
+
+        if ($this->scrapeData == null || $this->scrapeData == 'images') {
+            if (empty($fbData['photos'])) {
+                $this->output->writeln("     - No photos found");
+            } else {
+                $this->output->writeln("     + Adding photos");
+                foreach ($fbData['photos'] as $key => $image) {
+                    $this->scService->addSocial(
+                        $partyCode,
+                        SocialMedia::TYPE_FACEBOOK,
+                        SocialMedia::SUBTYPE_IMAGE,
+                        $image['postId'],
+                        $image['postTime'],
+                        $image['postText'],
+                        $image['postImage'],
+                        $image['postLikes'],
+                        $image['postData']
+                    );
+                }
+                $this->output->writeln("       + Photos added");
+            }
+        }
+
+        if ($this->scrapeData == null || $this->scrapeData == 'events') {
+            if (empty($fbData['events'])) {
+                $this->output->writeln("     - Event data not found");
+            } else {
+                foreach ($fbData['events'] as $key => $event) {
+                    $this->scService->addSocial(
+                        $partyCode,
+                        SocialMedia::TYPE_FACEBOOK,
+                        SocialMedia::SUBTYPE_EVENT,
+                        $event['postId'],
+                        $event['postTime'],
+                        $event['postText'],
+                        $event['postImage'],
+                        $event['postLikes'],
+                        $event['postData']
+                    );
+                }
+                $this->output->writeln("     + Events added");
+            }
+        }
+
+        $this->output->writeln("   + All Facebook data added");
     }
+
 
 
     /**

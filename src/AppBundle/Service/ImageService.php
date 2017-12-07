@@ -171,7 +171,7 @@ class ImageService extends ScraperServices
 
     /**
      * Finds best resolution of an image
-     * @param  string $fb
+     * @param  object $fb
      * @param  string $imgId
      * @param  bool   $cover
      * @return string
@@ -217,6 +217,52 @@ class ImageService extends ScraperServices
         }
 
         return $img;
+    }
 
+
+    /**
+     * Decodes Facebook external urls to find an image's source where available
+     * @param  object $post
+     * @return array
+     */
+    public function getFbExtImageSource($post) {
+        $data = null;
+        $type = $post->getField('type');
+
+        if ($type == 'video') {
+            $data['type'] = 'video';
+            $link = urldecode($post->getField('link'));
+
+            if (strpos($link, 'youtu')) { // youtube.com or youtu.be
+                if (strpos($link, 'v=')) {
+                    $idPosition = strpos($link, 'v=')+2;
+                } else if (strpos($link, 'youtu.be/')) {
+                    $idPosition = strpos($link, '.be/')+4;
+                }
+                $vidId  = substr($link, $idPosition, 11);
+
+                $data['src'] = "https://img.youtube.com/vi/".$vidId."/mqdefault.jpg";
+                // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480 (all 4:3 w/ letterbox)
+                $data['bkp'] = $post->getField('picture');
+                return $data;
+            }
+
+            $data['src'] = $post->getField('picture');
+            $data['bkp'] = null;
+            return $data;
+        }
+
+        $data['type'] = 'post';
+        $data['src']  = $post->getField('picture') ? $post->getField('picture') : null;
+        $data['bkp']  = null;
+
+        if ($data['src'] && strpos($data['src'], 'external.xx.fbcdn.net')) {
+            $start = strpos($data['src'], '&url=')+5;
+            $temp  = substr($data['src'], $start);
+            $end   = strpos($temp, '&');
+            $temp  = substr($temp, 0, $end);
+            $data['src'] = urldecode($temp);
+        }
+        return $data;
     }
 }
