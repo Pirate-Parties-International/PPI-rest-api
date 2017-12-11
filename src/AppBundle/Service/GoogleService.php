@@ -1,7 +1,6 @@
 <?php
 namespace AppBundle\Service;
 
-use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Config\Definition\Exception\Exception;
@@ -9,21 +8,19 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 use AppBundle\Command\ScraperCommand;
-use AppBundle\Service\ScraperServices;
+use AppBundle\Entity\SocialMedia;
 
-class GoogleService extends ScraperServices
+class GoogleService
 {
-    protected $em;
-    protected $images;
-    protected $parent;
     private   $container;
+    protected $db;
+    protected $images;
 
-    public function __construct(EntityManager $entityManager, Container $container) {
-        $this->em        = $entityManager;
+    public function __construct(Container $container) {
         $this->container = $container;
-        $this->parent    = $this->container->get('ScraperServices');
+        $this->db        = $this->container->get('DatabaseService');
         $this->images    = $this->container->get('ImageService');
-        @set_exception_handler(array($parent, 'exception_handler'));
+        @set_exception_handler(array($db, 'exception_handler'));
     }
 
 
@@ -37,14 +34,15 @@ class GoogleService extends ScraperServices
         $youtube = $this->container
             ->get('ConnectionService')
             ->getNewGoogle($googleId, true);
-        $data = $youtube->getChannelByName($googleId);
 
         echo "     + Info and stats... ";
-        if (empty($data)) {
+        if (!$youtube) {
             echo "not found\n";
             return false;
         }
-        if (empty($data->statistics) || empty($data->statistics->viewCount)) {
+
+        $data = $youtube->getChannelByName($googleId);
+        if (empty($data) || empty($data->statistics) || empty($data->statistics->viewCount)) {
             echo "not found\n";
             return false;
         }
@@ -54,16 +52,24 @@ class GoogleService extends ScraperServices
         $out['stats']['subscriberCount'] = (int)$data->statistics->subscriberCount;
         $out['stats']['videoCount']      = (int)$data->statistics->videoCount;
 
+        echo "ok\n";
+
         $playlist = $data->contentDetails->relatedPlaylists->uploads;
         $videos   = $youtube->getPlaylistItemsByPlaylistId($playlist);
+        $vidCount = 0;
 
         echo "     + Videos... ";
-        if (!empty($videos)) {
-            $out['videos'] = $this->getVideoDetails($partyCode, $youtube, $videos);
-            echo "processed\n";
-        } else {
+        if (empty($videos)) {
             echo "not found\n";
+            return $out;
         }
+
+        foreach ($videos as $key => $vid) {
+            $this->getVideoDetails($partyCode, $youtube, $vid);
+            $vidCount++;
+        }
+        echo $vidCount . " found and processed\n";
+        $out['videos'] = $vidCount;
 
         return $out;
     }
@@ -73,51 +79,47 @@ class GoogleService extends ScraperServices
      * Retrieves video details
      * @param  string $partyCode
      * @param  object $youtube
-     * @param  array  $videos
+     * @param  array  $vid
      * @return array
      */
-    public function getVideoDetails($partyCode, $youtube, $videos) {
-        $out = [];
+    public function getVideoDetails($partyCode, $youtube, $vid) {
+        $vidId   = $vid->snippet->resourceId->videoId;
+        $vidTime = \DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $vid->snippet->publishedAt);
+        // original ISO 8601, e.g. '2015-04-30T21:45:59.000Z'
 
-        foreach ($videos as $key => $vid) {
+        $imgSrc  = $vid->snippet->thumbnails->medium->url;
+        // deafult=120x90, medium=320x180, high=480x360, standard=640x480, maxres=1280x720
+        $img     = $this->images->saveImage('yt', $partyCode, $imgSrc, $vidId);
 
-            $vidId   = $vid->snippet->resourceId->videoId;
-            $vidInfo = $youtube->getVideoInfo($vidId);
+        $vidInfo  = $youtube->getVideoInfo($vidId);
+        $vidLikes = isset($vidInfo->statistics->likeCount)    ? $vidInfo->statistics->likeCount    : null;
+        $vidViews = isset($vidInfo->statistics->viewCount)    ? $vidInfo->statistics->viewCount    : null;
+        $vidComms = isset($vidInfo->statistics->commentCount) ? $vidInfo->statistics->commentCount : null;
 
-            $imgSrc  = $vid->snippet->thumbnails->medium->url; // 320x180 (only 16:9 option)
-            // deafult=120x90, medium=320x180, high=480x360, standard=640x480, maxres=1280x720
+        $data = [
+            'id'          => $vidId,
+            'posted'      => $vidTime->format('Y-m-d H:i:s'), // string
+            'text'        => $vid->snippet->title,
+            'description' => $vid->snippet->description,
+            'image'       => $img,
+            'img_source'  => $imgSrc,
+            'url'         => 'https://www.youtube.com/watch?v='.$vidId,
+            'views'       => $vidViews,
+            'likes'       => $vidLikes,
+            'comments'    => $vidComms
+            ];
 
-            $img = $this->images->saveImage('yt', $partyCode, $imgSrc, $vidId);
-
-            $vidTime = \DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $vid->snippet->publishedAt);
-            // original ISO 8601, e.g. '2015-04-30T21:45:59.000Z'
-
-            $vidLikes = isset($vidInfo->statistics->likeCount)    ? $vidInfo->statistics->likeCount    : null;
-            $vidViews = isset($vidInfo->statistics->viewCount)    ? $vidInfo->statistics->viewCount    : null;
-            $vidComms = isset($vidInfo->statistics->commentCount) ? $vidInfo->statistics->commentCount : null;
-
-            $out[] = [
-                'postId'    => $vidId,
-                'postTime'  => $vidTime, // DateTime
-                'postText'  => $vid->snippet->title,
-                'postImage' => $img,
-                'postLikes' => $vidLikes,
-                'postData'  => [
-                    'id'          => $vidId,
-                    'posted'      => $vidTime->format('Y-m-d H:i:s'), // string
-                    'text'        => $vid->snippet->title,
-                    'description' => $vid->snippet->description,
-                    'image'       => $img,
-                    'img_source'  => $imgSrc,
-                    'url'         => 'https://www.youtube.com/watch?v='.$vidId,
-                    'views'       => $vidViews,
-                    'likes'       => $vidLikes,
-                    'comments'    => $vidComms
-                    ]
-                ];
-        }
-
-        return $out;
+        $this->db->addSocial(
+            $partyCode,
+            SocialMedia::TYPE_YOUTUBE,
+            SocialMedia::SUBTYPE_VIDEO,
+            $vidId,
+            $vidTime,
+            $vid->snippet->title,
+            $img,
+            $vidLikes,
+            $data
+        );
     }
 
 

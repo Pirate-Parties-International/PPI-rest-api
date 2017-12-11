@@ -9,51 +9,25 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 use AppBundle\Command\ScraperCommand;
-use AppBundle\Service\ScraperServices;
-
-use AppBundle\Entity\Metadata;
-use AppBundle\Entity\Statistic;
 use AppBundle\Entity\SocialMedia;
 
-class FacebookService extends ScraperServices
+class FacebookService
 {
-    protected $em;
-    protected $parent;
-    protected $images;
-    protected $connect;
     private   $container;
+    protected $connect;
+    protected $db;
+    protected $images;
+    protected $stats;
 
-    public function __construct(EntityManager $entityManager, Container $container) {
-        $this->em        = $entityManager;
+    public function __construct(Container $container) {
         $this->container = $container;
-
-        $this->parent    = $this->container->get('ScraperServices');
-        $this->images    = $this->container->get('ImageService');
         $this->connect   = $this->container->get('ConnectionService');
-
-        @set_exception_handler([$this->parent, 'exception_handler']);
+        $this->db        = $this->container->get('DatabaseService');
+        $this->images    = $this->container->get('ImageService');
+        $this->stats     = $this->container->get('FbStatService');
+        @set_exception_handler([$this->db, 'exception_handler']);
     }
 
-
-    /**
-    * Counts likes/reactions/comments etc.
-    * @param  object $data
-    * @return int
-    */
-    public function getStatCount($data) {
-        if (!empty($data)) {
-            $meta  = $data->getMetadata();
-            $count = isset($meta['summary']['total_count']) ? $meta['summary']['total_count'] : null;
-        } else {
-            $count = null;
-        }
-
-        return $count;
-    }
-
-//
-// Getting info
-//
 
     /**
      * Queries for stats, posts, images and events
@@ -78,14 +52,14 @@ class FacebookService extends ScraperServices
         ];
 
         if ($scrapeData == null || $scrapeData == 'info') {
-            $out = $this->getPageInfo($fb, $fbPageId, $requestFields['basic']);
-            $out['postCount']  = $this->getPostCount($fb, $fbPageId, $requestFields['postStats']);
-            $out['videoCount'] = $this->getVideoCount($fb, $fbPageId, $requestFields['videoStats']);
+            $out = $this->stats->getPageInfo($fb, $fbPageId, $requestFields['basic']);
+            $out['postCount']  = $this->stats->getPostCount($fb, $fbPageId, $requestFields['postStats']);
+            $out['videoCount'] = $this->stats->getVideoCount($fb, $fbPageId, $requestFields['videoStats']);
         }
 
         if ($scrapeData == 'info') {
-            $out['photoCount'] = $this->getImageCount($fb, $fbPageId, $requestFields['imageStats']);
-            $out['eventCount'] = $this->getEventCount($fb, $fbPageId, $requestFields['eventStats']);
+            $out['imageCount'] = $this->stats->getImageCount($fb, $fbPageId, $requestFields['imageStats']);
+            $out['eventCount'] = $this->stats->getEventCount($fb, $fbPageId, $requestFields['eventStats']);
         }
 
         if ($scrapeData == null || $scrapeData == 'posts') {
@@ -96,8 +70,8 @@ class FacebookService extends ScraperServices
 
         if ($scrapeData == null || $scrapeData == 'images') {
             $temp = $this->getImages($fb, $fbPageId, $requestFields['imageDetails'], $partyCode, $scrapeFull);
-            $out['photoCount'] = isset($temp['photoCount']) ? $temp['photoCount'] : null;
-            $out['photos']     = isset($temp['photos'])     ? $temp['photos']     : null;
+            $out['imageCount'] = isset($temp['imageCount']) ? $temp['imageCount'] : null;
+            $out['images']     = isset($temp['images'])     ? $temp['images']     : null;
         }
 
         if ($scrapeData == null || $scrapeData == 'events') {
@@ -109,192 +83,6 @@ class FacebookService extends ScraperServices
         return $out;
     }
 
-
-//
-// Counting stats
-//
-
-    /**
-     * Basic info about a FB page
-     * @param  object $fb
-     * @param  string $fbPageId
-     * @param  stting $requestFields
-     * @return array
-     */
-    public function getPageInfo($fb, $fbPageId, $requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-
-        echo "     + Info and stats.... ";
-        if (empty($graphNode)) {
-            echo "not found\n";
-            return false;
-        }
-
-        $out['info'] = [
-            'about'   => $graphNode->getField('about'),
-            'address' => $graphNode->getField('single_line_address')
-        ];
-
-        $fdEmails = $graphNode->getField('emails');
-        if (!empty($fdEmails)) {
-            foreach ($fdEmails as $key => $email) {
-                $out['info']['email'][] = $email;
-            }
-        }
-
-        $coverId = !empty($graphNode->getField('cover')) ? $graphNode->getField('cover')->getField('cover_id') : null;
-        $out['cover'] = !is_null($coverId) ? $this->images->getFbImageSource($fb, $coverId, true) : null;
-
-        $out['likes']   = !empty($graphNode->getField('engagement')) ? $graphNode->getField('engagement')->getField('count') : null;
-        $out['talking'] = !empty($graphNode->getField('talking_about_count')) ? $graphNode->getField('talking_about_count') : null;
-
-        echo "ok\n";
-
-        return $out;
-    }
-
-
-    /**
-     * Post count for stats only
-     * @param  object $fb
-     * @param  string $fbPageId
-     * @param  string $requestFields
-     * @return int
-     */
-    public function getPostCount($fb, $fbPageId, $requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-
-        echo "     + Counting posts.... ";
-        if (empty($graphNode)) {
-            echo "not found\n";
-            return false;
-        }
-
-        $fdPcount  = $graphNode->getField('posts');
-        echo "page ";
-        $pageCount = 0;
-
-        do {
-            echo $pageCount . ', ';
-            foreach ($fdPcount as $key => $post) {
-                $temp['posts'][] = ['id' => $post->getField('id')]; // count all posts
-            }
-            $pageCount++;
-        } while ($fdPcount = $fb->next($fdPcount)); // while next page is not null
-
-        $out['postCount'] = count($temp['posts']);
-        echo "...total " . $out['postCount'] . " found\n";
-
-        return $out['postCount'];
-    }
-
-
-    /**
-     * Image count for stats only
-     * @param  object $fb
-     * @param  string $fbPageId
-     * @param  string $requestFields
-     * @return int
-     */
-    public function getImageCount($fb, $fbPageId, $requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-
-        echo "     + Counting photos... ";
-        if (empty($graphNode)) {
-            echo "not found\n";
-            return false;
-        }
-
-        $fdAlbums  = $graphNode->getField('albums');
-        echo "page ";
-        $pageCount = 0;
-
-        foreach ($fdAlbums as $key => $album) {
-            echo $pageCount . ", ";
-            $photoCount[] = $album->getField('photo_count');
-            $pageCount++;
-        }
-
-        $out['photoCount'] = array_sum($photoCount);
-        echo "...total " . $out['photoCount'] . " found\n";
-
-        return $out['photoCount'];
-    }
-
-
-    /**
-     * Video count for stats only
-     * @param  object $fb
-     * @param  string $fbPageId
-     * @param  string $requestFields
-     * @return int
-     */
-    public function getVideoCount($fb, $fbPageId, $requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-
-        echo "     + Counting videos... ";
-        if (empty($graphNode) || !$graphNode->getField('videos')) {
-            echo "not found\n";
-            return false;
-        }
-
-        $fdVcount = $graphNode->getField('videos');
-        echo "page ";
-        $pageCount = 0;
-
-        do {
-            echo $pageCount . ', ';
-            foreach ($fdVcount as $key => $post) {
-                $temp['videos'][] = ['id' => $post->getField('id')]; // count all posts
-            }
-            $pageCount++;
-        } while ($fdVcount = $fb->next($fdVcount)); // while next page is not null
-
-        $out['videoCount'] = count($temp['videos']);
-        echo "...total " . $out['videoCount'] . " found\n";
-
-        return $out['videoCount'];
-    }
-
-
-    /**
-     * Event count for stats only
-     * @param  object $fb
-     * @param  string $fbPageId
-     * @param  string $requestFields
-     * @return int
-     */
-    public function getEventCount($fb, $fbPageId, $requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($fb, $fbPageId, $requestFields);
-
-        echo "     + Counting events... ";
-        if (empty($graphNode)) {
-            echo "not found.\n";
-            return false;
-        }
-
-        $fdEvents  = $graphNode->getField('events');
-        echo "page ";
-        $pageCount = 0;
-
-        do {
-            echo $pageCount . ", ";
-            foreach ($fdEvents as $key => $event) {
-                $temp['events'][] = ['id' => $event->getField('id')];
-            }
-            $pageCount++;
-        } while ($fdEvents = $fb->next($fdEvents)); // while next page is not null
-
-        $out['eventCount'] = count($temp['events']);
-        echo "...total " . $out['eventCount'] . " found\n";
-
-        return $out['eventCount'];
-    }
-
-
-//
-// Getting details
-//
 
     /**
      * Processes text posts (inc. videos)
@@ -315,7 +103,7 @@ class FacebookService extends ScraperServices
         }
 
         $fdPosts   = $graphNode->getField('posts');
-        $timeLimit = $this->parent->getTimeLimit('fb', 'T', $partyCode, $scrapeFull);
+        $timeLimit = $this->db->getTimeLimit('fb', 'T', $partyCode, $scrapeFull);
 
         echo "page ";
         $pageCount = 0;
@@ -326,7 +114,8 @@ class FacebookService extends ScraperServices
             echo $pageCount . ', ';
 
             foreach ($fdPosts as $key => $post) {
-                $type = $post->getField('type'); // types = 'status', 'link', 'photo', 'video', 'event'
+                $type = $post->getField('type');
+                // types = 'status', 'link', 'photo', 'video', 'event'
 
                 if ($type == 'photo' || $type == 'event') {
                     continue; // get photos and events separately to get all details
@@ -367,9 +156,9 @@ class FacebookService extends ScraperServices
         $imgSrc = $this->images->getFbExtImageSource($post);
         $img    = isset($imgSrc['src']) ? $this->images->saveImage('fb', $partyCode, $imgSrc['src'], $post->getField('id'), $imgSrc['bkp']) :  null;
 
-        $likeCount     = $this->getStatCount($post->getField('likes'));
-        $reactionCount = $this->getStatCount($post->getField('reactions'));
-        $commentCount  = $this->getStatCount($post->getField('comments'));
+        $likeCount     = $this->stats->getStatCount($post->getField('likes'));
+        $reactionCount = $this->stats->getStatCount($post->getField('reactions'));
+        $commentCount  = $this->stats->getStatCount($post->getField('comments'));
         $shareCount    = !empty($post->getField('shares')) ? json_decode($post->getField('shares')->getField('count'), true) : null;
 
         $postData = [
@@ -391,7 +180,7 @@ class FacebookService extends ScraperServices
             'shares'     => $shareCount
             ];
 
-        $this->parent->addSocial(
+        $this->db->addSocial(
             $partyCode,
             SocialMedia::TYPE_FACEBOOK,
             $subType,
@@ -405,7 +194,7 @@ class FacebookService extends ScraperServices
     }
 
     /**
-     * Gets image details
+     * Processes images
      * @param  object $fb
      * @param  string $fbPageId
      * @param  string $requestFields
@@ -423,7 +212,7 @@ class FacebookService extends ScraperServices
         }
 
         $fdAlbums  = $graphNode->getField('albums');
-        $timeLimit = $this->parent->getTimeLimit('fb', 'I', $partyCode, $scrapeFull);
+        $timeLimit = $this->db->getTimeLimit('fb', 'I', $partyCode, $scrapeFull);
         echo "page ";
         $pageCount = 0;
         $imgCount  = 0;
@@ -450,16 +239,16 @@ class FacebookService extends ScraperServices
             // while next page is not null and within our time limit
         }
 
-        $out['photoCount'] = array_sum($photoCount);
+        $out['imageCount'] = array_sum($photoCount);
         $out['images']     = $imgCount;
-        echo "..." . $out['photoCount'] . " found, " . $imgCount . " since " . date('d/m/Y', $timeCheck) . " processed\n";
+        echo "..." . $out['imageCount'] . " found, " . $imgCount . " since " . date('d/m/Y', $timeCheck) . " processed\n";
 
         return $out;
     }
 
 
     /**
-     * Retrieves the details of a text post or video
+     * Retrieves the details of an image
      * @param  object $fb
      * @param  object $image
      * @param  object $album
@@ -471,9 +260,9 @@ class FacebookService extends ScraperServices
         $imgBkp = $photo->getField('picture'); // 130x130 thumbnail
         $img    = $this->images->saveImage('fb', $partyCode, $imgSrc, $photo->getField('id'), $imgBkp);
 
-        $likeCount     = $this->getStatCount($photo->getField('likes'));
-        $reactionCount = $this->getStatCount($photo->getField('reactions'));
-        $commentCount  = $this->getStatCount($photo->getField('comments'));
+        $likeCount     = $this->stats->getStatCount($photo->getField('likes'));
+        $reactionCount = $this->stats->getStatCount($photo->getField('reactions'));
+        $commentCount  = $this->stats->getStatCount($photo->getField('comments'));
         $shareCount    = count(json_decode($photo->getField('sharedposts'), true));
 
         $postData = [
@@ -494,7 +283,7 @@ class FacebookService extends ScraperServices
             'shares'     => $shareCount
         ];
 
-        $this->parent->addSocial(
+        $this->db->addSocial(
             $partyCode,
             SocialMedia::TYPE_FACEBOOK,
             SocialMedia::SUBTYPE_IMAGE,
@@ -509,7 +298,7 @@ class FacebookService extends ScraperServices
 
 
     /**
-     * Gets event details
+     * Processes events
      * @param  object $fb
      * @param  string $fbPageId
      * @param  string $requestFields
@@ -527,7 +316,7 @@ class FacebookService extends ScraperServices
         }
 
         $fdEvents  = $graphNode->getField('events');
-        $timeLimit = $this->parent->getTimeLimit('fb', 'E', $partyCode, $scrapeFull);
+        $timeLimit = $this->db->getTimeLimit('fb', 'E', $partyCode, $scrapeFull);
         echo "page ";
         $pageCount = 0;
         $eveCount  = 0;
@@ -553,7 +342,7 @@ class FacebookService extends ScraperServices
 
 
     /**
-     * 
+     * Retrieves the details of an event
      * @param  object $event
      * @param  string partyCode
      * @return null
@@ -577,7 +366,7 @@ class FacebookService extends ScraperServices
                 ];
         } else $placeAddress = null;
 
-        $commentCount = $this->getStatCount($event->getField('comments'));
+        $commentCount = $this->stats->getStatCount($event->getField('comments'));
         $coverData    = json_decode($event->getField('cover'), true);
 
         $imgId  = $coverData['id'];
@@ -600,7 +389,7 @@ class FacebookService extends ScraperServices
             'comments'    => $commentCount
         ];
 
-        $this->parent->addSocial(
+        $this->db->addSocial(
             $partyCode,
             SocialMedia::TYPE_FACEBOOK,
             SocialMedia::SUBTYPE_EVENT,

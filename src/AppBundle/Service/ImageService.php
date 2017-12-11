@@ -7,18 +7,16 @@ use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\DependencyInjection\Container;
 
 use AppBundle\Command\ScraperCommand;
-use AppBundle\Service\ScraperServices;
 
-class ImageService extends ScraperServices
+class ImageService
 {
-    protected $em;
-    protected $parent;
     private   $container;
+    protected $db;
 
     public function __construct(Container $container) {
         $this->container = $container;
-        $this->parent    = $this->container->get('ScraperServices');
-        @set_exception_handler([$this->parent, 'exception_handler']);
+        $this->db        = $this->container->get('DatabaseService');
+        @set_exception_handler([$this->db, 'exception_handler']);
     }
 
 
@@ -180,11 +178,12 @@ class ImageService extends ScraperServices
         $graphNode = $this->container
             ->get('ConnectionService')
             ->getFbGraphNode($fb, $imgId, 'height,width,album,images');
-        $images = $graphNode->getField('images');
 
-        if (!$images) {
+        if (empty($graphNode) || !$graphNode->getField('images')) {
             return false;
         }
+
+        $images = $graphNode->getField('images');
 
         if (!$cover) {
             foreach ($images as $key => $img) {

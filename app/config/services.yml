@@ -8,12 +8,12 @@ services:
 #        class: AppBundle\Directory\ClassName
 #        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
 
-    ScraperServices:
-        class: AppBundle\Service\ScraperServices
-        autowire: true
-
     ConnectionService:
         class: AppBundle\Service\ConnectionService
+        autowire: true
+
+    DatabaseService:
+        class: AppBundle\Service\DatabaseService
         autowire: true
 
     ImageService:
@@ -22,6 +22,10 @@ services:
 
     FacebookService:
         class: AppBundle\Service\FacebookService
+        autowire: true
+
+    FbStatService:
+        class: AppBundle\Service\FbStatService
         autowire: true
 
     TwitterService:

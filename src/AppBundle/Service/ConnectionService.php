@@ -10,15 +10,15 @@ use Facebook\FacebookThrottleException;
 use Madcoda\Youtube;
 use TwitterAPIExchange;
 
-class ConnectionService extends ScraperServices
+class ConnectionService
 {
-	protected $parent;
     private   $container;
+    protected $db;
 
     public function __construct(Container $container) {
         $this->container = $container;
-        $this->parent    = $this->container->get('ScraperServices');
-        @set_exception_handler([$this->parent, 'exception_handler']);
+        $this->db        = $this->container->get('DatabaseService');
+        @set_exception_handler([$this->db, 'exception_handler']);
     }
 
 
@@ -137,7 +137,7 @@ class ConnectionService extends ScraperServices
 			$url = 'https://api.twitter.com/1.1/users/show.json';
 		} else {
 	        $url = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
-	        $field .= '&tweet_mode=extended&count=1000';
+	        $field .= '&tweet_mode=extended&count=100';
 	        $field .= $maxId ? ('&max_id=' . $maxId) : null;
     	}
     	// echo "\n" . $url . $field;

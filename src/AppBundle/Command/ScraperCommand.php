@@ -15,10 +15,10 @@ use Pirates\PapiInfo\Compile;
 
 class ScraperCommand extends ContainerAwareCommand
 {
-    protected $output;
-    protected $em;
     private   $container;
-    public    $scService;
+    protected $output;
+    protected $db;
+    protected $em;
 
     protected $scrapeParty = null;
     protected $scrapeSite  = null;
@@ -46,7 +46,7 @@ class ScraperCommand extends ContainerAwareCommand
         $this->output    = $output;
         $this->container = $this->getContainer();
         $this->em        = $this->container->get('doctrine')->getManager();
-        $this->scService = $this->container->get('ScraperServices');
+        $this->db        = $this->container->get('DatabaseService');
         $this->logger    = $this->container->get('logger');
         $logger          = $this->logger;
 
@@ -168,10 +168,10 @@ class ScraperCommand extends ContainerAwareCommand
 
         if (!$this->scrapeParty) {
             $this->output->write("# Getting all parties...");
-            $parties = $this->scService->getAllParties();
+            $parties = $this->db->getAllParties();
         } else {
             $this->output->write("# Getting one party (" . $this->scrapeParty . ")...");
-            $parties = $this->scService->getOneParty($this->scrapeParty);
+            $parties = $this->db->getOneParty($this->scrapeParty);
         }
         $this->output->write(" Done\n");
 
@@ -240,14 +240,14 @@ class ScraperCommand extends ContainerAwareCommand
 
             $this->output->writeln("   + Facebook data retrieved");
 
-            $this->scService->addMeta(
+            $this->db->addMeta(
                 $partyCode,
                 Metadata::TYPE_FACEBOOK_INFO,
                 json_encode($fbData['info'])
             );
             $this->output->writeln("     + General info added");
 
-            $this->scService->addStatistic(
+            $this->db->addStatistic(
                 $partyCode,
                 Statistic::TYPE_FACEBOOK,
                 Statistic::SUBTYPE_LIKES,
@@ -255,7 +255,7 @@ class ScraperCommand extends ContainerAwareCommand
             );
             $this->output->writeln("     + 'Like' count added");
 
-            $this->scService->addStatistic(
+            $this->db->addStatistic(
                 $partyCode,
                 Statistic::TYPE_FACEBOOK,
                 Statistic::SUBTYPE_TALKING,
@@ -263,7 +263,7 @@ class ScraperCommand extends ContainerAwareCommand
             );
             $this->output->writeln("     + 'Talking about' count added");
 
-            $this->scService->addStatistic(
+            $this->db->addStatistic(
                 $partyCode,
                 Statistic::TYPE_FACEBOOK,
                 Statistic::SUBTYPE_POSTS,
@@ -271,7 +271,7 @@ class ScraperCommand extends ContainerAwareCommand
             );
             $this->output->writeln("     + Post count added");
 
-            $this->scService->addStatistic(
+            $this->db->addStatistic(
                 $partyCode,
                 Statistic::TYPE_FACEBOOK,
                 Statistic::SUBTYPE_IMAGES,
@@ -279,7 +279,7 @@ class ScraperCommand extends ContainerAwareCommand
             );
             $this->output->writeln("     + Image count added");
 
-            $this->scService->addStatistic(
+            $this->db->addStatistic(
                 $partyCode,
                 Statistic::TYPE_FACEBOOK,
                 Statistic::SUBTYPE_VIDEOS,
@@ -287,7 +287,7 @@ class ScraperCommand extends ContainerAwareCommand
             );
             $this->output->writeln("     + Video count added");
 
-            $this->scService->addStatistic(
+            $this->db->addStatistic(
                 $partyCode,
                 Statistic::TYPE_FACEBOOK,
                 Statistic::SUBTYPE_EVENTS,
@@ -304,7 +304,7 @@ class ScraperCommand extends ContainerAwareCommand
                     ->getFacebookCover($partyCode, $fbData['cover']);
                 $this->output->writeln("     + Cover retrieved");
 
-                $this->scService->addMeta(
+                $this->db->addMeta(
                     $partyCode,
                     Metadata::TYPE_FACEBOOK_COVER,
                     $cover
@@ -366,14 +366,14 @@ class ScraperCommand extends ContainerAwareCommand
             } else {
                 $this->output->writeln("   + Twitter data retrieved");
 
-                $this->scService->addMeta(
+                $this->db->addMeta(
                     $partyCode,
                     Metadata::TYPE_TWITTER_INFO,
                     json_encode($twData['description'])
                 );
                 $this->output->writeln("     + General info added");
 
-                $this->scService->addStatistic(
+                $this->db->addStatistic(
                     $partyCode,
                     Statistic::TYPE_TWITTER,
                     Statistic::SUBTYPE_LIKES,
@@ -381,7 +381,7 @@ class ScraperCommand extends ContainerAwareCommand
                 );
                 $this->output->writeln("     + 'Like' count added");
 
-                $this->scService->addStatistic(
+                $this->db->addStatistic(
                     $partyCode,
                     Statistic::TYPE_TWITTER,
                     Statistic::SUBTYPE_FOLLOWERS,
@@ -389,7 +389,7 @@ class ScraperCommand extends ContainerAwareCommand
                 );
                 $this->output->writeln("     + Follower count added");
 
-                $this->scService->addStatistic(
+                $this->db->addStatistic(
                     $partyCode,
                     Statistic::TYPE_TWITTER,
                     Statistic::SUBTYPE_FOLLOWING,
@@ -397,7 +397,7 @@ class ScraperCommand extends ContainerAwareCommand
                 );
                 $this->output->writeln("     + Following count added");
 
-                $this->scService->addStatistic(
+                $this->db->addStatistic(
                     $partyCode,
                     Statistic::TYPE_TWITTER,
                     Statistic::SUBTYPE_POSTS,
@@ -406,62 +406,22 @@ class ScraperCommand extends ContainerAwareCommand
                 $this->output->writeln("     + Tweet count added");
                 $this->output->writeln("   + All statistics added");
 
-                if (empty($twData['posts'])) {
-                    $this->output->writeln("     - Tweet data not found");
-                } else {
-                    $this->output->writeln("     + Adding text tweets");
-                    foreach ($twData['posts'] as $key => $post) {
-                        $this->scService->addSocial(
-                            $partyCode,
-                            SocialMedia::TYPE_TWITTER,
-                            SocialMedia::SUBTYPE_TEXT,
-                            $post['postId'],
-                            $post['postTime'],
-                            $post['postText'],
-                            $post['postImage'],
-                            $post['postLikes'],
-                            $post['postData']
-                        );
-                    }
+                if (!empty($twData['posts'])) {
                     $this->output->writeln("       + Text tweets added");
+                } else {
+                    $this->output->writeln("     - No text tweets found");
                 }
 
-                if (empty($twData['images'])) {
-                    $this->output->writeln("     - Image data not found");
-                } else {
-                    $this->output->writeln("     + Adding images");
-                    foreach ($twData['images'] as $key => $image) {
-                        $this->scService->addSocial(
-                            $partyCode,
-                            SocialMedia::TYPE_TWITTER,
-                            SocialMedia::SUBTYPE_IMAGE,
-                            $image['postId'],
-                            $image['postTime'],
-                            $image['postText'],
-                            $image['postImage'],
-                            $image['postLikes'],
-                            $image['postData']
-                        );
-                    }
+                if (!empty($twData['images'])) {
                     $this->output->writeln("       + Images added");
+                } else {
+                    $this->output->writeln("     - No images found");
+                }
 
-                    if (!empty($twData['videos'])) {
-                        $this->output->writeln("     + Adding videos");
-                        foreach ($twData['videos'] as $key => $video) {
-                            $this->scService->addSocial(
-                                $partyCode,
-                                SocialMedia::TYPE_TWITTER,
-                                SocialMedia::SUBTYPE_VIDEO,
-                                $image['postId'],
-                                $image['postTime'],
-                                $image['postText'],
-                                $image['postImage'],
-                                $image['postLikes'],
-                                $image['postData']
-                            );
-                        }
-                        $this->output->writeln("       + Videos added");
-                    }
+                if (!empty($twData['videos'])) {
+                    $this->output->writeln("       + Videos added");
+                } else {
+                    $this->output->writeln("     - No videos found");
                 }
 
                 $this->output->writeln("   + All Twitter data added");
@@ -488,7 +448,7 @@ class ScraperCommand extends ContainerAwareCommand
             } else {
                 $this->output->writeln("     + GooglePlus data retrieved");
 
-                $this->scService->addStatistic(
+                $this->db->addStatistic(
                     $partyCode,
                     Statistic::TYPE_GOOGLEPLUS,
                     Statistic::SUBTYPE_FOLLOWERS,
@@ -519,7 +479,7 @@ class ScraperCommand extends ContainerAwareCommand
             } else {
                 $this->output->writeln("   + Youtube data retrieved");
 
-                $this->scService->addStatistic(
+                $this->db->addStatistic(
                     $partyCode,
                     Statistic::TYPE_YOUTUBE,
                     Statistic::SUBTYPE_SUBSCRIBERS,
@@ -527,7 +487,7 @@ class ScraperCommand extends ContainerAwareCommand
                 );
                 $this->output->writeln("     + Subscriber count added");
 
-                $this->scService->addStatistic(
+                $this->db->addStatistic(
                     $partyCode,
                     Statistic::TYPE_YOUTUBE,
                     Statistic::SUBTYPE_VIEWS,
@@ -535,7 +495,7 @@ class ScraperCommand extends ContainerAwareCommand
                 );
                 $this->output->writeln("     + View count added");
 
-                $this->scService->addStatistic(
+                $this->db->addStatistic(
                     $partyCode,
                     Statistic::TYPE_YOUTUBE,
                     Statistic::SUBTYPE_VIDEOS,
@@ -544,24 +504,12 @@ class ScraperCommand extends ContainerAwareCommand
                 $this->output->writeln("     + Video count added");
                 $this->output->writeln("   + All statistics added");
 
-                if (empty($ytData['videos'])) {
-                    $this->output->writeln("     - Video data not found");
+                if (!empty($ytData['videos'])) {
+                    $this->output->writeln("       + Videos added");
                 } else {
-                    foreach ($ytData['videos'] as $key => $video) {
-                        $this->scService->addSocial(
-                            $partyCode,
-                            SocialMedia::TYPE_YOUTUBE,
-                            SocialMedia::SUBTYPE_VIDEO,
-                            $video['postId'],
-                            $video['postTime'],
-                            $video['postText'],
-                            $video['postImage'],
-                            $video['postLikes'],
-                            $video['postData']
-                        );
-                    }
-                    $this->output->writeln("     + Videos added");
+                    $this->output->writeln("     - No videos found");
                 }
+
                 $this->output->writeln("   + All Google data added");
             }
         }

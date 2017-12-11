@@ -17,17 +17,17 @@ use AppBundle\Entity\SocialMedia;
 
 use Pirates\PapiInfo\Compile;
 
-class ScraperServices
+class DatabaseService
 {
-    protected $stats = [];
+    private   $container;
+    protected $em;
     protected $meta  = [];
     protected $posts = [];
-    protected $em;
-    private   $container;
+    protected $stats = [];
 
     public function __construct(EntityManager $entityManager, Container $container) {
-        $this->em        = $entityManager;
         $this->container = $container;
+        $this->em        = $entityManager;
         @set_exception_handler(array($this, 'exception_handler'));
     }
 
@@ -131,7 +131,7 @@ class ScraperServices
 
 
     /**
-     * Builds or updates a social media object
+     * Builds or updates a SocialMedia object
      * @param  string   $type
      * @param  string   $subType
      * @param  string   $postId
