@@ -131,12 +131,12 @@ class ConnectionService
      */
     public function getTwRequest($tw, $username, $tweets = false, $maxId = null) {
     	$method = 'GET';
-		$field  = '?screen_name='.str_replace("@", "", $username);
+		$field  = '?screen_name=' . str_replace("@", "", $username);
 
     	if (!$tweets) {
-			$url = 'https://api.twitter.com/1.1/users/show.json';
+			$url    = 'https://api.twitter.com/1.1/users/show.json';
 		} else {
-	        $url = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
+	        $url    = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
 	        $field .= '&tweet_mode=extended&count=100';
 	        $field .= $maxId ? ('&max_id=' . $maxId) : null;
     	}

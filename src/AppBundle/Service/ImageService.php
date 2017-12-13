@@ -80,7 +80,6 @@ class ImageService
         }
 
         return $imgName;
-
     }
 
 
@@ -240,8 +239,8 @@ class ImageService
                 }
                 $vidId  = substr($link, $idPosition, 11);
 
-                $data['src'] = "https://img.youtube.com/vi/".$vidId."/mqdefault.jpg";
-                // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480 (all 4:3 w/ letterbox)
+                $data['src'] = "https://img.youtube.com/vi/" . $vidId . "/mqdefault.jpg";
+                // default=120x90, mqdefault=320x180, hqdefault=480x360, sddefault=640x480
                 $data['bkp'] = $post->getField('picture');
                 return $data;
             }
@@ -262,6 +261,7 @@ class ImageService
             $temp  = substr($temp, 0, $end);
             $data['src'] = urldecode($temp);
         }
+
         return $data;
     }
 }

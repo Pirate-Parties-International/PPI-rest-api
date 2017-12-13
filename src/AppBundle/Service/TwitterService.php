@@ -1,7 +1,6 @@
 <?php
 namespace AppBundle\Service;
 
-use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Config\Definition\Exception\Exception;
@@ -9,6 +8,8 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 use AppBundle\Command\ScraperCommand;
+use AppBundle\Entity\Metadata;
+use AppBundle\Entity\Statistic;
 use AppBundle\Entity\SocialMedia;
 
 class TwitterService
@@ -16,6 +17,11 @@ class TwitterService
     private   $container;
     protected $connect;
     protected $db;
+
+    protected $partyCode;
+    protected $twUsername;
+    protected $scrapeFull;
+    protected $tw;
 
     public function __construct(Container $container) {
         $this->container = $container;
@@ -27,31 +33,33 @@ class TwitterService
 
     /**
      * Queries Twitter for stats and tweets
-     * @param  string $username
      * @param  string $partyCode
+     * @param  string $twUsername
      * @param  bool   $scrapeFull
      * @return array
      */
-    public function getTwitterData($username, $partyCode, $scrapeFull = false) {
-        $tw   = $this->connect->getNewTwitter();
-        $data = $this->connect->getTwRequest($tw, $username);
+    public function getTwitterData($partyCode, $twUsername, $scrapeFull = false) {
+        $this->scrapeFull = $scrapeFull;
+        $this->partyCode  = $partyCode;
+        $this->twUsername = $twUsername;
+        $this->tw         = $this->connect->getNewTwitter();
+
+        $data = $this->connect->getTwRequest($this->tw, $twUsername);
 
         echo "     + Info and stats... ";
-        if (empty($data) || empty($data->followers_count)) {
+        if (empty($data)) {
             echo "not found\n";
             return false;
         }
 
-        $out = [
-            'description' => $data->description,
-            'tweets'      => $data->statuses_count,
-            'likes'       => $data->favourites_count,
-            'followers'   => $data->followers_count,
-            'following'   => $data->friends_count,
-        ];
+        $out = $this->getTwStats($data);
+        if (!isset($out['tweets'])) {
+            echo "not found\n";
+            return false;
+        }
         echo "ok... total " . $out['tweets'] . " tweets found\n";
 
-        $temp = $this->getTweets($tw, $username, $partyCode, $scrapeFull);
+        $temp = $this->getTweets();
         $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : 0;
         $out['images'] = isset($temp['images']) ? $temp['images'] : 0;
         $out['videos'] = isset($temp['videos']) ? $temp['videos'] : 0;
@@ -64,15 +72,71 @@ class TwitterService
 
 
     /**
-     * Processes tweets
-     * @param  object $tw
-     * @param  string $username
-     * @param  string $partyCode
-     * @param  bool   $scrapeFull
+     * Retrieves Twitter account statistics
+     * @param  object $data
      * @return array
      */
-    public function getTweets($tw, $username, $partyCode, $scrapeFull = false) {
-        $tweetData = $this->connect->getTwRequest($tw, $username, true);
+    public function getTwStats($data) {
+        $array = [];
+
+        if (isset($data->description)) {
+            $this->db->addMeta(
+                $this->partyCode,
+                Metadata::TYPE_TWITTER_INFO,
+                $data->description
+            );
+            $array['description'] = true;
+        }
+
+        if (isset($data->favourites_count)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_TWITTER,
+                Statistic::SUBTYPE_LIKES,
+                $data->favourites_count
+            );
+            $array['likes'] = true;
+        }
+
+        if (isset($data->followers_count)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_TWITTER,
+                Statistic::SUBTYPE_FOLLOWERS,
+                $data->followers_count
+            );
+            $array['followers'] = true;
+        }
+
+        if (isset($data->friends_count)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_TWITTER,
+                Statistic::SUBTYPE_FOLLOWING,
+                $data->friends_count
+            );
+            $array['following'] = true;
+        }
+
+        if (isset($data->statuses_count)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_TWITTER,
+                Statistic::SUBTYPE_POSTS,
+                $data->statuses_count
+            );
+            $array['tweets'] = $data->statuses_count;
+        }
+
+        return $array;
+    }
+
+    /**
+     * Processes tweets
+     * @return array
+     */
+    public function getTweets() {
+        $tweetData = $this->connect->getTwRequest($this->tw, $this->twUsername, true);
 
         echo "     + Tweet details.... ";
         if (empty($tweetData)) {
@@ -80,7 +144,7 @@ class TwitterService
             return false;
         }
 
-        $timeLimit = $this->db->getTimeLimit('tw', 'T', $partyCode, $scrapeFull);
+        $timeLimit = $this->db->getTimeLimit('tw', 'T', $this->partyCode, $this->scrapeFull);
         $pageCount = 0;
         echo "page ";
 
@@ -95,7 +159,7 @@ class TwitterService
                 $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
                 // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
 
-                $tweet  = $this->getTweetDetails($item, $partyCode, $twTime);
+                $tweet  = $this->getTweetDetails($item, $twTime);
 
                 if ($tweet === 'txt') {
                     $txtCount++;
@@ -106,10 +170,10 @@ class TwitterService
             }
 
             $timeCheck = $twTime->getTimestamp(); // check time of last tweet scraped
-            $this->connect->getTwRateLimit($tw);
+            $this->connect->getTwRateLimit($this->tw);
 
             // make new request to get next page of results
-            $tweetData = $this->connect->getTwRequest($tw, $username, true, $item->id);
+            $tweetData = $this->connect->getTwRequest($this->tw, $this->twUsername, true, $item->id);
             $pageCount++;
 
         } while ($timeCheck > $timeLimit && $pageCount < 100);
@@ -126,11 +190,10 @@ class TwitterService
     /**
      * Retrieves the details of a tweet
      * @param  object $item
-     * @param  string $partyCode
      * @param  object $twTime
      * @return string
      */
-    public function getTweetDetails($item, $partyCode, $twTime) {
+    public function getTweetDetails($item, $twTime) {
 
         if (!empty($item->full_text)) {
             $twText = $item->full_text;
@@ -139,29 +202,29 @@ class TwitterService
         } else $twText = null;
 
         if (!empty($item->entities->media)) { // if tweet contains media
-            $tweet = $this->getMediaDetails($item, $partyCode, $twTime, $twText);
+            $tweet = $this->getMediaDetails($item, $twTime, $twText);
             return $tweet;
         }
 
-        $data = [
+        $allData = [
             'id'       => $item->id,
             'posted'   => $twTime->format('Y-m-d H:i:s'), // string
             'text'     => $twText,
-            'url'      => 'https://twitter.com/statuses/'.$item->id,
+            'url'      => 'https://twitter.com/statuses/' . $item->id,
             'likes'    => $item->favorite_count,
             'retweets' => $item->retweet_count
             ];
 
         $this->db->addSocial(
-            $partyCode,
+            $this->partyCode,
             SocialMedia::TYPE_TWITTER,
             SocialMedia::SUBTYPE_TEXT,
             $item->id,
-            $twTime,
+            $twTime, // DateTime
             $twText,
             null,
             $item->favorite_count,
-            $data
+            $allData
         );
 
         return 'txt';
@@ -171,12 +234,11 @@ class TwitterService
     /**
      * Retrieves the details of an image or video
      * @param  object $item
-     * @param  string $partyCode
      * @param  object $twTime
      * @param  string $twText
      * @return array
      */
-    public function getMediaDetails($item, $partyCode, $twTime, $twText) {
+    public function getMediaDetails($item, $twTime, $twText) {
         $media = $item->extended_entities->media;
 
         $imgCount = 0;
@@ -191,33 +253,33 @@ class TwitterService
                 $imgCount++;
             }
 
-            $imgSrc = $photo->media_url.":small";
+            $imgSrc = $photo->media_url . ":small";
             $imgId  = $photo->id;
             $img    = $this->container
                 ->get('ImageService')
-                ->saveImage('tw', $partyCode, $imgSrc, $imgId);
+                ->saveImage('tw', $this->partyCode, $imgSrc, $imgId);
 
-            $data = [
+            $allData = [
                 'id'         => $imgId,
                 'posted'     => $twTime->format('Y-m-d H:i:s'), // string
                 'text'       => $twText,
                 'image'      => $img,
                 'img_source' => $imgSrc,
-                'url'        => 'https://twitter.com/statuses/'.$item->id,
+                'url'        => 'https://twitter.com/statuses/' . $item->id,
                 'likes'      => $item->favorite_count,
                 'retweets'   => $item->retweet_count
                 ];
 
             $this->db->addSocial(
-                $partyCode,
+                $this->partyCode,
                 SocialMedia::TYPE_TWITTER,
                 $subType,
                 $item->id,
-                $twTime,
+                $twTime, // DateTime
                 $twText,
-                null,
+                $img,
                 $item->favorite_count,
-                $data
+                $allData
             );
         }
 

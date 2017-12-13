@@ -42,7 +42,7 @@ class DatabaseService
      * @return array
      */
     public function getAllParties() {
-        $parties = $this->container->get('doctrine')
+        $parties = $this->em
             ->getRepository('AppBundle:Party')
             ->findAll();
         
@@ -61,7 +61,7 @@ class DatabaseService
      * @return array
      */
     public function getOneParty($code) {
-        $party = $this->container->get('doctrine')
+        $party = $this->em
             ->getRepository('AppBundle:Party')
             ->findOneByCode($code);
 
@@ -108,7 +108,7 @@ class DatabaseService
      * @return Metadata
      */
     public function addMeta($code, $type, $value) {
-        $m = $this->container->get('doctrine')
+        $m = $this->em
             ->getRepository('AppBundle:Metadata')
             ->findOneBy([
                 'type' => $type,
@@ -143,7 +143,7 @@ class DatabaseService
      * @return SocialMedia
      */
     public function addSocial($code, $type, $subType, $postId, $postTime, $postText, $postImage, $postLikes, $postData) {
-        $p = $this->container->get('doctrine')
+        $p = $this->em
             ->getRepository('AppBundle:SocialMedia')
             ->findOneByPostId($postId);
 
@@ -201,7 +201,7 @@ class DatabaseService
         }
 
         echo "checking database...";
-        $p = $this->container->get('doctrine')
+        $p = $this->em
             ->getRepository('AppBundle:SocialMedia')
             ->findOneBy([
                 'code' => $partyCode,
