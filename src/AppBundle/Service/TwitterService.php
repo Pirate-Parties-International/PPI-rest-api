@@ -17,6 +17,7 @@ class TwitterService
     private   $container;
     protected $connect;
     protected $db;
+    protected $log;
 
     protected $partyCode;
     protected $twUsername;
@@ -27,6 +28,7 @@ class TwitterService
         $this->container = $container;
         $this->connect   = $this->container->get('ConnectionService');
         $this->db        = $this->container->get('DatabaseService');
+        $this->log       = $this->container->get('logger');
         @set_exception_handler(array($this->db, 'exception_handler'));
     }
 
@@ -45,19 +47,15 @@ class TwitterService
         $this->tw         = $this->connect->getNewTwitter();
 
         $data = $this->connect->getTwRequest($this->tw, $twUsername);
-
-        echo "     + Info and stats... ";
         if (empty($data)) {
-            echo "not found\n";
             return false;
         }
 
         $out = $this->getTwStats($data);
-        if (!isset($out['tweets'])) {
-            echo "not found\n";
-            return false;
+        if (!empty($out)) {
+            $this->log->info("    + Info and stats... ok");
+            $this->log->info("    + Total " . $out['tweets'] . " tweets found");
         }
-        echo "ok... total " . $out['tweets'] . " tweets found\n";
 
         $temp = $this->getTweets();
         $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : 0;
@@ -65,7 +63,7 @@ class TwitterService
         $out['videos'] = isset($temp['videos']) ? $temp['videos'] : 0;
 
         $timeCheck = $temp['timeCheck'];
-        echo "..." . $out['posts'] . " text posts, " . $out['images'] . " images and " . $out['videos'] . " videos since " . date('d/m/Y', $timeCheck) . " processed\n";
+        $this->log->info("    + " . $out['posts'] . " text posts, " . $out['images'] . " images and " . $out['videos'] . " videos since " . date('d/m/Y', $timeCheck) . " processed");
  
         return $out;
     }
@@ -78,6 +76,11 @@ class TwitterService
      */
     public function getTwStats($data) {
         $array = [];
+
+        if (!isset($data->statuses_count)) {
+            $this->log->notice("  - Twitter info and stats not found for " . $this->partyCode);
+            return false;
+        }
 
         if (isset($data->description)) {
             $this->db->addMeta(
@@ -138,22 +141,21 @@ class TwitterService
     public function getTweets() {
         $tweetData = $this->connect->getTwRequest($this->tw, $this->twUsername, true);
 
-        echo "     + Tweet details.... ";
         if (empty($tweetData)) {
-            echo "not found\n";
+            $this->log->notice("    - Tweet details not found for " . $this->partyCode);
             return false;
         }
 
+        $this->log->info("    + Getting tweet details...");
         $timeLimit = $this->db->getTimeLimit('tw', 'T', $this->partyCode, $this->scrapeFull);
-        $pageCount = 0;
-        echo "page ";
 
-        $txtCount = 0;
-        $imgCount = 0;
-        $vidCount = 0;
+        $pageCount = 0;
+        $txtCount  = 0;
+        $imgCount  = 0;
+        $vidCount  = 0;
 
         do { // process current page of results
-            echo $pageCount .', ';
+            $this->log->debug("     + Page " . $pageCount);
 
             foreach($tweetData as $item) {
                 $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);

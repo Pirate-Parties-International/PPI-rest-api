@@ -18,7 +18,7 @@ class ScraperCommand extends ContainerAwareCommand
     private   $container;
     protected $db;
     protected $em;
-    protected $logger;
+    protected $log;
     protected $output;
 
     protected $scrapeParty = null;
@@ -48,24 +48,23 @@ class ScraperCommand extends ContainerAwareCommand
         $this->container = $this->getContainer();
         $this->em        = $this->container->get('doctrine')->getManager();
         $this->db        = $this->container->get('DatabaseService');
-        $this->logger    = $this->container->get('logger');
-        $logger          = $this->logger;
+        $this->log       = $this->container->get('logger');
 
-        $output->writeln("##### Starting scraper #####");
+        $this->log->notice("##### Starting scraper #####");
         $startTime = new \DateTime('now');
 
         $parties = $this->verifyInput($input);
 
         foreach ($parties as $partyCode => $party) {
             if ($this->scrapeStart && ($partyCode < $this->scrapeStart)) {
-                $output->writeln(" - " . $partyCode . " skipped...");
+                $this->log->info("- " . $partyCode . " skipped...");
 
             } else {
-                $output->writeln(" + Processing " . $partyCode);
+                $this->log->info("# Processing " . $partyCode);
 
                 $socialNetworks = $party->getSocialNetworks();
                 if (empty($socialNetworks)) {
-                    $output->writeln("   - Social Network information missing");
+                    $this->log->warning("- Social Network information missing for " . $partyCode);
                     continue;
                 }
 
@@ -74,7 +73,7 @@ class ScraperCommand extends ContainerAwareCommand
         }
 
         $endDiff = $startTime->diff(new \DateTime('now'));
-        $output->writeln("# All done in " . $endDiff->format('%H:%I:%S'));
+        $this->log->notice("# All done in " . $endDiff->format('%H:%I:%S'));
     }
 
 
@@ -91,7 +90,7 @@ class ScraperCommand extends ContainerAwareCommand
         $this->scrapeFull  = $input->getOption('full');   // if null, get most recent posts only
 
         if ($this->scrapeFull) {
-            $this->output->writeln("### Full scrape requested, will overwrite database!");
+            $this->log->notice("### Full scrape requested, will overwrite database!");
         }
 
         switch ($this->scrapeSite) {
@@ -111,8 +110,8 @@ class ScraperCommand extends ContainerAwareCommand
                 $siteName = "YouTube";
                 break;
             default:
-                $this->output->writeln("   - ERROR: Search term \"" . $this->scrapeSite . "\" not recognised");
-                $this->output->writeln("# Process halted");
+                $this->log->error("- ERROR: Search term \"" . $this->scrapeSite . "\" not recognised");
+                $this->log->notice("# Process halted");
                 exit;
         }
 
@@ -122,8 +121,8 @@ class ScraperCommand extends ContainerAwareCommand
                 case null:
                     break;
                 default:
-                    $this->output->writeln("   - ERROR: Search term \"" . $this->scrapeData . "\" is only valid for Facebook");
-                    $this->output->writeln("# Process halted");
+                    $this->log->error("- ERROR: Search term \"" . $this->scrapeData . "\" is only valid for Facebook");
+                    $this->log->notice("# Process halted");
                     exit;
             }
 
@@ -152,29 +151,29 @@ class ScraperCommand extends ContainerAwareCommand
                     $dataName = "events";
                     break;
                 case 'videos':
-                    $this->output->writeln("   - ERROR: Videos are included with text posts and can not be scraped separately");
-                    $this->output->writeln("# Process halted");
+                    $this->log->error("- ERROR: Videos are included with text posts and can not be scraped separately");
+                    $this->log->notice("# Process halted");
                     exit;
                 default:
-                    $this->output->writeln("   - ERROR: Search term \"" . $this->scrapeData . "\" is not valid");
-                    $this->output->writeln("# Process halted");
+                    $this->log->error("- ERROR: Search term \"" . $this->scrapeData . "\" is not valid");
+                    $this->log->notice("# Process halted");
                     exit;
             }
 
             $this->scrapeSite = 'fb';
-            $this->output->writeln("### Scraping Facebook for " . $dataName . " only");
+            $this->log->info("### Scraping Facebook for " . $dataName . " only");
         } else {
-            $this->output->writeln("### Scraping " . $siteName . " for all data");
+            $this->log->info("### Scraping " . $siteName . " for all data");
         }
 
         if (!$this->scrapeParty) {
-            $this->output->write("# Getting all parties...");
+            $this->log->info("# Getting all parties...");
             $parties = $this->db->getAllParties();
         } else {
-            $this->output->write("# Getting one party (" . $this->scrapeParty . ")...");
+            $this->log->info("# Getting one party (" . $this->scrapeParty . ")...");
             $parties = $this->db->getOneParty($this->scrapeParty);
         }
-        $this->output->write(" Done\n");
+        $this->log->info("  + Done");
 
         return $parties;
     }
@@ -208,11 +207,11 @@ class ScraperCommand extends ContainerAwareCommand
                 $this->scrapeYoutube($partyCode, $socialNetworks);
         }
 
-        $this->output->writeln(" # Saving to DB");
+        $this->log->info("  + Saving to DB");
         $this->em->flush();
 
         $midDiff = $midTime->diff(new \DateTime('now'));
-        $this->output->writeln("   + Done with " . $partyCode . " in " . $midDiff->format('%H:%I:%S'));
+        $this->log->notice("# Done with " . $partyCode . " in " . $midDiff->format('%H:%I:%S'));
     }
 
 
@@ -224,72 +223,72 @@ class ScraperCommand extends ContainerAwareCommand
     public function scrapeFacebook($partyCode, $socialNetworks)
     {
         if (empty($socialNetworks['facebook']) || empty($socialNetworks['facebook']['username'])) {
-            $this->output->writeln("   - Facebook data not found");
+            $this->log->warning(" - Facebook data not found for " . $partyCode);
             return false;
         }
 
-        $this->output->writeln("   + Starting Facebook import");
+        $this->log->info("  + Starting Facebook import");
         $fbData = $this->container->get('FacebookService')
             ->getFBData($partyCode, $socialNetworks['facebook']['username'], $this->scrapeFull, $this->scrapeData);
 
         if (!$fbData) {
-            $this->output->writeln("     - ERROR while retrieving FB data");
+            $this->log->notice("  - ERROR while retrieving FB data for " . $partyCode);
             return false;
         }
 
-        $this->output->writeln("   + Facebook data retrieved");
+        $this->log->info("    + Facebook data retrieved");
 
         if ($this->scrapeData == null || $this->scrapeData == 'info') {
-            $status = isset($fbData['info'])    ? "+ General info added"          : "- General info not found";
-            $this->output->writeln("     " . $status);
-            $status = isset($fbData['likes'])   ? "+ 'Like' count added"          : "- 'Like' count not found";
-            $this->output->writeln("     " . $status);
-            $status = isset($fbData['talking']) ? "+ 'Talking about' count added" : "- 'Talking about' count not found";
-            $this->output->writeln("     " . $status);
+            $status = isset($fbData['info'])    ? "    + General info added"          : "    - General info not found";
+            $this->log->info($status);
+            $status = isset($fbData['likes'])   ? "    + 'Like' count added"          : "    - 'Like' count not found";
+            $this->log->info($status);
+            $status = isset($fbData['talking']) ? "    + 'Talking about' count added" : "    - 'Talking about' count not found";
+            $this->log->info($status);
 
-            $status = $fbData['postCount']  ? "+ Text post count added" : "- Text post count not found";
-            $this->output->writeln("     " . $status);
-            $status = $fbData['imageCount'] ? "+ Image count added"     : "- Image count not found";
-            $this->output->writeln("     " . $status);
-            $status = $fbData['videoCount'] ? "+ Video count added"     : "- Video count not found";
-            $this->output->writeln("     " . $status);
-            $status = $fbData['eventCount'] ? "+ Event count added"     : "- Event count not found";
-            $this->output->writeln("     " . $status);
+            $status = $fbData['postCount']  ? "    + Text post count added" : "    - Text post count not found";
+            $this->log->info($status);
+            $status = $fbData['imageCount'] ? "    + Image count added"     : "    - Image count not found";
+            $this->log->info($status);
+            $status = $fbData['videoCount'] ? "    + Video count added"     : "    - Video count not found";
+            $this->log->info($status);
+            $status = $fbData['eventCount'] ? "    + Event count added"     : "    - Event count not found";
+            $this->log->info($status);
 
-            $this->output->writeln("   + All statistics processed");
+            $this->log->info("  + All Facebook statistics processed");
 
             if (!isset($fbData['cover'])) {
-                $this->output->writeln("     - No cover found");
+                $this->log->notice("  - No Facebook cover found for " . $partyCode);
             } else {
                 $cover = $this->container->get('ImageService')
                     ->getFacebookCover($partyCode, $fbData['cover']);
-                $this->output->writeln("     + Cover retrieved");
+                $this->log->info("    + Cover retrieved");
 
                 $this->db->addMeta(
                     $partyCode,
                     Metadata::TYPE_FACEBOOK_COVER,
                     $cover
                 );
-                $this->output->writeln("       + Cover added");
+                $this->log->info("      + Cover added");
             }
         }
 
         if ($this->scrapeData == null || $this->scrapeData == 'posts') {
-            $status = !empty($fbData['posts'])  ? "+ Text posts added" : "- No text posts found";
-            $this->output->writeln("     " . $status);
-            $status = !empty($fbData['videos']) ? "+ Videos added"     : "- No videos found";
-            $this->output->writeln("     " . $status);
+            $status = !empty($fbData['posts'])  ? "    + Text posts added" : "    - No text posts found";
+            $this->log->info($status);
+            $status = !empty($fbData['videos']) ? "    + Videos added"     : "    - No videos found";
+            $this->log->info($status);
         }
         if ($this->scrapeData == null || $this->scrapeData == 'images') {
-            $status = !empty($fbData['images']) ? "+ Images added"     : "- No images found";
-            $this->output->writeln("     " . $status);
+            $status = !empty($fbData['images']) ? "    + Images added"     : "    - No images found";
+            $this->log->info($status);
         }
         if ($this->scrapeData == null || $this->scrapeData == 'events') {
-            $status = !empty($fbData['events']) ? "+ Events added"     : "- No events found";
-            $this->output->writeln("     " . $status);
+            $status = !empty($fbData['events']) ? "    + Events added"     : "    - No events found";
+            $this->log->info($status);
         }
 
-        $this->output->writeln("   + All Facebook data processed");
+        $this->log->info("  + All Facebook data processed");
     }
 
 
@@ -302,42 +301,42 @@ class ScraperCommand extends ContainerAwareCommand
     public function scrapeTwitter($partyCode, $socialNetworks)
     {
         if (empty($socialNetworks['twitter']) || empty($socialNetworks['twitter']['username'])) {
-            $this->output->writeln("   - Twitter data not found");
+            $this->log->warning(" - Twitter data not found for " . $partyCode);
             return false;
         }
 
-        $this->output->writeln("   + Starting Twitter import");
+        $this->log->info("  + Starting Twitter import");
         $twData = $this->container->get('TwitterService')
             ->getTwitterData($partyCode, $socialNetworks['twitter']['username'], $this->scrapeFull);
 
         if (!$twData) {
-            $this->output->writeln("     - ERROR while retrieving TW data");
+            $this->log->notice("  - ERROR while retrieving Twitter data for " . $partyCode);
             return false;
         }
 
-        $this->output->writeln("   + Twitter data retrieved");
+        $this->log->info("    + Twitter data retrieved");
 
-        $status = isset($twData['description']) ? "+ Description added"     : "- Description not found";
-        $this->output->writeln("     " . $status);
-        $status = isset($twData['likes'])       ? "+ 'Like' count added"    : "- 'Like' count not found";
-        $this->output->writeln("     " . $status);
-        $status = isset($twData['followers'])   ? "+ Follower count added"  : "- Follower count not found";
-        $this->output->writeln("     " . $status);
-        $status = isset($twData['following'])   ? "+ Following count added" : "- Following count not found";
-        $this->output->writeln("     " . $status);
-        $status = isset($twData['tweets'])      ? "+ Tweet count added"     : "- Tweet count not found";
-        $this->output->writeln("     " . $status);
+        $status = isset($twData['description']) ? "    + Description added"     : "    - Description not found";
+        $this->log->info($status);
+        $status = isset($twData['likes'])       ? "    + 'Like' count added"    : "    - 'Like' count not found";
+        $this->log->info($status);
+        $status = isset($twData['followers'])   ? "    + Follower count added"  : "    - Follower count not found";
+        $this->log->info($status);
+        $status = isset($twData['following'])   ? "    + Following count added" : "    - Following count not found";
+        $this->log->info($status);
+        $status = isset($twData['tweets'])      ? "    + Tweet count added"     : "    - Tweet count not found";
+        $this->log->info($status);
 
-        $this->output->writeln("   + All statistics processed");
+        $this->log->info("  + All Twitter statistics processed");
 
-        $status = !empty($twData['posts'])  ? "+ Text tweets added" : "- No text tweets found";
-        $this->output->writeln("     " . $status);
-        $status = !empty($twData['images']) ? "+ Images added"      : "- No images found";
-        $this->output->writeln("     " . $status);
-        $status = !empty($twData['videos']) ? "+ Videos added"      : "- No videos found";
-        $this->output->writeln("     " . $status);
+        $status = !empty($twData['posts'])  ? "    + Text tweets added" : "    - No text tweets found";
+        $this->log->info($status);
+        $status = !empty($twData['images']) ? "    + Images added"      : "    - No images found";
+        $this->log->info($status);
+        $status = !empty($twData['videos']) ? "    + Videos added"      : "    - No videos found";
+        $this->log->info($status);
 
-        $this->output->writeln("   + All Twitter data processed");
+        $this->log->info("  + All Twitter data processed");
     }
 
 
@@ -349,21 +348,21 @@ class ScraperCommand extends ContainerAwareCommand
     public function scrapeGooglePlus($partyCode, $socialNetworks)
     {
         if (empty($socialNetworks['googlePlus'])) {
-            $this->output->writeln("   - Google+ data not found");
+            $this->log->warning(" - Google+ data not found for " . $partyCode);
             return false;
         }
 
-        $this->output->writeln("   + Starting Google+ import");
+        $this->log->info("  + Starting Google+ import");
         $gData = $this->container->get('GoogleService')
             ->getGooglePlusData($partyCode, $socialNetworks['googlePlus']);
 
         if (empty($gData)) {
-            $this->output->writeln("     - ERROR while retrieving G+ data");
+            $this->log->notice("  - ERROR while retrieving Google+ data for " . $partyCode);
             return false;
         }
 
-        $this->output->writeln("     + Google+ data retrieved");
-        $this->output->writeln("     + Follower count added");
+        $this->log->info("    + Google+ data retrieved");
+        $this->log->info("      + Follower count added");
     }
 
 
@@ -375,34 +374,34 @@ class ScraperCommand extends ContainerAwareCommand
     public function scrapeYoutube($partyCode, $socialNetworks)
     {
         if (empty($socialNetworks['youtube'])) {
-            $this->output->writeln("   - Youtube data not found");
+            $this->log->warning(" - Youtube data not found for " . $partyCode);
             return false;
         }
 
-        $this->output->writeln("   + Starting Youtube import");
+        $this->log->info("  + Starting Youtube import");
         $ytData = $this->container->get('GoogleService')
             ->getYoutubeData($partyCode, $socialNetworks['youtube']);
 
         if (!$ytData) {
-            $this->output->writeln("     - ERROR while retrieving Youtube data");
+            $this->log->notice("  - ERROR while retrieving Youtube data for " . $partyCode);
             return false;
         }
 
-        $this->output->writeln("   + Youtube data retrieved");
+        $this->log->info("  + Youtube data retrieved");
 
-        $status = isset($ytData['stats']['subCount'])  ? "+ Subscriber count added" : "- Subscriber count not found";
-        $this->output->writeln("     " . $status);
-        $status = isset($ytData['stats']['viewCount']) ? "+ View count added"       : "- View count not found";
-        $this->output->writeln("     " . $status);
-        $status = isset($ytData['stats']['vidCount'])  ? "+ Video count added"      : "- Video count not found";
-        $this->output->writeln("     " . $status);
+        $status = isset($ytData['subCount'])  ? "    + Subscriber count added" : "    - Subscriber count not found";
+        $this->log->info($status);
+        $status = isset($ytData['viewCount']) ? "    + View count added"       : "    - View count not found";
+        $this->log->info($status);
+        $status = isset($ytData['vidCount'])  ? "    + Video count added"      : "    - Video count not found";
+        $this->log->info($status);
 
-        $this->output->writeln("   + All statistics processed");
+        $this->log->info("  + All Youtube statistics processed");
 
-        $status = !empty($ytData['videos']) ? "+ Videos added" : "- No videos found";
-        $this->output->writeln("     " . $status);
+        $status = !empty($ytData['videos']) ? "    + Videos added" : "    - No videos found";
+        $this->log->info($status);
 
-        $this->output->writeln("   + All Google data processed");
+        $this->log->info("  + All Google data processed");
     }
 
 }

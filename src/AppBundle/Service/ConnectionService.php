@@ -14,10 +14,12 @@ class ConnectionService
 {
     private   $container;
     protected $db;
+    protected $log;
 
     public function __construct(Container $container) {
         $this->container = $container;
         $this->db        = $this->container->get('DatabaseService');
+        $this->log       = $this->container->get('logger');
         @set_exception_handler([$this->db, 'exception_handler']);
     }
 
@@ -54,21 +56,21 @@ class ConnectionService
 
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
             // When Graph returns an error
-            echo 'Graph returned an error: ' . $e->getMessage() . "\n";
+            $this->log->error($fbPageId . " - Graph returned an error: " . $e->getMessage());
             exit;
 
         } catch(Facebook\Exceptions\FacebookSDKException $e) {
             // When validation fails or other local issues
-            echo 'Facebook SDK returned an error: ' . $e->getMessage() . "\n";
+            $this->log->error($fbPageId . " - Facebook SDK returned an error: " . $e->getMessage());
             exit;
 
         } catch(Facebook\Exceptions\FacebookThrottleException $e) {
             // When the app hits the rate limit
-            echo $e->getMessage() . "\n";
+            $this->log->notice($fbPageId . " - " . $e->getMessage());
             $response = $this->getFbRateLimit($request);
 
         } catch(\Exception $e) {
-            echo $fbPageId . " - Exception: " . $e->getMessage() . "\n";
+            $this->log->error($fbPageId . " - Exception: " . $e->getMessage());
             return false;
         }
 
@@ -90,12 +92,12 @@ class ConnectionService
 
         do {
             try {
-                echo "Please wait until " . date('H:i:s', $waitUntil) . "... ";
+                $this->log->notice("  - Please wait until " . date('H:i:s', $waitUntil) . "...");
                 time_sleep_until($waitUntil);
                 $response = $fb->getClient()->sendRequest($request);
                 $connected = true;
             } catch(\Exception $e) {
-                echo "Still waiting... ";
+                $this->log->notice("  - Still waiting...");
             }
         } while ($connected == false);
 
@@ -150,7 +152,7 @@ class ConnectionService
 		    return json_decode($data);
 
         } catch (\Exception $e) {
-            echo $e->getMessage() . "\n";
+            $this->log->error($username . " - " . $e->getMessage());
             return false;
         }
     }
@@ -173,10 +175,10 @@ class ConnectionService
         } while (!isset($data['resources'])); // make sure we have a response before continuing
 
         $limitCheck = $data['resources']['application']['/application/rate_limit_status'];
-        // echo "(" . $limitCheck['remaining'] . " remaining, resetting at " . date('H:i:s', $limitCheck['reset']) . ") ";
+        $this->log->debug("       + (" . $limitCheck['remaining'] . " requests remaining, resetting at " . date('H:i:s', $limitCheck['reset']) . ") ");
 
         if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
-            echo "...Rate limit reached! Resuming at " . date('H:i:s', $limitCheck['reset']) . "... ";
+            $this->log->notice("  - Rate limit reached! Resuming at " . date('H:i:s', $limitCheck['reset']) . "...");
             time_sleep_until($limitCheck['reset']);
         }
     }
@@ -198,7 +200,7 @@ class ConnectionService
 
 		$url = 'https://www.googleapis.com/plus/v1/people/';
 		$url .= $googleId . '?key=' . $apikey;
-        $google = $this->curl($url);
+        $google = $this->curl($url, $googleId);
 
         return json_decode($google);
     }
@@ -229,7 +231,7 @@ class ConnectionService
                 $response  = curl_exec($curl);
                 $connected = true;
             } catch (\Exception $e) {
-                echo $e->getMessage() . "\n";
+                $this->log->error($googleId . " - " . $e->getMessage());
                 $tryCount++;
                 return false;
             }

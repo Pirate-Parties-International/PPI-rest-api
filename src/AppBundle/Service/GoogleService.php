@@ -17,6 +17,7 @@ class GoogleService
     protected $connect;
     protected $db;
     protected $images;
+    protected $log;
 
     protected $partyCode;
     protected $googleId;
@@ -27,7 +28,8 @@ class GoogleService
         $this->connect   = $this->container->get('ConnectionService');
         $this->db        = $this->container->get('DatabaseService');
         $this->images    = $this->container->get('ImageService');
-        @set_exception_handler(array($db, 'exception_handler'));
+        $this->log       = $this->container->get('logger');
+        @set_exception_handler(array($this->db, 'exception_handler'));
     }
 
 
@@ -42,36 +44,32 @@ class GoogleService
         $this->googleId  = $googleId;
         $this->yt        = $this->connect->getNewGoogle($googleId, true);
 
-        echo "     + Info and stats... ";
-        if (!$this->yt) {
-            echo "not found\n";
-            return false;
-        }
-
         $data = $this->yt->getChannelByName($googleId);
-        if (empty($data) || empty($data->statistics)) {
-            echo "not found\n";
+        if (empty($data)) {
             return false;
         }
 
-        $out['stats'] = $this->getYtStats($data->statistics);
-        echo "ok\n";
+        $out = $this->getYtStats($data->statistics);
+        if (!empty($out)) {
+            $this->log->info("    + Info and stats... ok");
+        }
 
         $playlist = $data->contentDetails->relatedPlaylists->uploads;
         $videos   = $this->yt->getPlaylistItemsByPlaylistId($playlist);
         $vidCount = 0;
 
-        echo "     + Videos... ";
         if (empty($videos)) {
-            echo "not found\n";
+            $this->log->notice("    - Youtube videos not found for " . $this->partyCode);
             return $out;
         }
 
+        $this->log->info("    + Getting video details...");
         foreach ($videos as $key => $vid) {
             $this->getVideoDetails($vid);
             $vidCount++;
         }
-        echo $vidCount . " found and processed\n";
+
+        $this->log->info("    + " . $vidCount . " videos found and processed");
         $out['videos'] = $vidCount;
 
         return $out;
@@ -86,6 +84,11 @@ class GoogleService
     public function getYtStats($stats) {
         // these stats are strings, so we need to cast them to int to save them to db
         $array = [];
+
+        if (!isset($stats->subscriberCount)) {
+            $this->log->notice("    - Youtube info not found for " . $this->partyCode);
+            return false;
+        }
 
         if (!empty($stats->subscriberCount)) {
             $this->db->addStatistic(

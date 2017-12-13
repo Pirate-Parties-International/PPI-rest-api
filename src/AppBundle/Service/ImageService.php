@@ -12,10 +12,12 @@ class ImageService
 {
     private   $container;
     protected $db;
+    protected $log;
 
     public function __construct(Container $container) {
         $this->container = $container;
         $this->db        = $this->container->get('DatabaseService');
+        $this->log       = $this->container->get('logger');
         @set_exception_handler([$this->db, 'exception_handler']);
     }
 
@@ -57,16 +59,14 @@ class ImageService
             try {
                 $imgData = file_get_contents($imgSrc, false, $ctx);
             } catch (\Exception $e) {
-                echo $e->getMessage();
+                $this->log->notice($e->getMessage());
                 if ($imgBkp) { // try backup if available
-                    echo " trying backup... ";
                     try {
                         $imgData = file_get_contents($imgBkp, false, $ctx);
-                        echo "successful";
+                        $this->log->info("    + Backup successful");
                     } catch (\Exception $e) {
-                        echo "unsuccessful";
+                        $this->log->info("    - Backup unsuccessful");
                     }
-                    echo ", ";
                 }
             }
         }
@@ -75,7 +75,7 @@ class ImageService
             try {
                 file_put_contents($imgPath, $imgData);
             } catch (\Exception $e) {
-                echo $e->getMessage();
+                $this->log->notice($e->getMessage());
             }
         }
 
@@ -110,7 +110,7 @@ class ImageService
         try {
             $imgData = file_get_contents($imgSrc, false, $ctx);
         } catch (\Exception $e) {
-            echo $e->getMessage() . "\n";
+            $this->log->notice($e->getMessage());
         }
 
         if (empty($imgData)) {

@@ -5,6 +5,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\DependencyInjection\Container;
+use Symfony\Component\Console\Output\OutputInterface;
 
 use AppBundle\Command\ScraperCommand;
 use AppBundle\Entity\SocialMedia;
@@ -16,6 +17,7 @@ class FacebookService
     protected $db;
     protected $images;
     protected $stats;
+    protected $log;
 
     protected $partyCode;
     protected $fbPageId;
@@ -28,6 +30,7 @@ class FacebookService
         $this->db        = $this->container->get('DatabaseService');
         $this->images    = $this->container->get('ImageService');
         $this->stats     = $this->container->get('FbStatService');
+        $this->log       = $this->container->get('logger');
         @set_exception_handler([$this->db, 'exception_handler']);
     }
 
@@ -46,8 +49,13 @@ class FacebookService
         $this->fbPageId   = $fbPageId;
         $this->fb         = $this->connect->getNewFacebook();
 
+        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, 'engagement');
+
+        if (empty($graphNode)) {
+            return false;
+        }
+
         $this->stats->setVariables($partyCode, $fbPageId, $this->fb);
-        // echo "Variables updated (" . $this->partyCode . ", " . $this->fbPageId . ")\n";
 
         $requestFields = [
             'basic'        => 'cover,engagement,talking_about_count,about,emails,single_line_address',
@@ -101,22 +109,21 @@ class FacebookService
     public function getPosts($requestFields) {
         $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
 
-        echo "     + Post details.... ";
-        if (empty($graphNode)) {
-            echo "not found\n";
+        if (empty($graphNode) || is_null($graphNode->getField('posts'))) {
+            $this->log->notice("    - Facebook posts not found for " . $this->partyCode);
             return false;
         }
 
+        $this->log->info("    + Getting post details...");
         $fdPosts   = $graphNode->getField('posts');
         $timeLimit = $this->db->getTimeLimit('fb', 'T', $this->partyCode, $this->scrapeFull);
 
-        echo "page ";
         $pageCount = 0;
         $txtCount  = 0;
         $vidCount  = 0;
 
         do {
-            echo $pageCount . ', ';
+            $this->log->debug("     + Page " . $pageCount);
 
             foreach ($fdPosts as $key => $post) {
                 $type = $post->getField('type');
@@ -143,7 +150,7 @@ class FacebookService
 
         $out['posts']  = $txtCount;
         $out['videos'] = $vidCount;
-        echo "..." . $txtCount . " text posts and " . $vidCount . " videos since " . date('d/m/Y', $timeCheck) . " processed\n";
+        $this->log->info("    + " . $txtCount . " text posts and " . $vidCount . " videos since " . date('d/m/Y', $timeCheck) . " processed");
 
         return (isset($out)) ? $out : null;
     }
@@ -205,15 +212,15 @@ class FacebookService
     public function getImages($requestFields) {
         $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
 
-        echo "     + Image details... ";
-        if (empty($graphNode)) {
-            echo "not found\n";
+        if (empty($graphNode) || is_null($graphNode->getField('albums'))) {
+            $this->log->notice("    - Facebook images not found for " . $this->partyCode);
             return false;
         }
 
+        $this->log->info("    + Getting image details...");
         $fdAlbums  = $graphNode->getField('albums');
         $timeLimit = $this->db->getTimeLimit('fb', 'I', $this->partyCode, $this->scrapeFull);
-        echo "page ";
+
         $pageCount = 0;
         $imgCount  = 0;
 
@@ -226,7 +233,7 @@ class FacebookService
             }
 
             do {
-                echo $pageCount . ', ';
+                $this->log->debug("     + Page " . $pageCount);
                 foreach ($fdPhotos as $key => $photo) {
                     $this->getImageDetails($photo, $album);
                     $imgCount++;
@@ -241,7 +248,7 @@ class FacebookService
 
         $out['imageCount'] = array_sum($photoCount);
         $out['images']     = $imgCount;
-        echo "..." . $out['imageCount'] . " found, " . $imgCount . " since " . date('d/m/Y', $timeCheck) . " processed\n";
+        $this->log->info("    + " . $out['imageCount'] . " images found, " . $imgCount . " since " . date('d/m/Y', $timeCheck) . " processed");
 
         return $out;
     }
@@ -303,20 +310,20 @@ class FacebookService
     public function getEvents($requestFields) {
         $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
 
-        echo "     + Event details... ";
-        if (empty($graphNode)) {
-            echo "not found\n";
+        if (empty($graphNode) || is_null($graphNode->getField('events'))) {
+            $this->log->notice("    - Facebook events not found for " . $this->partyCode);
             return false;
         }
 
+        $this->log->info("    + Getting event details...");
         $fdEvents  = $graphNode->getField('events');
         $timeLimit = $this->db->getTimeLimit('fb', 'E', $this->partyCode, $this->scrapeFull);
-        echo "page ";
+
         $pageCount = 0;
         $eveCount  = 0;
 
         do { // process current page of results
-            echo $pageCount . ', ';
+            $this->log->debug("      + Page " . $pageCount);
             foreach ($fdEvents as $key => $event) {
                 $this->getEventDetails($event);
                 $eveCount++;
@@ -329,7 +336,7 @@ class FacebookService
         // while next page is not null and within our time limit
 
         $out['events'] = $eveCount;
-        echo "..." . $out['events'] . " found and processed\n";
+        $this->log->info("    + " . $out['events'] . " events found and processed");
 
         return $out;
     }

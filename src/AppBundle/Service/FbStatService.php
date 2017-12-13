@@ -16,6 +16,7 @@ class FbStatService
     protected $connect;
     protected $db;
     protected $images;
+    protected $log;
 
     protected $partyCode;
     protected $fbPageId;
@@ -26,6 +27,7 @@ class FbStatService
         $this->connect   = $this->container->get('ConnectionService');
         $this->db        = $this->container->get('DatabaseService');
         $this->images    = $this->container->get('ImageService');
+        $this->log       = $this->container->get('logger');
         @set_exception_handler([$this->db, 'exception_handler']);
     }
 
@@ -51,12 +53,10 @@ class FbStatService
         $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
         $array = [];
 
-        echo "     + Info and stats.... ";
-        if (empty($graphNode)) {
-            echo "not found\n";
+        if (empty($graphNode) || is_null($graphNode->getField('engagement'))) {
+            $this->log->notice("    - Facebook info not found for " . $this->partyCode);
             return false;
         }
-        // var_dump($graphNode); exit;
 
         $info = [
             'about'   => $graphNode->getField('about'),
@@ -99,9 +99,8 @@ class FbStatService
             );
             $array['talking'] = true;
         }
-        echo "ok\n";
 
-        // var_dump($array); exit;
+        $this->log->info("    + Info and stats... ok");
         return $array;
     }
 
@@ -114,20 +113,19 @@ class FbStatService
     public function getPostCount($requestFields) {
         $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
 
-        echo "     + Counting posts.... ";
-        if (empty($graphNode) || !$graphNode->getField('posts')) {
-            echo "not found\n";
+        if (empty($graphNode) || is_null($graphNode->getField('posts'))) {
+            $this->log->notice("    - Facebook text posts not counted for " . $this->partyCode);
             return false;
         }
         // var_dump($graphNode); exit;
 
+        $this->log->info("    + Counting text posts...");
         $fdPcount  = $graphNode->getField('posts');
-        echo "page ";
         $pageCount = 0;
         $temp      = [];
 
         do {
-            echo $pageCount . ', ';
+            $this->log->debug("     + Page " . $pageCount);
             foreach ($fdPcount as $key => $post) {
                 $temp['posts'][] = ['id' => $post->getField('id')]; // count all posts
             }
@@ -146,7 +144,7 @@ class FbStatService
             $postCount
         );
 
-        echo "...total " . $postCount . " found\n";
+        $this->log->info("    + Total " . $postCount . " text posts found");
         return true;
     }
 
@@ -159,20 +157,19 @@ class FbStatService
     public function getImageCount($requestFields) {
         $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
 
-        echo "     + Counting photos... ";
-        if (empty($graphNode) || !$graphNode->getField('albums')) {
-            echo "not found\n";
+        if (empty($graphNode) || is_null($graphNode->getField('albums'))) {
+            $this->log->notice("    - Facebook images not counted for " . $this->partyCode);
             return false;
         }
         // var_dump($graphNode); exit;
 
+        $this->log->info("    + Counting images...");
         $fdAlbums   = $graphNode->getField('albums');
-        echo "page ";
         $pageCount  = 0;
         $photoCount = [];
 
         foreach ($fdAlbums as $key => $album) {
-            echo $pageCount . ", ";
+            $this->log->debug("     + Page " . $pageCount);
             $photoCount[] = $album->getField('count');
             $pageCount++;
         }
@@ -189,7 +186,7 @@ class FbStatService
             $imageCount
         );
 
-        echo "...total " . $imageCount . " found\n";
+        $this->log->info("    + Total " . $imageCount . " images found");
         return true;
     }
 
@@ -202,20 +199,19 @@ class FbStatService
     public function getVideoCount($requestFields) {
         $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
 
-        echo "     + Counting videos... ";
-        if (empty($graphNode) || !$graphNode->getField('videos')) {
-            echo "not found\n";
+        if (empty($graphNode) || is_null($graphNode->getField('videos'))) {
+            $this->log->notice("    - Facebook videos not counted for " . $this->partyCode);
             return false;
         }
         // var_dump($graphNode); exit;
 
+        $this->log->info("    + Counting videos...");
         $fdVcount  = $graphNode->getField('videos');
-        echo "page ";
         $pageCount = 0;
         $temp      = [];
 
         do {
-            echo $pageCount . ', ';
+            $this->log->debug("     + Page " . $pageCount);
             foreach ($fdVcount as $key => $post) {
                 $temp['videos'][] = ['id' => $post->getField('id')]; // count all posts
             }
@@ -234,7 +230,7 @@ class FbStatService
             $videoCount
         );
 
-        echo "...total " . $videoCount . " found\n";
+        $this->log->info("    + Total " . $videoCount . " videos found");
         return true;
     }
 
@@ -247,20 +243,19 @@ class FbStatService
     public function getEventCount($requestFields) {
         $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
 
-        echo "     + Counting events... ";
-        if (empty($graphNode) || !$graphNode->getField('events')) {
-            echo "not found.\n";
+        if (empty($graphNode) || is_null($graphNode->getField('events'))) {
+            $this->log->notice("    - Facebook events not counted for " . $this->partyCode);
             return false;
         }
         // var_dump($graphNode); exit;
 
+        $this->log->info("    + Counting events...");
         $fdEvents  = $graphNode->getField('events');
-        echo "page ";
         $pageCount = 0;
         $temp      = [];
 
         do {
-            echo $pageCount . ", ";
+            $this->log->debug("     + Page " . $pageCount);
             foreach ($fdEvents as $key => $event) {
                 $temp['events'][] = ['id' => $event->getField('id')];
             }
@@ -279,7 +274,7 @@ class FbStatService
             $eventCount
         );
 
-        echo "...total " . $eventCount . " found\n";
+        $this->log->info("    + Total " . $eventCount . "events found");
         return true;
     }
 

@@ -21,6 +21,8 @@ class DatabaseService
 {
     private   $container;
     protected $em;
+    protected $log;
+
     protected $meta  = [];
     protected $posts = [];
     protected $stats = [];
@@ -28,12 +30,13 @@ class DatabaseService
     public function __construct(EntityManager $entityManager, Container $container) {
         $this->container = $container;
         $this->em        = $entityManager;
+        $this->log       = $this->container->get('logger');
         @set_exception_handler(array($this, 'exception_handler'));
     }
 
 
     public function exception_handler($e) {
-        $this->output->writeln($e->getMessage());
+        $this->log->error($e->getMessage());
     }
 
 
@@ -178,7 +181,6 @@ class DatabaseService
      * @return int
      */
     public function getTimeLimit($type, $subType, $partyCode, $scrapeFull = false) {
-
         $fbLaunch  = strtotime("04 February 2004"); // Facebook launch date
         $ytLaunch  = strtotime("14 February 2005"); // YouTube launch date
         $twLaunch  = strtotime("15 July 2006");     // Twitter launch date
@@ -186,7 +188,7 @@ class DatabaseService
         $timeLimit = strtotime("-1 year");          // current date -1 year
 
         if ($scrapeFull) { // if user requested a full scrape
-            echo "getting all... ";
+            $this->log->info("      - Full scrape requested, getting all... ");
             switch ($type) {
                 case 'tw':
                     $limit = $twLaunch;
@@ -200,7 +202,6 @@ class DatabaseService
             return $limit;
         }
 
-        echo "checking database...";
         $p = $this->em
             ->getRepository('AppBundle:SocialMedia')
             ->findOneBy([
@@ -213,12 +214,12 @@ class DatabaseService
             );
 
         if (!empty($p)) {
-            echo " !empty, updating... ";
+            $this->log->info("      + Database !empty, updating... ");
             $limit = $p->getPostTime()->getTimestamp();
             return $limit;
         }
 
-        echo " empty, getting all... ";
+        $this->log->info("      - Database empty, getting all... ");
         switch ($type) {
             case 'tw':
                 $limit = $timeLimit;
