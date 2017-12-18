@@ -216,6 +216,7 @@ class DatabaseService
         if (!empty($p)) {
             $this->log->info("      + Database !empty, updating... ");
             $limit = $p->getPostTime()->getTimestamp();
+            $this->log->debug("       + (Lastest databse entry: " . date('d/m/Y', $limit) . ")");
             return $limit;
         }
 

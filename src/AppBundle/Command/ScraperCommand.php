@@ -71,7 +71,7 @@ class ScraperCommand extends ContainerAwareCommand
 
         foreach ($parties as $partyCode => $party) {
             if ($this->scrapeStart && ($partyCode < $this->scrapeStart)) {
-                $this->log->info("- " . $partyCode . " skipped...");
+                $this->log->info("  - " . $partyCode . " skipped...");
                 continue;
             }
 
