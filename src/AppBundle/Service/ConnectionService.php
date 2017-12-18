@@ -175,7 +175,7 @@ class ConnectionService
         } while (!isset($data['resources'])); // make sure we have a response before continuing
 
         $limitCheck = $data['resources']['application']['/application/rate_limit_status'];
-        $this->log->debug("       + (" . $limitCheck['remaining'] . " requests remaining, resetting at " . date('H:i:s', $limitCheck['reset']) . ") ");
+        // $this->log->debug("       + (" . $limitCheck['remaining'] . " requests remaining, resetting at " . date('H:i:s', $limitCheck['reset']) . ") ");
 
         if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
             $this->log->notice("  - Rate limit reached! Resuming at " . date('H:i:s', $limitCheck['reset']) . "...");

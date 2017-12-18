@@ -35,3 +35,7 @@ services:
     GoogleService:
         class: AppBundle\Service\GoogleService
         autowire: true
+
+    VerificationService:
+        class: AppBundle\Service\VerificationService
+        autowire: true

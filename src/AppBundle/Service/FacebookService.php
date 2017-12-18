@@ -16,8 +16,8 @@ class FacebookService
     protected $connect;
     protected $db;
     protected $images;
-    protected $stats;
     protected $log;
+    protected $stats;
 
     protected $partyCode;
     protected $fbPageId;
@@ -29,8 +29,8 @@ class FacebookService
         $this->connect   = $this->container->get('ConnectionService');
         $this->db        = $this->container->get('DatabaseService');
         $this->images    = $this->container->get('ImageService');
-        $this->stats     = $this->container->get('FbStatService');
         $this->log       = $this->container->get('logger');
+        $this->stats     = $this->container->get('FbStatService');
         @set_exception_handler([$this->db, 'exception_handler']);
     }
 
@@ -55,8 +55,6 @@ class FacebookService
             return false;
         }
 
-        $this->stats->setVariables($partyCode, $fbPageId, $this->fb);
-
         $requestFields = [
             'basic'        => 'cover,engagement,talking_about_count,about,emails,single_line_address',
             'postStats'    => 'posts.limit(100){id}',
@@ -69,6 +67,7 @@ class FacebookService
         ];
 
         if ($scrapeData == null || $scrapeData == 'info') {
+            $this->stats->setVariables($partyCode, $fbPageId, $this->fb);
             $out = $this->stats->getPageInfo($requestFields['basic']);
             $out['postCount']  = $this->stats->getPostCount($requestFields['postStats']);
             $out['videoCount'] = $this->stats->getVideoCount($requestFields['videoStats']);

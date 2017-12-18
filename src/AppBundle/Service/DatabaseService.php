@@ -69,9 +69,9 @@ class DatabaseService
             ->findOneByCode($code);
 
         if (empty($party)) {
-            echo ("   - ERROR - Party code \"". $code ."\" not recognised\n");
-            echo ("# Process halted\n");
-            die;
+            $this->log->error("   - ERROR - Party code \"". $code ."\" not recognised\n");
+            $this->log->notice("# Process halted\n");
+            exit;
         }
 
         $data = array(); // scraper is set up to work with arrays
@@ -185,7 +185,7 @@ class DatabaseService
         $ytLaunch  = strtotime("14 February 2005"); // YouTube launch date
         $twLaunch  = strtotime("15 July 2006");     // Twitter launch date
         $gpLaunch  = strtotime("28 June 2011");     // Google+ launch date
-        $timeLimit = strtotime("-1 year");          // current date -1 year
+        $timeLimit = strtotime("-1 year");          // our time limit
 
         if ($scrapeFull) { // if user requested a full scrape
             $this->log->info("      - Full scrape requested, getting all... ");

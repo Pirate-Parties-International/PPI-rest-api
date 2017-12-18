@@ -77,8 +77,6 @@ class FbStatService
         );
         $array['info'] = true;
 
-        $coverId = !empty($graphNode->getField('cover')) ? $graphNode->getField('cover')->getField('cover_id') : null;
-        $array['cover'] = !is_null($coverId) ? $this->images->getFbImageSource($this->fb, $coverId, true) : null;
 
         if (!empty($graphNode->getField('engagement'))) {
             $this->db->addStatistic(
@@ -101,7 +99,41 @@ class FbStatService
         }
 
         $this->log->info("    + Info and stats... ok");
+
+        $array['cover'] = $this->getCover($graphNode);
+
         return $array;
+    }
+
+
+    /**
+     * Retrieves FB cover image and saves to disk
+     * @param  object $graphNode
+     * @return bool
+     */
+    public function getCover($graphNode) {
+        if (empty($graphNode->getField('cover'))) {
+            $this->log->notice("    - No Facebook cover found for " . $this->partyCode);
+            return null;
+        }
+
+        $coverId = $graphNode->getField('cover')->getField('cover_id');
+        $imgSrc  = !is_null($coverId) ? $this->images->getFbImageSource($this->fb, $coverId, true) : null;
+        $cover   = !is_null($imgSrc)  ? $this->images->getFacebookCover($this->partyCode, $imgSrc) : null;
+
+        if (is_null($cover)) {
+            $this->log->notice("    - No Facebook cover found for " . $this->partyCode);
+            return null;
+        }
+
+        $this->db->addMeta(
+            $this->partyCode,
+            Metadata::TYPE_FACEBOOK_COVER,
+            $cover
+        );
+
+        $this->log->info("    + Cover retrieved");
+        return true;
     }
 
 
@@ -274,7 +306,7 @@ class FbStatService
             $eventCount
         );
 
-        $this->log->info("    + Total " . $eventCount . "events found");
+        $this->log->info("    + Total " . $eventCount . " events found");
         return true;
     }
 
