@@ -69,7 +69,7 @@ class GoogleService
             $vidCount++;
         }
 
-        $this->log->info("    + " . $vidCount . " videos found and processed");
+        $this->log->info("      + " . $vidCount . " videos found and processed");
         $out['videos'] = $vidCount;
 
         return $out;

@@ -157,7 +157,7 @@ class FbStatService
         $temp      = [];
 
         do {
-            $this->log->debug("     + Page " . $pageCount);
+            $this->log->debug("       + Page " . $pageCount);
             foreach ($fdPcount as $key => $post) {
                 $temp['posts'][] = ['id' => $post->getField('id')]; // count all posts
             }
@@ -176,7 +176,7 @@ class FbStatService
             $postCount
         );
 
-        $this->log->info("    + Total " . $postCount . " text posts found");
+        $this->log->info("      + Total " . $postCount . " text posts found");
         return true;
     }
 
@@ -201,7 +201,7 @@ class FbStatService
         $photoCount = [];
 
         foreach ($fdAlbums as $key => $album) {
-            $this->log->debug("     + Page " . $pageCount);
+            $this->log->debug("       + Page " . $pageCount);
             $photoCount[] = $album->getField('count');
             $pageCount++;
         }
@@ -218,7 +218,7 @@ class FbStatService
             $imageCount
         );
 
-        $this->log->info("    + Total " . $imageCount . " images found");
+        $this->log->info("      + Total " . $imageCount . " images found");
         return true;
     }
 
@@ -243,7 +243,7 @@ class FbStatService
         $temp      = [];
 
         do {
-            $this->log->debug("     + Page " . $pageCount);
+            $this->log->debug("       + Page " . $pageCount);
             foreach ($fdVcount as $key => $post) {
                 $temp['videos'][] = ['id' => $post->getField('id')]; // count all posts
             }
@@ -262,7 +262,7 @@ class FbStatService
             $videoCount
         );
 
-        $this->log->info("    + Total " . $videoCount . " videos found");
+        $this->log->info("      + Total " . $videoCount . " videos found");
         return true;
     }
 
@@ -287,7 +287,7 @@ class FbStatService
         $temp      = [];
 
         do {
-            $this->log->debug("     + Page " . $pageCount);
+            $this->log->debug("       + Page " . $pageCount);
             foreach ($fdEvents as $key => $event) {
                 $temp['events'][] = ['id' => $event->getField('id')];
             }
@@ -306,7 +306,7 @@ class FbStatService
             $eventCount
         );
 
-        $this->log->info("    + Total " . $eventCount . " events found");
+        $this->log->info("      + Total " . $eventCount . " events found");
         return true;
     }
 

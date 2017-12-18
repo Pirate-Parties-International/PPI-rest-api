@@ -54,7 +54,7 @@ class TwitterService
         $out = $this->getTwStats($data);
         if (!empty($out)) {
             $this->log->info("    + Info and stats... ok");
-            $this->log->info("    + Total " . $out['tweets'] . " tweets found");
+            $this->log->info("      + Total " . $out['tweets'] . " tweets found");
         }
 
         $temp = $this->getTweets();
@@ -63,7 +63,7 @@ class TwitterService
         $out['videos'] = isset($temp['videos']) ? $temp['videos'] : 0;
 
         $timeCheck = $temp['timeCheck'];
-        $this->log->info("    + " . $out['posts'] . " text posts, " . $out['images'] . " images and " . $out['videos'] . " videos since " . date('d/m/Y', $timeCheck) . " processed");
+        $this->log->info("      + " . $out['posts'] . " text posts, " . $out['images'] . " images and " . $out['videos'] . " videos since " . date('d/m/Y', $timeCheck) . " processed");
  
         return $out;
     }
@@ -155,7 +155,7 @@ class TwitterService
         $vidCount  = 0;
 
         do { // process current page of results
-            $this->log->debug("     + Page " . $pageCount);
+            $this->log->debug("       + Page " . $pageCount);
 
             foreach($tweetData as $item) {
                 $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);

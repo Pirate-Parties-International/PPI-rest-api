@@ -122,7 +122,7 @@ class FacebookService
         $vidCount  = 0;
 
         do {
-            $this->log->debug("     + Page " . $pageCount);
+            $this->log->debug("       + Page " . $pageCount);
 
             foreach ($fdPosts as $key => $post) {
                 $type = $post->getField('type');
@@ -149,7 +149,7 @@ class FacebookService
 
         $out['posts']  = $txtCount;
         $out['videos'] = $vidCount;
-        $this->log->info("    + " . $txtCount . " text posts and " . $vidCount . " videos since " . date('d/m/Y', $timeCheck) . " processed");
+        $this->log->info("      + " . $txtCount . " text posts and " . $vidCount . " videos since " . date('d/m/Y', $timeCheck) . " processed");
 
         return (isset($out)) ? $out : null;
     }
@@ -232,7 +232,7 @@ class FacebookService
             }
 
             do {
-                $this->log->debug("     + Page " . $pageCount);
+                $this->log->debug("       + Page " . $pageCount);
                 foreach ($fdPhotos as $key => $photo) {
                     $this->getImageDetails($photo, $album);
                     $imgCount++;
@@ -247,7 +247,7 @@ class FacebookService
 
         $out['imageCount'] = array_sum($photoCount);
         $out['images']     = $imgCount;
-        $this->log->info("    + " . $out['imageCount'] . " images found, " . $imgCount . " since " . date('d/m/Y', $timeCheck) . " processed");
+        $this->log->info("      + " . $out['imageCount'] . " images found, " . $imgCount . " since " . date('d/m/Y', $timeCheck) . " processed");
 
         return $out;
     }
@@ -322,7 +322,7 @@ class FacebookService
         $eveCount  = 0;
 
         do { // process current page of results
-            $this->log->debug("      + Page " . $pageCount);
+            $this->log->debug("       + Page " . $pageCount);
             foreach ($fdEvents as $key => $event) {
                 $this->getEventDetails($event);
                 $eveCount++;
@@ -336,7 +336,7 @@ class FacebookService
 
         $out['eventCount'] = $eveCount;
         $out['events']     = true;
-        $this->log->info("    + " . $out['eventCount'] . " events found and processed");
+        $this->log->info("      + " . $out['eventCount'] . " events found and processed");
 
         return $out;
     }
