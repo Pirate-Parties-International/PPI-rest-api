@@ -123,40 +123,40 @@ class VerificationService
      */
     public function verifyFbData($fbData, $scrapeData) {
         if ($scrapeData == null || $scrapeData == 'info') {
-            $status = isset($fbData['info'])    ? "    + General info added"          : "    - General info not found";
+            $status = isset($fbData['info'])    ? "    + General info added"          : "      - General info is null";
             $this->log->info($status);
-            $status = isset($fbData['likes'])   ? "    + 'Like' count added"          : "    - 'Like' count not found";
+            $status = isset($fbData['likes'])   ? "    + 'Like' count added"          : "      - 'Like' count is null";
             $this->log->info($status);
-            $status = isset($fbData['talking']) ? "    + 'Talking about' count added" : "    - 'Talking about' count not found";
+            $status = isset($fbData['talking']) ? "    + 'Talking about' count added" : "      - 'Talking about' count is null";
             $this->log->info($status);
 
-            $status = $fbData['postCount']  ? "    + Text post count added" : "    - Text post count not found";
+            $status = $fbData['postCount']  ? "    + Text post count added" : "      - Text post count is null";
             $this->log->info($status);
-            $status = $fbData['imageCount'] ? "    + Image count added"     : "    - Image count not found";
+            $status = $fbData['imageCount'] ? "    + Image count added"     : "      - Image count is null";
             $this->log->info($status);
-            $status = $fbData['videoCount'] ? "    + Video count added"     : "    - Video count not found";
+            $status = $fbData['videoCount'] ? "    + Video count added"     : "      - Video count is null";
             $this->log->info($status);
-            $status = $fbData['eventCount'] ? "    + Event count added"     : "    - Event count not found";
+            $status = $fbData['eventCount'] ? "    + Event count added"     : "      - Event count is null";
             $this->log->info($status);
 
             $this->log->info("  + All Facebook statistics processed");
 
-            $status = $fbData['cover'] ? "    + Cover added" : "    - Cover not found";
+            $status = $fbData['cover'] ? "    + Cover added" : "      - Cover not found";
             $this->log->info($status);
         }
 
         if ($scrapeData == null || $scrapeData == 'posts') {
-            $status = !empty($fbData['posts'])  ? "    + Text posts added" : "    - No text posts found";
+            $status = !empty($fbData['posts'])  ? "    + Text posts added" : "      - No text posts found";
             $this->log->info($status);
-            $status = !empty($fbData['videos']) ? "    + Videos added"     : "    - No videos found";
+            $status = !empty($fbData['videos']) ? "    + Videos added"     : "      - No videos found";
             $this->log->info($status);
         }
         if ($scrapeData == null || $scrapeData == 'images') {
-            $status = !empty($fbData['images']) ? "    + Images added"     : "    - No images found";
+            $status = !empty($fbData['images']) ? "    + Images added"     : "      - No images found";
             $this->log->info($status);
         }
         if ($scrapeData == null || $scrapeData == 'events') {
-            $status = !empty($fbData['events']) ? "    + Events added"     : "    - No events found";
+            $status = !empty($fbData['events']) ? "    + Events added"     : "      - No events found";
             $this->log->info($status);
         }
     }
@@ -168,24 +168,24 @@ class VerificationService
      * @return null
      */
     public function verifyTwData($twData) {
-        $status = isset($twData['description']) ? "    + Description added"     : "    - Description not found";
+        $status = isset($twData['description']) ? "    + Description added"     : "      - Description is null";
         $this->log->info($status);
-        $status = isset($twData['likes'])       ? "    + 'Like' count added"    : "    - 'Like' count not found";
+        $status = isset($twData['likes'])       ? "    + 'Like' count added"    : "      - 'Like' count is null";
         $this->log->info($status);
-        $status = isset($twData['followers'])   ? "    + Follower count added"  : "    - Follower count not found";
+        $status = isset($twData['followers'])   ? "    + Follower count added"  : "      - Follower count is null";
         $this->log->info($status);
-        $status = isset($twData['following'])   ? "    + Following count added" : "    - Following count not found";
+        $status = isset($twData['following'])   ? "    + Following count added" : "      - Following count is null";
         $this->log->info($status);
-        $status = isset($twData['tweets'])      ? "    + Tweet count added"     : "    - Tweet count not found";
+        $status = isset($twData['tweets'])      ? "    + Tweet count added"     : "      - Tweet count is null";
         $this->log->info($status);
 
         $this->log->info("  + All Twitter statistics processed");
 
-        $status = !empty($twData['posts'])  ? "    + Text tweets added" : "    - No text tweets found";
+        $status = !empty($twData['posts'])  ? "    + Text tweets added" : "      - No text tweets found";
         $this->log->info($status);
-        $status = !empty($twData['images']) ? "    + Images added"      : "    - No images found";
+        $status = !empty($twData['images']) ? "    + Images added"      : "      - No images found";
         $this->log->info($status);
-        $status = !empty($twData['videos']) ? "    + Videos added"      : "    - No videos found";
+        $status = !empty($twData['videos']) ? "    + Videos added"      : "      - No videos found";
         $this->log->info($status);
     }
 
@@ -196,16 +196,16 @@ class VerificationService
      * @return null
      */
     public function verifyYtData($ytData) {
-        $status = isset($ytData['subCount'])  ? "    + Subscriber count added" : "    - Subscriber count not found";
+        $status = isset($ytData['subCount'])  ? "    + Subscriber count added" : "      - Subscriber count is null";
         $this->log->info($status);
-        $status = isset($ytData['viewCount']) ? "    + View count added"       : "    - View count not found";
+        $status = isset($ytData['viewCount']) ? "    + View count added"       : "      - View count is null";
         $this->log->info($status);
-        $status = isset($ytData['vidCount'])  ? "    + Video count added"      : "    - Video count not found";
+        $status = isset($ytData['vidCount'])  ? "    + Video count added"      : "      - Video count is null";
         $this->log->info($status);
 
         $this->log->info("  + All Youtube statistics processed");
 
-        $status = !empty($ytData['videos']) ? "    + Videos added" : "    - No videos found";
+        $status = !empty($ytData['videos']) ? "    + Videos added" : "      - No videos found";
         $this->log->info($status);
     }
 

@@ -334,8 +334,9 @@ class FacebookService
         } while ($timeCheck > $timeLimit && $fdEvents = $this->fb->next($fdEvents));
         // while next page is not null and within our time limit
 
-        $out['events'] = $eveCount;
-        $this->log->info("    + " . $out['events'] . " events found and processed");
+        $out['eventCount'] = $eveCount;
+        $out['events']     = true;
+        $this->log->info("    + " . $out['eventCount'] . " events found and processed");
 
         return $out;
     }
