@@ -47,7 +47,9 @@ class TwitterService
         $this->tw         = $this->connect->getNewTwitter();
 
         $data = $this->connect->getTwRequest($this->tw, $twUsername);
-        if (empty($data)) {
+
+        if (!isset($data->statuses_count)) {
+            $this->log->notice("  - Twitter info and stats not found for " . $this->partyCode);
             return false;
         }
 
@@ -76,11 +78,6 @@ class TwitterService
      */
     public function getTwStats($data) {
         $array = [];
-
-        if (!isset($data->statuses_count)) {
-            $this->log->notice("  - Twitter info and stats not found for " . $this->partyCode);
-            return false;
-        }
 
         if (isset($data->description)) {
             $this->db->addMeta(
@@ -161,7 +158,7 @@ class TwitterService
                 $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
                 // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
 
-                $tweet  = $this->getTweetDetails($item, $twTime);
+                $tweet = $this->getTweetDetails($item, $twTime);
 
                 if ($tweet === 'txt') {
                     $txtCount++;
@@ -196,7 +193,6 @@ class TwitterService
      * @return string
      */
     public function getTweetDetails($item, $twTime) {
-
         if (!empty($item->full_text)) {
             $twText = $item->full_text;
         } else if (!empty($item->text)) {
