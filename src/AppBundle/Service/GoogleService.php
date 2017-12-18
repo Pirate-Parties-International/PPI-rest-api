@@ -1,7 +1,6 @@
 <?php
 namespace AppBundle\Service;
 
-use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Config\Definition\Exception\Exception;
@@ -9,122 +8,188 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 use AppBundle\Command\ScraperCommand;
-use AppBundle\Service\ScraperServices;
+use AppBundle\Entity\SocialMedia;
+use AppBundle\Entity\Statistic;
 
-use Madcoda\Youtube;
-
-class GoogleService extends ScraperServices
+class GoogleService
 {
-    protected $em;
     private   $container;
+    protected $connect;
+    protected $db;
+    protected $images;
+    protected $log;
 
-    public function __construct(EntityManager $entityManager, Container $container) {
-        $this->em = $entityManager;
+    protected $partyCode;
+    protected $googleId;
+    protected $yt;
+
+    public function __construct(Container $container) {
         $this->container = $container;
-        @set_exception_handler(array($scraper, 'exception_handler'));
+        $this->connect   = $this->container->get('ConnectionService');
+        $this->db        = $this->container->get('DatabaseService');
+        $this->images    = $this->container->get('ImageService');
+        $this->log       = $this->container->get('logger');
+        @set_exception_handler(array($this->db, 'exception_handler'));
     }
 
 
     /**
      * Queries Youtube for stats and videos
-     * @param  string $id
-     * @param  string $code     party code
+     * @param  string $partyCode
+     * @param  string $googleId
      * @return array
      */
-    public function getYoutubeData($id, $code) {
-    	$scraper = $this->container->get('ScraperServices');
+    public function getYoutubeData($partyCode, $googleId) {
+        $this->partyCode = $partyCode;
+        $this->googleId  = $googleId;
+        $this->yt        = $this->connect->getNewGoogle($googleId, true);
 
-        $apikey  = $this->container->getParameter('gplus_api_key');
-        $youtube = new Youtube(array('key' => $apikey));
-
-        $data = $youtube->getChannelByName($id);
-
+        $data = $this->yt->getChannelByName($googleId);
         if (empty($data)) {
             return false;
         }
-        if (empty($data->statistics) || empty($data->statistics->viewCount)) {
+
+        $out = $this->getYtStats($data->statistics);
+        if (!empty($out)) {
+            $this->log->info("    + Info and stats... ok");
+        }
+
+        $playlist = $data->contentDetails->relatedPlaylists->uploads;
+        $videos   = $this->yt->getPlaylistItemsByPlaylistId($playlist);
+        $vidCount = 0;
+
+        if (empty($videos)) {
+            $this->log->notice("    - Youtube videos not found for " . $this->partyCode);
+            return $out;
+        }
+
+        $this->log->info("    + Getting video details...");
+        foreach ($videos as $key => $vid) {
+            $this->getVideoDetails($vid);
+            $vidCount++;
+        }
+
+        $this->log->info("    + " . $vidCount . " videos found and processed");
+        $out['videos'] = $vidCount;
+
+        return $out;
+    }
+
+
+    /**
+     * Retrieves channel statistics
+     * @param object $stats
+     * @return null
+     */
+    public function getYtStats($stats) {
+        // these stats are strings, so we need to cast them to int to save them to db
+        $array = [];
+
+        if (!isset($stats->subscriberCount)) {
+            $this->log->notice("    - Youtube info not found for " . $this->partyCode);
             return false;
         }
 
-        // these stats are strings, so we need to force them to int to save them to db
-        $out['stats']['viewCount']       = (int)$data->statistics->viewCount;
-        $out['stats']['subscriberCount'] = (int)$data->statistics->subscriberCount;
-        $out['stats']['videoCount']      = (int)$data->statistics->videoCount;
-
-        $playlist = $data->contentDetails->relatedPlaylists->uploads;
-        $videos   = $youtube->getPlaylistItemsByPlaylistId($playlist);
-
-        echo "     + Videos... ";
-
-        if (!empty($videos)) {
-            $out['videos'] = [];
-            foreach ($videos as $key => $vid) {
-
-                $vidId   = $vid->snippet->resourceId->videoId;
-                $vidInfo = $youtube->getVideoInfo($vidId);
-                $imgSrc  = $vid->snippet->thumbnails->medium->url; // 320x180 (only 16:9 option)
-                // deafult=120x90, medium=320x180, high=480x360, standard=640x480, maxres=1280x720
-
-                // save thumbnail to disk
-                $img = $scraper->saveImage('yt', $code, $imgSrc, $vidId);
-
-                $vidTime = \DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $vid->snippet->publishedAt);
-                // original ISO 8601, e.g. '2015-04-30T21:45:59.000Z'
-
-                $vidLikes = isset($vidInfo->statistics->likeCount)    ? $vidInfo->statistics->likeCount    : null;
-                $vidViews = isset($vidInfo->statistics->viewCount)    ? $vidInfo->statistics->viewCount    : null;
-                $vidComms = isset($vidInfo->statistics->commentCount) ? $vidInfo->statistics->commentCount : null;
-
-                $out['videos'][] = [
-                    'postId'    => $vidId,
-                    'postTime'  => $vidTime, // DateTime
-                    'postText'  => $vid->snippet->title,
-                    'postImage' => $img,
-                    'postLikes' => $vidLikes,
-                    'postData'  => [
-                        'id'          => $vidId,
-                        'posted'      => $vidTime->format('Y-m-d H:i:s'), // string
-                        'text'        => $vid->snippet->title,
-                        'description' => $vid->snippet->description,
-                        'image'       => $img,
-                        'img_source'  => $imgSrc,
-                        'url'         => 'https://www.youtube.com/watch?v='.$vidId,
-                        'views'       => $vidViews,
-                        'likes'       => $vidLikes,
-                        'comments'    => $vidComms
-                        ]
-                    ];
-            }
-            echo "processed\n";
-
-        } else {
-            echo "not found\n";
+        if (!empty($stats->subscriberCount)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_YOUTUBE,
+                Statistic::SUBTYPE_SUBSCRIBERS,
+                (int)$stats->subscriberCount
+            );
+            $array['subCount'] = true;
         }
 
-        return $out;
+        if (!empty($stats->subscriberCount)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_YOUTUBE,
+                Statistic::SUBTYPE_VIEWS,
+                (int)$stats->viewCount
+            );
+            $array['viewCount'] = true;
+        }
 
+        if (!empty($stats->subscriberCount)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_YOUTUBE,
+                Statistic::SUBTYPE_VIDEOS,
+                (int)$stats->videoCount
+            );
+            $array['vidCount'] = true;
+        }
+
+        return $array;
+    }
+
+
+    /**
+     * Retrieves details of a video
+     * @param  array $vid
+     * @return array
+     */
+    public function getVideoDetails($vid) {
+        $vidId   = $vid->snippet->resourceId->videoId;
+        $vidTime = \DateTime::createFromFormat('Y-m-d\TH:i:s.u\Z', $vid->snippet->publishedAt);
+        // original ISO 8601, e.g. '2015-04-30T21:45:59.000Z'
+
+        $imgSrc  = $vid->snippet->thumbnails->medium->url;
+        // deafult=120x90, medium=320x180, high=480x360, standard=640x480, maxres=1280x720
+        $img     = $this->images->saveImage('yt', $this->partyCode, $imgSrc, $vidId);
+
+        $vidInfo  = $this->yt->getVideoInfo($vidId);
+        $vidLikes = isset($vidInfo->statistics->likeCount)    ? $vidInfo->statistics->likeCount    : null;
+        $vidViews = isset($vidInfo->statistics->viewCount)    ? $vidInfo->statistics->viewCount    : null;
+        $vidComms = isset($vidInfo->statistics->commentCount) ? $vidInfo->statistics->commentCount : null;
+
+        $data = [
+            'id'          => $vidId,
+            'posted'      => $vidTime->format('Y-m-d H:i:s'), // string
+            'text'        => $vid->snippet->title,
+            'description' => $vid->snippet->description,
+            'image'       => $img,
+            'img_source'  => $imgSrc,
+            'url'         => 'https://www.youtube.com/watch?v=' . $vidId,
+            'views'       => $vidViews,
+            'likes'       => $vidLikes,
+            'comments'    => $vidComms
+            ];
+
+        $this->db->addSocial(
+            $this->partyCode,
+            SocialMedia::TYPE_YOUTUBE,
+            SocialMedia::SUBTYPE_VIDEO,
+            $vidId,
+            $vidTime, // DateTime
+            $vid->snippet->title,
+            $img,
+            $vidLikes,
+            $data
+        );
     }
 
 
     /**
      * Queries Google+ for followers
-     * @param  string $id
+     * @param  string $googleId
      * @return int
      */
-    public function getGooglePlusData($id) {
-    	$scraper = $this->container->get('ScraperServices');
+    public function getGooglePlusData($partyCode, $googleId) {
+        $data = $this->connect->getNewGoogle($googleId);
 
-        $apikey = $this->container->getParameter('gplus_api_key');
-        $google = $scraper->curl(
-            sprintf('https://www.googleapis.com/plus/v1/people/%s?key=%s',
-                $id, $apikey)
-            );
-        $data = json_decode( $google );
         if (empty($data) || !isset($data->circledByCount)) {
             return false;
         }
-        return $data->circledByCount;
 
+        $this->db->addStatistic(
+            $partyCode,
+            Statistic::TYPE_GOOGLEPLUS,
+            Statistic::SUBTYPE_FOLLOWERS,
+            $data->circledByCount
+        );
+
+        return true;
     }
 
 }

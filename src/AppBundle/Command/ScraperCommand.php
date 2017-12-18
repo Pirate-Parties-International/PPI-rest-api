@@ -15,6 +15,19 @@ use Pirates\PapiInfo\Compile;
 
 class ScraperCommand extends ContainerAwareCommand
 {
+    private   $container;
+    protected $db;
+    protected $em;
+    protected $log;
+    protected $verify;
+
+    protected $scrapeParty = null;
+    protected $scrapeSite  = null;
+    protected $scrapeData  = null;
+    protected $scrapeStart = null;
+    protected $scrapeFull  = false;
+
+
     protected function configure()
     {
         $this
@@ -28,571 +41,196 @@ class ScraperCommand extends ContainerAwareCommand
         ;
     }
 
+
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $full  = $input->getOption('full');   // if null, get most recent posts only
-        $who   = $input->getOption('party');  // if null, get all
-        $where = $input->getOption('site');   // if null, get all
-        $what  = $input->getOption('data');   // if null, get all
-        $when  = $input->getOption('resume'); // if null, get all
-
         $this->container = $this->getContainer();
-        $this->em = $this->container->get('doctrine')->getManager();
+        $this->db        = $this->container->get('DatabaseService');
+        $this->em        = $this->container->get('doctrine')->getManager();
+        $this->log       = $this->container->get('logger');
+        $this->verify    = $this->container->get('VerificationService');
 
-        $this->output = $output;
-        $this->logger = $this->getContainer()->get('logger');
-        $logger = $this->logger;
-
-        $scraperService = $this->container->get('ScraperServices');
-
-        $output->writeln("##### Starting scraper #####");
+        $this->log->notice("##### Starting scraper #####");
         $startTime = new \DateTime('now');
 
-        // Verify argument search terms
-        $verified = $this->verifySearchTerms($what, $where);
-        if (isset($verified)) {
-            $what  = $verified;
-            $where = 'fb';
-        }
+        $options = $this->verify->verifyInput($input);
+        $this->scrapeParty = $options['party'];  // if null, get all
+        $this->scrapeStart = $options['resume']; // if null, get all
+        $this->scrapeSite  = $options['site'];   // if null, get all
+        $this->scrapeData  = $options['data'];   // if null, get all
+        $this->scrapeFull  = $options['full'];   // if null, get most recent posts only
 
-        if (empty($who)) {
-            $output->writeln("# Getting all parties");
-            $parties = $scraperService->getAllParties();
-            $output->writeln("Done");
+        if (!$this->scrapeParty) {
+            $this->log->info("# Getting all parties...");
+            $parties = $this->db->getAllParties();
         } else {
-            $output->writeln("# Getting one party (". $who .")");
-            $parties = $scraperService->getOneParty($who);
-            $output->writeln("Done");
+            $this->log->info("# Getting one party (" . $this->scrapeParty . ")...");
+            $parties = $this->db->getOneParty($this->scrapeParty);
         }
+        $this->log->info("  + Done");
 
-        foreach ($parties as $code => $party) {
-            if (!empty($when) && $code < $when) {
-                echo " - ".$code." skipped...\n";
-            } else {
-                $output->writeln(" + Processing " . $code);
-                $sn = $party->getSocialNetworks();
-                $midTime = new \DateTime('now');
-
-                if (empty($sn)) {
-                    continue;
-                }
-
-                if ($where == null || $where == 'fb') {
-                    $this->scrapeFacebook($sn, $what, $code, $full, $output, $scraperService);
-                }
-
-                if ($where == null || $where == 'tw') {
-                    $this->scrapeTwitter($sn, $code, $full, $output, $scraperService);
-                }
-                if ($where == null || $where == 'g+') {
-                    $this->scrapeGooglePlus($sn, $code, $full, $output, $scraperService);
-                }
-
-                if ($where == null || $where == 'yt') {
-                    $this->scrapeYoutube($sn, $code, $full, $output, $scraperService);
-                }
-
-                $output->writeln(" # Saving to DB");
-                $this->em->flush();
-
-                $endTime = new \DateTime('now');
-                $midDiff = $midTime->diff($endTime);
-                $output->writeln("   + Done with ".$code." in ".$midDiff->format('%H:%I:%S'));
+        foreach ($parties as $partyCode => $party) {
+            if ($this->scrapeStart && ($partyCode < $this->scrapeStart)) {
+                $this->log->info("- " . $partyCode . " skipped...");
+                continue;
             }
+
+            $this->log->notice("# Processing " . $partyCode);
+
+            $socialNetworks = $party->getSocialNetworks();
+            if (empty($socialNetworks)) {
+                $this->log->warning("- Social Network information missing for " . $partyCode);
+                continue;
+            }
+
+            $this->processParty($partyCode, $socialNetworks);
         }
 
-        $endDiff = $startTime->diff($endTime);
-        $output->writeln("# All done in ".$endDiff->format('%H:%I:%S'));
-
-        if (!empty($sn['errors'])) {
-            $output->writeln("# Errors:");
-            var_dump($sn['errors']);
-        }
-        
+        $endDiff = $startTime->diff(new \DateTime('now'));
+        $this->log->notice("# All done in " . $endDiff->format('%H:%I:%S'));
     }
 
-    public function verifySearchTerms($data, $site) {
-        $out = null;
 
-        switch ($site) {
-            case null:
-                $siteName = null;
-                break;
+    /**
+     * Process each party according to input arguments
+     * @param string $partyCode
+     * @param array  $socialNetworks
+     */
+    public function processParty($partyCode, $socialNetworks) {
+        $midTime = new \DateTime('now');
+
+        switch ($this->scrapeSite) {
             case 'fb':
-                $siteName = "Facebook";
+                $this->scrapeFacebook($partyCode, $socialNetworks);
                 break;
             case 'tw':
-                $siteName = "Twitter";
+                $this->scrapeTwitter($partyCode, $socialNetworks);
                 break;
             case 'g+':
-                $siteName = "Google+";
+                $this->scrapeGooglePlus($partyCode, $socialNetworks);
                 break;
             case 'yt':
-                $siteName = "YouTube";
+                $this->scrapeYoutube($partyCode, $socialNetworks);
                 break;
-            default:
-                echo "   - ERROR: Search term \"". $site ."\" not recognised\n";
-                echo "# Process halted\n";
-                exit;
+            default: // case null, scrape all
+                $this->scrapeFacebook($partyCode, $socialNetworks);
+                $this->scrapeTwitter($partyCode, $socialNetworks);
+                $this->scrapeGooglePlus($partyCode, $socialNetworks);
+                $this->scrapeYoutube($partyCode, $socialNetworks);
         }
 
-        if ($data) {
-            switch ($data) {
-                case 'info':
-                case 'data':
-                case 'basic':
-                case 'stats':
-                    $out = 'info';
-                    $dataName = "basic information";
-                    break;
-                case 'posts':
-                case 'text':
-                case 'statuses':
-                    $out = 'posts';
-                    $dataName = "text posts and videos";
-                    break;
-                case 'photos':
-                case 'images':
-                case 'pictures':
-                    $out = 'images';
-                    $dataName = "images";
-                    break;
-                case 'events':
-                    $out = 'events';
-                    $dataName = "events";
-                    break;
-                case 'videos':
-                    echo "   - ERROR: Videos are included with text posts and can not be scraped separately\n";
-                    echo "# Process halted\n";
-                    exit;
-                default:
-                    echo "   - ERROR: Search term \"". $data ."\" is not valid\n";
-                    echo "# Process halted\n";
-                    exit;
-            }
+        $this->log->info("  + Saving to DB");
+        $this->em->flush();
 
-            switch ($site) {
-                case 'fb':
-                case null:
-                    break;
-                default:
-                    echo "   - ERROR: Search term \"". $data ."\" is only valid for Facebook\n";
-                    echo "# Process halted\n";
-                    exit;
-            }
-
-            echo "### Scraping Facebook for ".$dataName." only\n";
-        } else if ($siteName) {
-            echo "### Scraping ".$siteName." for all data\n";
-        } else {
-            echo "### Scraping all sites for all data\n";
-        }
-
-        return $out;
+        $midDiff = $midTime->diff(new \DateTime('now'));
+        $this->log->notice("# Done with " . $partyCode . " in " . $midDiff->format('%H:%I:%S'));
     }
 
 
-    //
-    // FACEBOOK
-    //
-    public function scrapeFacebook($sn, $what, $code, $full, $output, $scraperService)
+    /**
+    * FACEBOOK scraping
+    * @param string $partyCode
+    * @param array  $socialNetworks
+    */
+    public function scrapeFacebook($partyCode, $socialNetworks)
     {
-        $facebookService = $this->container->get('FacebookService');
-
-        if (!empty($sn['facebook']) && !empty($sn['facebook']['username'])) {
-            $output->writeln("   + Starting Facebook import");
-            $fd = $facebookService->getFBData($sn['facebook']['username'], $what, $code, $full);
-
-            if ($what == null || $what == 'info') {
-                if ($fd == false || empty($fd['likes'])) {
-                    $output->writeln("     - ERROR while retrieving FB data");
-                    $sn['errors'][] = [$code => 'fb'];
-                } else {
-                    $output->writeln("   + Facebook data retrieved");
-
-                    $scraperService->addMeta(
-                        $code,
-                        Metadata::TYPE_FACEBOOK_INFO,
-                        json_encode($fd['info'])
-                    );
-                    $output->writeln("     + General info added");
-
-                    $scraperService->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_LIKES,
-                        $fd['likes']
-                    );
-                    $output->writeln("     + 'Like' count added");
-
-                    $scraperService->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_TALKING,
-                        $fd['talking']
-                    );
-                    $output->writeln("     + 'Talking about' count added");
-
-                    $scraperService->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_POSTS,
-                        $fd['postCount']
-                    );
-                    $output->writeln("     + Post count added");
-
-                    $scraperService->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_IMAGES,
-                        $fd['photoCount']
-                    );
-                    $output->writeln("     + Photo count added");
-
-                    $scraperService->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_VIDEOS,
-                        $fd['videoCount']
-                    );
-                    $output->writeln("     + Video count added");
-
-                    $scraperService->addStatistic(
-                        $code,
-                        Statistic::TYPE_FACEBOOK,
-                        Statistic::SUBTYPE_EVENTS,
-                        $fd['eventCount']
-                    );
-                    $output->writeln("     + Event count added");
-                    $output->writeln("   + All statistics added");
-
-                    if (is_null($fd['cover'])) {
-                        $output->writeln("     - No cover found");
-                        $sn['errors'][] = [$code => 'fb cover not found'];
-                    } else {
-                        $cover = $facebookService->getFacebookCover($code, $fd['cover']);
-                        $output->writeln("     + Cover retrieved");
-
-                        $scraperService->addMeta(
-                            $code,
-                            Metadata::TYPE_FACEBOOK_COVER,
-                            $cover
-                        );
-                        $output->writeln("       + Cover added");
-                    }
-                }
-            }
-
-            if ($what == null || $what == 'posts') {
-                if (empty($fd['posts'])) {
-                    $output->writeln("     - No posts found");
-                    $sn['errors'][] = [$code => 'fb posts not found'];
-                } else {
-                    $output->writeln("     + Adding text posts");
-                    foreach ($fd['posts'] as $key => $post) {
-                        $scraperService->addSocial(
-                            $code,
-                            SocialMedia::TYPE_FACEBOOK,
-                            SocialMedia::SUBTYPE_TEXT,
-                            $post['postId'],
-                            $post['postTime'],
-                            $post['postText'],
-                            $post['postImage'],
-                            $post['postLikes'],
-                            $post['postData']
-                        );
-                    }
-                    $output->writeln("       + Text posts added");
-                }
-
-                if (empty($fd['videos'])) {
-                    $output->writeln("     - No videos found");
-                } else {
-                    $output->writeln("     + Adding videos");
-                    foreach ($fd['videos'] as $key => $image) {
-                        $scraperService->addSocial(
-                            $code,
-                            SocialMedia::TYPE_FACEBOOK,
-                            SocialMedia::SUBTYPE_VIDEO,
-                            $image['postId'],
-                            $image['postTime'],
-                            $image['postText'],
-                            $image['postImage'],
-                            $image['postLikes'],
-                            $image['postData']
-                        );
-                    }
-                    $output->writeln("       + Videos added");
-                }
-            }
-
-            if ($what == null || $what == 'images') {
-                if (empty($fd['photos'])) {
-                    $output->writeln("     - No photos found");
-                    $sn['errors'][] = [$code => 'fb photos not found'];
-                } else {
-                    $output->writeln("     + Adding photos");
-                    foreach ($fd['photos'] as $key => $image) {
-                        $scraperService->addSocial(
-                            $code,
-                            SocialMedia::TYPE_FACEBOOK,
-                            SocialMedia::SUBTYPE_IMAGE,
-                            $image['postId'],
-                            $image['postTime'],
-                            $image['postText'],
-                            $image['postImage'],
-                            $image['postLikes'],
-                            $image['postData']
-                        );
-                    }
-                    $output->writeln("       + Photos added");
-                }
-            }
-
-            if ($what == null || $what == 'events') {
-                if (empty($fd['events'])) {
-                    $output->writeln("     - Event data not found");
-                    $sn['errors'][] = [$code => 'fb events not found'];
-                } else {
-                    foreach ($fd['events'] as $key => $event) {
-                        $scraperService->addSocial(
-                            $code,
-                            SocialMedia::TYPE_FACEBOOK,
-                            SocialMedia::SUBTYPE_EVENT,
-                            $event['postId'],
-                            $event['postTime'],
-                            $event['postText'],
-                            $event['postImage'],
-                            $event['postLikes'],
-                            $event['postData']
-                        );
-                    }
-                    $output->writeln("     + Events added");
-                }
-            }
-        $output->writeln("   + All Facebook data added");
+        if (empty($socialNetworks['facebook']) || empty($socialNetworks['facebook']['username'])) {
+            $this->log->warning(" - Facebook data not found for " . $partyCode);
+            return false;
         }
 
+        $this->log->info("  + Starting Facebook import");
+        $fbData = $this->container->get('FacebookService')
+            ->getFBData($partyCode, $socialNetworks['facebook']['username'], $this->scrapeData, $this->scrapeFull);
+
+        if (!$fbData) {
+            $this->log->notice("  - ERROR while retrieving FB data for " . $partyCode);
+            return false;
+        }
+
+        $this->log->info("    + Facebook data retrieved");
+        $this->verify->verifyFbData($fbData, $this->scrapeData);
+        $this->log->info("  + All Facebook data processed");
     }
 
 
-    //
-    // TWITTER
-    //
-    public function scrapeTwitter($sn, $code, $full, $output, $scraperService)
+    /**
+     * TWITTER scraping
+     * @param string $partyCode
+     * @param array  $socialNetworks
+     */
+    public function scrapeTwitter($partyCode, $socialNetworks)
     {
-        $twitterService = $this->container->get('TwitterService');
-
-        if (!empty($sn['twitter']) && !empty($sn['twitter']['username'])) {
-            $output->writeln("   + Starting Twitter import");
-            $td = $twitterService->getTwitterData($sn['twitter']['username'], $code, $full);
-
-            if ($td == false || empty($td['followers']) || empty($td['tweets'])) {
-                $output->writeln("     - ERROR while retrieving TW data");
-                $sn['errors'][] = [$code => 'tw'];
-            } else {
-                $output->writeln("   + Twitter data retrieved");
-
-                $scraperService->addMeta(
-                    $code,
-                    Metadata::TYPE_TWITTER_INFO,
-                    json_encode($td['description'])
-                );
-                $output->writeln("     + General info added");
-
-                $scraperService->addStatistic(
-                    $code,
-                    Statistic::TYPE_TWITTER,
-                    Statistic::SUBTYPE_LIKES,
-                    $td['likes']
-                );
-                $output->writeln("     + 'Like' count added");
-
-                $scraperService->addStatistic(
-                    $code,
-                    Statistic::TYPE_TWITTER,
-                    Statistic::SUBTYPE_FOLLOWERS,
-                    $td['followers']
-                );
-                $output->writeln("     + Follower count added");
-
-                $scraperService->addStatistic(
-                    $code,
-                    Statistic::TYPE_TWITTER,
-                    Statistic::SUBTYPE_FOLLOWING,
-                    $td['following']
-                );
-                $output->writeln("     + Following count added");
-
-                $scraperService->addStatistic(
-                    $code,
-                    Statistic::TYPE_TWITTER,
-                    Statistic::SUBTYPE_POSTS,
-                    $td['tweets']
-                );
-                $output->writeln("     + Tweet count added");
-                $output->writeln("   + All statistics added");
-
-                if (empty($td['posts'])) {
-                    $output->writeln("     - Tweet data not found");
-                    $sn['errors'][] = [$code => 'tw posts'];
-                } else {
-                    $output->writeln("     + Adding text tweets");
-                    foreach ($td['posts'] as $key => $post) {
-                        $scraperService->addSocial(
-                            $code,
-                            SocialMedia::TYPE_TWITTER,
-                            SocialMedia::SUBTYPE_TEXT,
-                            $post['postId'],
-                            $post['postTime'],
-                            $post['postText'],
-                            $post['postImage'],
-                            $post['postLikes'],
-                            $post['postData']
-                        );
-                    }
-                    $output->writeln("       + Text tweets added");
-                }
-
-                if (empty($td['images'])) {
-                    $output->writeln("     - Image data not found");
-                    $sn['errors'][] = [$code => 'tw images'];
-                } else {
-                    $output->writeln("     + Adding images");
-                    foreach ($td['images'] as $key => $image) {
-                        $scraperService->addSocial(
-                            $code,
-                            SocialMedia::TYPE_TWITTER,
-                            SocialMedia::SUBTYPE_IMAGE,
-                            $image['postId'],
-                            $image['postTime'],
-                            $image['postText'],
-                            $image['postImage'],
-                            $image['postLikes'],
-                            $image['postData']
-                        );
-                    }
-                    $output->writeln("       + Images added");
-
-                    if (!empty($td['videos'])) {
-                        $output->writeln("     + Adding videos");
-                        foreach ($td['videos'] as $key => $video) {
-                            $scraperService->addSocial(
-                                $code,
-                                SocialMedia::TYPE_TWITTER,
-                                SocialMedia::SUBTYPE_VIDEO,
-                                $image['postId'],
-                                $image['postTime'],
-                                $image['postText'],
-                                $image['postImage'],
-                                $image['postLikes'],
-                                $image['postData']
-                            );
-                        }
-                        $output->writeln("       + Videos added");
-                    }
-                }
-
-                $output->writeln("   + All Twitter data added");
-            }
+        if (empty($socialNetworks['twitter']) || empty($socialNetworks['twitter']['username'])) {
+            $this->log->warning(" - Twitter data not found for " . $partyCode);
+            return false;
         }
+
+        $this->log->info("  + Starting Twitter import");
+        $twData = $this->container->get('TwitterService')
+            ->getTwitterData($partyCode, $socialNetworks['twitter']['username'], $this->scrapeFull);
+
+        if (!$twData) {
+            $this->log->notice("  - ERROR while retrieving Twitter data for " . $partyCode);
+            return false;
+        }
+
+        $this->log->info("    + Twitter data retrieved");
+        $this->verify->verifyTwData($twData);
+        $this->log->info("  + All Twitter data processed");
     }
 
 
-    //
-    // GOOGLE PLUS
-    //
-    public function scrapeGooglePlus($sn, $code, $full, $output, $scraperService)
+    /**
+     * GOOGLE PLUS scraping
+     * @param string $partyCode
+     * @param array  $socialNetworks
+     */
+    public function scrapeGooglePlus($partyCode, $socialNetworks)
     {
-        $googleService = $this->container->get('GoogleService');
-
-        if (!empty($sn['googlePlus'])) {
-            $output->writeln("   + Starting GooglePlus import");
-            $gd = $googleService->getGooglePlusData($sn['googlePlus']);
-
-            if ($gd == false || empty($gd)) {
-                $output->writeln("     - ERROR while retrieving G+ data");
-                $sn['errors'][] = [$code => 'g+'];
-            } else {
-                $output->writeln("     + GooglePlus data retrieved");
-
-                $scraperService->addStatistic(
-                    $code,
-                    Statistic::TYPE_GOOGLEPLUS,
-                    Statistic::SUBTYPE_FOLLOWERS,
-                    $gd
-                );
-                $output->writeln("     + Follower count added");
-            }
+        if (empty($socialNetworks['googlePlus'])) {
+            $this->log->warning(" - Google+ data not found for " . $partyCode);
+            return false;
         }
 
+        $this->log->info("  + Starting Google+ import");
+        $gData = $this->container->get('GoogleService')
+            ->getGooglePlusData($partyCode, $socialNetworks['googlePlus']);
+
+        if (empty($gData)) {
+            $this->log->notice("  - ERROR while retrieving Google+ data for " . $partyCode);
+            return false;
+        }
+
+        $this->log->info("    + Google+ data retrieved");
+        $this->log->info("      + Follower count added");
     }
 
 
-    //
-    // YOUTUBE
-    //
-    public function scrapeYoutube($sn, $code, $full, $output, $scraperService)
+    /**
+     * YOUTUBE scraping
+     * @param string $partyCode
+     * @param array  $socialNetworks
+     */
+    public function scrapeYoutube($partyCode, $socialNetworks)
     {
-        $googleService   = $this->container->get('GoogleService');
-
-        if (!empty($sn['youtube'])) {
-            $output->writeln("   + Starting Youtube import");
-            $yd = $googleService->getYoutubeData($sn['youtube'], $code);
-
-            if ($yd == false || empty($yd)) {
-                $output->writeln("     - ERROR while retrieving Youtube data");
-                $sn['errors'][] = [$code => 'yt'];
-            } else {
-                $output->writeln("   + Youtube data retrieved");
-
-                $scraperService->addStatistic(
-                    $code,
-                    Statistic::TYPE_YOUTUBE,
-                    Statistic::SUBTYPE_SUBSCRIBERS,
-                    $yd['stats']['subscriberCount']
-                );
-                $output->writeln("     + Subscriber count added");
-
-                $scraperService->addStatistic(
-                    $code,
-                    Statistic::TYPE_YOUTUBE,
-                    Statistic::SUBTYPE_VIEWS,
-                    $yd['stats']['viewCount']
-                );
-                $output->writeln("     + View count added");
-
-                $scraperService->addStatistic(
-                    $code,
-                    Statistic::TYPE_YOUTUBE,
-                    Statistic::SUBTYPE_VIDEOS,
-                    $yd['stats']['videoCount']
-                );
-                $output->writeln("     + Video count added");
-                $output->writeln("   + All statistics added");
-
-                if (empty($yd['videos'])) {
-                    $output->writeln("     - Video data not found");
-                    $sn['errors'][] = [$code => 'yt'];
-                } else {
-                    foreach ($yd['videos'] as $key => $video) {
-                        $scraperService->addSocial(
-                            $code,
-                            SocialMedia::TYPE_YOUTUBE,
-                            SocialMedia::SUBTYPE_VIDEO,
-                            $video['postId'],
-                            $video['postTime'],
-                            $video['postText'],
-                            $video['postImage'],
-                            $video['postLikes'],
-                            $video['postData']
-                        );
-                    }
-                    $output->writeln("     + Videos added");
-                }
-                $output->writeln("   + All Google data added");
-            }
+        if (empty($socialNetworks['youtube'])) {
+            $this->log->warning(" - Youtube data not found for " . $partyCode);
+            return false;
         }
+
+        $this->log->info("  + Starting Youtube import");
+        $ytData = $this->container->get('GoogleService')
+            ->getYoutubeData($partyCode, $socialNetworks['youtube']);
+
+        if (!$ytData) {
+            $this->log->notice("  - ERROR while retrieving Youtube data for " . $partyCode);
+            return false;
+        }
+
+        $this->log->info("  + Youtube data retrieved");
+        $this->verify->verifyYtData($ytData);
+        $this->log->info("  + All Google data processed");
     }
 
 }

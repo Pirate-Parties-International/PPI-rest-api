@@ -8,18 +8,34 @@ services:
 #        class: AppBundle\Directory\ClassName
 #        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
 
-    ScraperServices:
-        class: AppBundle\Service\ScraperServices
-        arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
+    ConnectionService:
+        class: AppBundle\Service\ConnectionService
+        autowire: true
+
+    DatabaseService:
+        class: AppBundle\Service\DatabaseService
+        autowire: true
+
+    ImageService:
+        class: AppBundle\Service\ImageService
+        autowire: true
 
     FacebookService:
         class: AppBundle\Service\FacebookService
-        arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
+        autowire: true
+
+    FbStatService:
+        class: AppBundle\Service\FbStatService
+        autowire: true
 
     TwitterService:
         class: AppBundle\Service\TwitterService
-        arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
+        autowire: true
 
     GoogleService:
         class: AppBundle\Service\GoogleService
-        arguments: [ @doctrine.orm.entity_manager, '@service_container' ]
+        autowire: true
+
+    VerificationService:
+        class: AppBundle\Service\VerificationService
+        autowire: true

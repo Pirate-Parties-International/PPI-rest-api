@@ -1,7 +1,6 @@
 <?php
 namespace AppBundle\Service;
 
-use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Config\Definition\Exception\Exception;
@@ -9,219 +8,286 @@ use Symfony\Component\DependencyInjection\Container;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 use AppBundle\Command\ScraperCommand;
-use AppBundle\Service\ScraperServices;
+use AppBundle\Entity\Metadata;
+use AppBundle\Entity\Statistic;
+use AppBundle\Entity\SocialMedia;
 
-use TwitterAPIExchange;
-
-class TwitterService extends ScraperServices 
+class TwitterService
 {
-    protected $em;
     private   $container;
+    protected $connect;
+    protected $db;
+    protected $log;
 
-    public function __construct(EntityManager $entityManager, Container $container) {
-        $this->em = $entityManager;
+    protected $partyCode;
+    protected $twUsername;
+    protected $scrapeFull;
+    protected $tw;
+
+    public function __construct(Container $container) {
         $this->container = $container;
-        @set_exception_handler(array($scraper, 'exception_handler'));
+        $this->connect   = $this->container->get('ConnectionService');
+        $this->db        = $this->container->get('DatabaseService');
+        $this->log       = $this->container->get('logger');
+        @set_exception_handler(array($this->db, 'exception_handler'));
     }
 
 
     /**
      * Queries Twitter for stats and tweets
-     * @param  string $username
-     * @param  string $code     party code
+     * @param  string $partyCode
+     * @param  string $twUsername
+     * @param  bool   $scrapeFull
      * @return array
      */
-    public function getTwitterData($username, $code, $full = null) {
-        $settings = array(
-            'oauth_access_token'        => $this->container->getParameter('tw_oauth_access_token'),
-            'oauth_access_token_secret' => $this->container->getParameter('tw_oauth_access_token_secret'),
-            'consumer_key'              => $this->container->getParameter('tw_consumer_key'),
-            'consumer_secret'           => $this->container->getParameter('tw_consumer_secret')
-        );
+    public function getTwitterData($partyCode, $twUsername, $scrapeFull = false) {
+        $this->scrapeFull = $scrapeFull;
+        $this->partyCode  = $partyCode;
+        $this->twUsername = $twUsername;
+        $this->tw         = $this->connect->getNewTwitter();
 
-    //
-    // Basic info and stats
-    //
-        $url = 'https://api.twitter.com/1.1/users/show.json';
-        $getfield = '?screen_name='.str_replace("@", "", $username);
-        $requestMethod = 'GET';
-
-        $twitter = new TwitterAPIExchange($settings);
-        $data = $twitter->setGetfield($getfield)
-            ->buildOauth($url, $requestMethod)
-            ->performRequest();
-
+        $data = $this->connect->getTwRequest($this->tw, $twUsername);
         if (empty($data)) {
             return false;
         }
 
-        $data = json_decode($data);
-
-        if (empty($data->followers_count)) {
-            return false;
+        $out = $this->getTwStats($data);
+        if (!empty($out)) {
+            $this->log->info("    + Info and stats... ok");
+            $this->log->info("    + Total " . $out['tweets'] . " tweets found");
         }
 
-        $out = [
-            'description' => $data->description,
-            'tweets'      => $data->statuses_count,
-            'likes'       => $data->favourites_count,
-            'followers'   => $data->followers_count,
-            'following'   => $data->friends_count,
-        ];
-        echo "     + Info and stats... ok... total ".$out['tweets']." tweets found\n";
-
-        $temp = $this->getTweetDetails($settings, $requestMethod, $username, $code, $full);
-        $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : null;
-        $out['images'] = isset($temp['images']) ? $temp['images'] : null;
-        $out['videos'] = isset($temp['videos']) ? $temp['videos'] : null;
+        $temp = $this->getTweets();
+        $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : 0;
+        $out['images'] = isset($temp['images']) ? $temp['images'] : 0;
+        $out['videos'] = isset($temp['videos']) ? $temp['videos'] : 0;
 
         $timeCheck = $temp['timeCheck'];
-        $imgCount  = array_key_exists('images', $out) ? count($out['images']) : 0;
-        $vidCount  = array_key_exists('videos', $out) ? count($out['videos']) : 0;
-        echo "...".count($out['posts'])." text posts, ".$imgCount." images and ".$vidCount." videos since ".date('d/m/Y', $timeCheck)." processed\n";
+        $this->log->info("    + " . $out['posts'] . " text posts, " . $out['images'] . " images and " . $out['videos'] . " videos since " . date('d/m/Y', $timeCheck) . " processed");
+ 
         return $out;
     }
 
 
     /**
-     * Gets tweet details (inc. images and videos)
-     * @param  array  $settings
-     * @param  string $requetMethod
-     * @param  string $username
-     * @param  string $code
-     * @param  bool   $full
-     * @return int
+     * Retrieves Twitter account statistics
+     * @param  object $data
+     * @return array
      */
-    public function getTweetDetails($settings, $requestMethod, $username, $code, $full) {
-        $tweetUrl = 'https://api.twitter.com/1.1/statuses/user_timeline.json';
-        $getfield = '?screen_name='.str_replace("@", "", $username).'&count=100&tweet_mode=extended';
-        try {
-            $twitter = new TwitterAPIExchange($settings);
-            $tweetData = $twitter->setGetField($getfield)
-                ->buildOauth($tweetUrl, $requestMethod)
-                ->performRequest();
-        } catch (\Exception $e) {
-            echo $e->getMessage()."\n";
-            $out['errors'][] = [$code => $e->getMessage()];
+    public function getTwStats($data) {
+        $array = [];
+
+        if (!isset($data->statuses_count)) {
+            $this->log->notice("  - Twitter info and stats not found for " . $this->partyCode);
             return false;
         }
 
-        $scraper = $this->container->get('ScraperServices');
-        echo "     + Tweet details.... ";
+        if (isset($data->description)) {
+            $this->db->addMeta(
+                $this->partyCode,
+                Metadata::TYPE_TWITTER_INFO,
+                $data->description
+            );
+            $array['description'] = true;
+        }
+
+        if (isset($data->favourites_count)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_TWITTER,
+                Statistic::SUBTYPE_LIKES,
+                $data->favourites_count
+            );
+            $array['likes'] = true;
+        }
+
+        if (isset($data->followers_count)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_TWITTER,
+                Statistic::SUBTYPE_FOLLOWERS,
+                $data->followers_count
+            );
+            $array['followers'] = true;
+        }
+
+        if (isset($data->friends_count)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_TWITTER,
+                Statistic::SUBTYPE_FOLLOWING,
+                $data->friends_count
+            );
+            $array['following'] = true;
+        }
+
+        if (isset($data->statuses_count)) {
+            $this->db->addStatistic(
+                $this->partyCode,
+                Statistic::TYPE_TWITTER,
+                Statistic::SUBTYPE_POSTS,
+                $data->statuses_count
+            );
+            $array['tweets'] = $data->statuses_count;
+        }
+
+        return $array;
+    }
+
+    /**
+     * Processes tweets
+     * @return array
+     */
+    public function getTweets() {
+        $tweetData = $this->connect->getTwRequest($this->tw, $this->twUsername, true);
+
         if (empty($tweetData)) {
-            echo "not found\n";
+            $this->log->notice("    - Tweet details not found for " . $this->partyCode);
             return false;
-        } else {
-            $tweetData = json_decode($tweetData);
-            $timeLimit = $scraper->getTimeLimit('tw', 'T', $code, $full);
-            $pageCount = 0;
-            echo "page ";
-
-            do { // process current page of results
-                echo $pageCount .', ';
-
-                foreach($tweetData as $item) {
-
-                    $image  = null;
-                    $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
-                    // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
-
-                    if (!empty($item->full_text)) {
-                        $twText = $item->full_text;
-                    } else if (!empty($item->text)) {
-                        $twText = $item->text;
-                    } else $twText = null;
-
-                    if (!empty($item->entities->media)) { // if tweet contains media
-                        $media = $item->extended_entities->media;
-                        foreach ($media as $photo) { // if tweet contains multiple images
-                            $imgSrc = $photo->media_url.":small";
-                            $imgId  = $photo->id;
-
-                            if ($photo->type == 'video') {
-                                $postType = 'videos';
-                            } else { // if type == 'photo' or 'animated_gif'
-                                $postType = 'images';
-                            }
-
-                            // save image to disk
-                            $img = $scraper->saveImage('tw', $code, $imgSrc, $imgId);
-
-                            $out[$postType][] = [
-                                'postId'    => $item->id,
-                                'postTime'  => $twTime, // DateTime
-                                'postText'  => $twText,
-                                'postImage' => $img,
-                                'postLikes' => $item->favorite_count,
-                                'postData'  => [
-                                    'id'         => $imgId,
-                                    'posted'     => $twTime->format('Y-m-d H:i:s'), // string
-                                    'text'       => $twText,
-                                    'image'      => $img,
-                                    'img_source' => $imgSrc,
-                                    'url'        => 'https://twitter.com/statuses/'.$item->id,
-                                    'likes'      => $item->favorite_count,
-                                    'retweets'   => $item->retweet_count
-                                    ]
-                                ];
-                        }
-
-                    } else { // if text only
-                        $out['posts'][] = [
-                            'postId'    => $item->id,
-                            'postTime'  => $twTime, // DateTime
-                            'postText'  => $twText,
-                            'postImage' => null,
-                            'postLikes' => $item->favorite_count,
-                            'postData'  => [
-                                'id'       => $item->id,
-                                'posted'   => $twTime->format('Y-m-d H:i:s'), // string
-                                'text'     => $twText,
-                                'url'      => 'https://twitter.com/statuses/'.$item->id,
-                                'likes'    => $item->favorite_count,
-                                'retweets' => $item->retweet_count
-                                ]
-                            ];
-                    }
-                    // echo '.';
-                }
-
-                $timeCheck = $twTime->getTimestamp(); // check time of last tweet scraped
-
-                try {
-                    $limitData = null;
-                    do { // check rate limit
-                        $limitUrl  = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
-                        $limitData = json_decode($twitter->buildOauth($limitUrl, $requestMethod)->performRequest(), true);
-                    } while (!isset($limitData['resources'])); // make sure we have a response before continuing
-
-                    $limitCheck = $limitData['resources']['application']['/application/rate_limit_status'];
-                    // echo "(".$limitCheck['remaining']." remaining, resetting at ".date('H:i:s', $limitCheck['reset']).") ";
-
-                    if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
-                        echo "...Rate limit reached! Resuming at ".date('H:i:s', $limitCheck['reset'])."... ";
-                        time_sleep_until($limitCheck['reset']);
-                    }
-
-                    // make new request to get next page of results
-                    $nextField = '?screen_name='.str_replace("@", "", $username).'&max_id='.($item->id).'&count=100';
-                    $tweetData = json_decode($twitter->setGetField($nextField)
-                        ->buildOauth($tweetUrl, $requestMethod)
-                        ->performRequest());
-                } catch (\Exception $e) {
-                    echo $e->getMessage()."\n";
-                    $out['errors'][] = [$code => $e->getMessage()];
-                    return false;
-                }
-
-                $pageCount++;
-
-            } while ($timeCheck > $timeLimit && $pageCount < 100);
-            // while tweet times are more recent than the limit as set above, up to 5000
-
         }
+
+        $this->log->info("    + Getting tweet details...");
+        $timeLimit = $this->db->getTimeLimit('tw', 'T', $this->partyCode, $this->scrapeFull);
+
+        $pageCount = 0;
+        $txtCount  = 0;
+        $imgCount  = 0;
+        $vidCount  = 0;
+
+        do { // process current page of results
+            $this->log->debug("     + Page " . $pageCount);
+
+            foreach($tweetData as $item) {
+                $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
+                // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
+
+                $tweet  = $this->getTweetDetails($item, $twTime);
+
+                if ($tweet === 'txt') {
+                    $txtCount++;
+                } else {
+                    $imgCount += $tweet['img'];
+                    $vidCount += $tweet['vid'];
+                }
+            }
+
+            $timeCheck = $twTime->getTimestamp(); // check time of last tweet scraped
+            $this->connect->getTwRateLimit($this->tw);
+
+            // make new request to get next page of results
+            $tweetData = $this->connect->getTwRequest($this->tw, $this->twUsername, true, $item->id);
+            $pageCount++;
+
+        } while ($timeCheck > $timeLimit && $pageCount < 100);
+        // while tweet times are more recent than the limit as set above, up to 5000
+
+        $out['posts']     = $txtCount;
+        $out['images']    = $imgCount;
+        $out['videos']    = $vidCount;
         $out['timeCheck'] = $timeCheck;
         return $out;
+    }
+
+
+    /**
+     * Retrieves the details of a tweet
+     * @param  object $item
+     * @param  object $twTime
+     * @return string
+     */
+    public function getTweetDetails($item, $twTime) {
+
+        if (!empty($item->full_text)) {
+            $twText = $item->full_text;
+        } else if (!empty($item->text)) {
+            $twText = $item->text;
+        } else $twText = null;
+
+        if (!empty($item->entities->media)) { // if tweet contains media
+            $tweet = $this->getMediaDetails($item, $twTime, $twText);
+            return $tweet;
+        }
+
+        $allData = [
+            'id'       => $item->id,
+            'posted'   => $twTime->format('Y-m-d H:i:s'), // string
+            'text'     => $twText,
+            'url'      => 'https://twitter.com/statuses/' . $item->id,
+            'likes'    => $item->favorite_count,
+            'retweets' => $item->retweet_count
+            ];
+
+        $this->db->addSocial(
+            $this->partyCode,
+            SocialMedia::TYPE_TWITTER,
+            SocialMedia::SUBTYPE_TEXT,
+            $item->id,
+            $twTime, // DateTime
+            $twText,
+            null,
+            $item->favorite_count,
+            $allData
+        );
+
+        return 'txt';
+    }
+
+
+    /**
+     * Retrieves the details of an image or video
+     * @param  object $item
+     * @param  object $twTime
+     * @param  string $twText
+     * @return array
+     */
+    public function getMediaDetails($item, $twTime, $twText) {
+        $media = $item->extended_entities->media;
+
+        $imgCount = 0;
+        $vidCount = 0;
+
+        foreach ($media as $photo) { // if tweet contains multiple images
+            if ($photo->type == 'video') {
+                $subType = SocialMedia::SUBTYPE_VIDEO;
+                $vidCount++;
+            } else { // if type == 'photo' or 'animated_gif'
+                $subType = SocialMedia::SUBTYPE_IMAGE;
+                $imgCount++;
+            }
+
+            $imgSrc = $photo->media_url . ":small";
+            $imgId  = $photo->id;
+            $img    = $this->container
+                ->get('ImageService')
+                ->saveImage('tw', $this->partyCode, $imgSrc, $imgId);
+
+            $allData = [
+                'id'         => $imgId,
+                'posted'     => $twTime->format('Y-m-d H:i:s'), // string
+                'text'       => $twText,
+                'image'      => $img,
+                'img_source' => $imgSrc,
+                'url'        => 'https://twitter.com/statuses/' . $item->id,
+                'likes'      => $item->favorite_count,
+                'retweets'   => $item->retweet_count
+                ];
+
+            $this->db->addSocial(
+                $this->partyCode,
+                SocialMedia::TYPE_TWITTER,
+                $subType,
+                $item->id,
+                $twTime, // DateTime
+                $twText,
+                $img,
+                $item->favorite_count,
+                $allData
+            );
+        }
+
+        $count['img'] = $imgCount;
+        $count['vid'] = $vidCount;
+        return $count;
     }
 
 }
