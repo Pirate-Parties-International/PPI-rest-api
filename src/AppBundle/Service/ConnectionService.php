@@ -4,23 +4,45 @@ namespace AppBundle\Service;
 use Symfony\Component\DependencyInjection\Container;
 
 use Facebook\Facebook;
-use Facebook\FacebookSDKException;
-use Facebook\FacebookResponseException;
-use Facebook\FacebookThrottleException;
+use Facebook\Exceptions\FacebookSDKException;
+use Facebook\Exceptions\FacebookResponseException;
+use Facebook\Exceptions\FacebookThrottleException;
 use Madcoda\Youtube;
 use TwitterAPIExchange;
 
 class ConnectionService
 {
     private   $container;
-    protected $db;
     protected $log;
+
+    protected $fb       = null;
+    protected $fbPageId = null;
 
     public function __construct(Container $container) {
         $this->container = $container;
-        $this->db        = $this->container->get('DatabaseService');
         $this->log       = $this->container->get('logger');
-        @set_exception_handler([$this->db, 'exception_handler']);
+        @set_exception_handler([$this, 'exception_handler']);
+    }
+
+
+    public function exception_handler($e) {
+        $message = $e->getMessage();
+        $this->log->error($message);
+
+        if ($message == "Application request limit reached") {
+            $this->getFbRateLimit();
+        }
+    }
+
+
+    /**
+     * Builds a Facebook Throttle Exception to test error handling
+     */
+    public function testFbRateLimit() {
+        $e = new FacebookThrottleException("Application request limit reached");
+        // $e->setCode(4);
+        // $e->setMessage("Application request limit reached");
+        throw $e;
     }
 
 
@@ -35,24 +57,26 @@ class ConnectionService
             'default_graph_version' => 'v2.7',
         ];
 
-        $fb = new Facebook($settings);
-        $fb->setDefaultAccessToken($this->container->getParameter('fb_access_token'));
+        $this->fb = new Facebook($settings);
+        $this->fb->setDefaultAccessToken($this->container->getParameter('fb_access_token'));
 
-        return $fb;
+        return $this->fb;
     }
 
 
     /**
      * Sends request to Facebook API and returns graph node
-     * @param  object $fb
      * @param  string $fbPageId
      * @param  string $fields
      * @return object
      */
-    public function getFbGraphNode($fb, $fbPageId, $fields) {
-        $request = $fb->request('GET', $fbPageId, ['fields' => $fields]);
+    public function getFbGraphNode($fbPageId, $fields) {
+        $this->fbPageId = $fbPageId;
+        $request = $this->fb->request('GET', $fbPageId, ['fields' => $fields]);
+
         try {
-            $response = $fb->getClient()->sendRequest($request);
+            $response = $this->fb->getClient()->sendRequest($request);
+            // $this->testFbRateLimit();
 
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
             // When Graph returns an error
@@ -66,12 +90,18 @@ class ConnectionService
 
         } catch(Facebook\Exceptions\FacebookThrottleException $e) {
             // When the app hits the rate limit
-            $this->log->notice($fbPageId . " - " . $e->getMessage());
+            $this->log->error($fbPageId . " - " . $e->getMessage());
             $response = $this->getFbRateLimit($request);
 
         } catch(\Exception $e) {
             $this->log->error($fbPageId . " - Exception: " . $e->getMessage());
+
+            if ($e->getMessage() == "Application request limit reached") {
+                $this->getFbRateLimit($request);
+
+            } else {
             return false;
+            }
         }
 
         $graphNode = null;
@@ -86,18 +116,27 @@ class ConnectionService
      * @param  object $request
      * @return object
      */
-    public function getFbRateLimit($request) {
+    public function getFbRateLimit($request = null) {
         $connected = false;
-        $waitUntil = strtotime("+15 minutes");
+
+        if (is_null($request)) {
+            $request = $this->fb->request('GET', $this->fbPageId, ['fields' => 'engagement']);
+        }
 
         do {
             try {
+                $waitUntil = strtotime("+10 minutes");
+
                 $this->log->notice("  - Please wait until " . date('H:i:s', $waitUntil) . "...");
                 time_sleep_until($waitUntil);
-                $response = $fb->getClient()->sendRequest($request);
+
+                // $this->testFbRateLimit();
+
+                $response = $this->fb->getClient()->sendRequest($request);
                 $connected = true;
+
             } catch(\Exception $e) {
-                $this->log->notice("  - Still waiting...");
+                $this->log->error(" - " . $e->getMessage());
             }
         } while ($connected == false);
 

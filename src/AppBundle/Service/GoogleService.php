@@ -29,7 +29,7 @@ class GoogleService
         $this->db        = $this->container->get('DatabaseService');
         $this->images    = $this->container->get('ImageService');
         $this->log       = $this->container->get('logger');
-        @set_exception_handler(array($this->db, 'exception_handler'));
+        @set_exception_handler(array($this->connect, 'exception_handler'));
     }
 
 

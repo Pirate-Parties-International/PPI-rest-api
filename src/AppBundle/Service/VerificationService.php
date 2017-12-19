@@ -15,7 +15,7 @@ class VerificationService
         $this->container = $container;
         $this->db        = $this->container->get('DatabaseService');
         $this->log       = $this->container->get('logger');
-        @set_exception_handler([$this->db, 'exception_handler']);
+        @set_exception_handler(array($this->container->get('ConnectionService'), 'exception_handler'));
     }
 
 

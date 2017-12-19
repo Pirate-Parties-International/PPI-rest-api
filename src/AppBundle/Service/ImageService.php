@@ -18,7 +18,7 @@ class ImageService
         $this->container = $container;
         $this->db        = $this->container->get('DatabaseService');
         $this->log       = $this->container->get('logger');
-        @set_exception_handler([$this->db, 'exception_handler']);
+        @set_exception_handler(array($this->container->get('ConnectionService'), 'exception_handler'));
     }
 
 
@@ -173,10 +173,10 @@ class ImageService
      * @param  bool   $cover
      * @return string
      */
-    public function getFbImageSource($fb, $imgId, $cover = false) {
+    public function getFbImageSource($imgId, $cover = false) {
         $graphNode = $this->container
             ->get('ConnectionService')
-            ->getFbGraphNode($fb, $imgId, 'height,width,album,images');
+            ->getFbGraphNode($imgId, 'height,width,album,images');
 
         if (empty($graphNode) || !$graphNode->getField('images')) {
             return false;

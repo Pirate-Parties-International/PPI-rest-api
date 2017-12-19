@@ -31,12 +31,7 @@ class DatabaseService
         $this->container = $container;
         $this->em        = $entityManager;
         $this->log       = $this->container->get('logger');
-        @set_exception_handler(array($this, 'exception_handler'));
-    }
-
-
-    public function exception_handler($e) {
-        $this->log->error($e->getMessage());
+        @set_exception_handler(array($this->container->get('ConnectionService'), 'exception_handler'));
     }
 
 

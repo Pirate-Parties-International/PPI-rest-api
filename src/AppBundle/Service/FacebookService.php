@@ -31,7 +31,7 @@ class FacebookService
         $this->images    = $this->container->get('ImageService');
         $this->log       = $this->container->get('logger');
         $this->stats     = $this->container->get('FbStatService');
-        @set_exception_handler([$this->db, 'exception_handler']);
+        @set_exception_handler([$this->connect, 'exception_handler']);
     }
 
 
@@ -49,7 +49,7 @@ class FacebookService
         $this->fbPageId   = $fbPageId;
         $this->fb         = $this->connect->getNewFacebook();
 
-        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, 'engagement');
+        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, 'engagement');
 
         if (empty($graphNode)) {
             return false;
@@ -106,7 +106,7 @@ class FacebookService
      * @return array
      */
     public function getPosts($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
+        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('posts'))) {
             $this->log->notice("    - Facebook posts not found for " . $this->partyCode);
@@ -209,7 +209,7 @@ class FacebookService
      * @return array
      */
     public function getImages($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
+        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('albums'))) {
             $this->log->notice("    - Facebook images not found for " . $this->partyCode);
@@ -260,7 +260,7 @@ class FacebookService
      * @return null
      */
     public function getImageDetails($photo, $album) {
-        $imgSrc = $this->images->getFbImageSource($this->fb, $photo->getField('id')); // ~480x480 (or closest)
+        $imgSrc = $this->images->getFbImageSource($photo->getField('id')); // ~480x480 (or closest)
         $imgBkp = $photo->getField('picture'); // 130x130 thumbnail
         $img    = $this->images->saveImage('fb', $this->partyCode, $imgSrc, $photo->getField('id'), $imgBkp);
 
@@ -307,7 +307,7 @@ class FacebookService
      * @return array
      */
     public function getEvents($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
+        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('events'))) {
             $this->log->notice("    - Facebook events not found for " . $this->partyCode);

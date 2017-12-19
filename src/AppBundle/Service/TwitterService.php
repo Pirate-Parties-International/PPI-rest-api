@@ -29,7 +29,7 @@ class TwitterService
         $this->connect   = $this->container->get('ConnectionService');
         $this->db        = $this->container->get('DatabaseService');
         $this->log       = $this->container->get('logger');
-        @set_exception_handler(array($this->db, 'exception_handler'));
+        @set_exception_handler(array($this->connect, 'exception_handler'));
     }
 
 
@@ -49,7 +49,7 @@ class TwitterService
         $data = $this->connect->getTwRequest($this->tw, $twUsername);
 
         if (!isset($data->statuses_count)) {
-            $this->log->notice("  - Twitter info and stats not found for " . $this->partyCode);
+            $this->log->warning("  - Twitter data not found for " . $this->partyCode);
             return false;
         }
 

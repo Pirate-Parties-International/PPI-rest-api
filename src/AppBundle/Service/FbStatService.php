@@ -28,7 +28,7 @@ class FbStatService
         $this->db        = $this->container->get('DatabaseService');
         $this->images    = $this->container->get('ImageService');
         $this->log       = $this->container->get('logger');
-        @set_exception_handler([$this->db, 'exception_handler']);
+        @set_exception_handler(array($this->connect, 'exception_handler'));
     }
 
 
@@ -50,7 +50,7 @@ class FbStatService
      * @return array
      */
     public function getPageInfo($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
+        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
         $array = [];
 
         if (empty($graphNode) || is_null($graphNode->getField('engagement'))) {
@@ -118,7 +118,7 @@ class FbStatService
         }
 
         $coverId = $graphNode->getField('cover')->getField('cover_id');
-        $imgSrc  = !is_null($coverId) ? $this->images->getFbImageSource($this->fb, $coverId, true) : null;
+        $imgSrc  = !is_null($coverId) ? $this->images->getFbImageSource($coverId, true) : null;
         $cover   = !is_null($imgSrc)  ? $this->images->getFacebookCover($this->partyCode, $imgSrc) : null;
 
         if (is_null($cover)) {
@@ -143,7 +143,7 @@ class FbStatService
      * @return int
      */
     public function getPostCount($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
+        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('posts'))) {
             $this->log->notice("    - Facebook text posts not counted for " . $this->partyCode);
@@ -187,7 +187,7 @@ class FbStatService
      * @return int
      */
     public function getImageCount($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
+        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('albums'))) {
             $this->log->notice("    - Facebook images not counted for " . $this->partyCode);
@@ -229,7 +229,7 @@ class FbStatService
      * @return int
      */
     public function getVideoCount($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
+        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('videos'))) {
             $this->log->notice("    - Facebook videos not counted for " . $this->partyCode);
@@ -273,7 +273,7 @@ class FbStatService
      * @return int
      */
     public function getEventCount($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fb, $this->fbPageId, $requestFields);
+        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('events'))) {
             $this->log->notice("    - Facebook events not counted for " . $this->partyCode);
