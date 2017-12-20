@@ -71,6 +71,7 @@ class FacebookService
             $out = $this->stats->getPageInfo($requestFields['basic']);
             $out['postCount']  = $this->stats->getPostCount($requestFields['postStats']);
             $out['videoCount'] = $this->stats->getVideoCount($requestFields['videoStats']);
+            $out['cover'] = isset($out['cover']) ? $out['cover'] : null;
         }
 
         if ($scrapeData == 'info') {
