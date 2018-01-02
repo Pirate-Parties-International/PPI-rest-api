@@ -18,10 +18,17 @@ monolog:
         main:
             type:         fingers_crossed
             action_level: error
-            handler:      nested
-        nested:
+            handler:      grouped
+        grouped:
+            type:    group
+            members: [sentry, stream]
+        stream:
             type:  stream
             path:  "%kernel.logs_dir%/%kernel.environment%.log"
-            level: debug
+            level: error
         console:
             type:  console
+        sentry:
+            type:  raven
+            dsn:   "https://890551eeba34439e98184f2bb9835836:b8191b312c9844d9bfbb9ba2d71a234e@sentry.io/265963"
+            level: warning
