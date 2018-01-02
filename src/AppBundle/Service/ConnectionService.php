@@ -125,7 +125,7 @@ class ConnectionService
 
         do {
             try {
-                $waitUntil = strtotime("+10 minutes");
+                $waitUntil = strtotime("+20 minutes");
 
                 $this->log->notice("  - Please wait until " . date('H:i:s', $waitUntil) . "...");
                 time_sleep_until($waitUntil);

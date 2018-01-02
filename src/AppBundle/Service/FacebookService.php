@@ -55,44 +55,33 @@ class FacebookService
             return false;
         }
 
-        $requestFields = [
-            'basic'        => 'cover,engagement,talking_about_count,about,emails,single_line_address',
-            'postStats'    => 'posts.limit(100){id}',
-            'imageStats'   => 'albums{count}',
-            'videoStats'   => 'videos.limit(100){id}',
-            'eventStats'   => 'events.limit(100){id}',
-            'postDetails'  => 'posts.limit(50){id,type,permalink_url,message,story,link,name,caption,picture,object_id,created_time,updated_time,shares,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true)}',
-            'imageDetails' => 'albums{id,name,photo_count,photos{created_time,updated_time,picture,source,link,name,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}',
-            'eventDetails' => 'events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}'
-        ];
-
         if ($scrapeData == null || $scrapeData == 'info') {
             $this->stats->setVariables($partyCode, $fbPageId, $this->fb);
-            $out = $this->stats->getPageInfo($requestFields['basic']);
-            $out['postCount']  = $this->stats->getPostCount($requestFields['postStats']);
-            $out['videoCount'] = $this->stats->getVideoCount($requestFields['videoStats']);
+            $out = $this->stats->getPageInfo();
+            $out['postCount']  = $this->stats->getPostCount();
+            $out['videoCount'] = $this->stats->getVideoCount();
             $out['cover'] = isset($out['cover']) ? $out['cover'] : null;
         }
 
         if ($scrapeData == 'info') {
-            $out['imageCount'] = $this->stats->getImageCount($requestFields['imageStats']);
-            $out['eventCount'] = $this->stats->getEventCount($requestFields['eventStats']);
+            $out['imageCount'] = $this->stats->getImageCount();
+            $out['eventCount'] = $this->stats->getEventCount();
         }
 
         if ($scrapeData == null || $scrapeData == 'posts') {
-            $temp = $this->getPosts($requestFields['postDetails']);
+            $temp = $this->getPosts();
             $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : null;
             $out['videos'] = isset($temp['videos']) ? $temp['videos'] : null;
         }
 
         if ($scrapeData == null || $scrapeData == 'images') {
-            $temp = $this->getImages($requestFields['imageDetails']);
+            $temp = $this->getImages();
             $out['imageCount'] = isset($temp['imageCount']) ? $temp['imageCount'] : null;
             $out['images']     = isset($temp['images'])     ? $temp['images']     : null;
         }
 
         if ($scrapeData == null || $scrapeData == 'events') {
-            $temp = $this->getEvents($requestFields['eventDetails']);
+            $temp = $this->getEvents();
             $out['eventCount'] = isset($temp['eventCount']) ? $temp['eventCount'] : null;
             $out['events']     = isset($temp['events'])     ? $temp['events']     : null;
         }
@@ -106,8 +95,9 @@ class FacebookService
      * @param  string $requestFields
      * @return array
      */
-    public function getPosts($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
+    public function getPosts() {
+        $requestFields = 'posts.limit(50){id,type,permalink_url,message,story,link,name,caption,picture,object_id,created_time,updated_time,shares,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true)}';
+        $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('posts'))) {
             $this->log->notice("    - Facebook posts not found for " . $this->partyCode);
@@ -116,7 +106,7 @@ class FacebookService
 
         $this->log->info("    + Getting post details...");
         $fdPosts   = $graphNode->getField('posts');
-        $timeLimit = $this->db->getTimeLimit('fb', 'T', $this->partyCode, $this->scrapeFull);
+        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'fb', 'T', $this->scrapeFull);
 
         $pageCount = 0;
         $txtCount  = 0;
@@ -209,8 +199,9 @@ class FacebookService
      * @param  string $requestFields
      * @return array
      */
-    public function getImages($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
+    public function getImages() {
+        $requestFields = 'albums{id,name,photo_count,photos{created_time,updated_time,picture,source,link,name,likes.limit(0).summary(true),reactions.limit(0).summary(true),comments.limit(0).summary(true),sharedposts.limit(0).summary(true)}}';
+        $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('albums'))) {
             $this->log->notice("    - Facebook images not found for " . $this->partyCode);
@@ -219,7 +210,7 @@ class FacebookService
 
         $this->log->info("    + Getting image details...");
         $fdAlbums  = $graphNode->getField('albums');
-        $timeLimit = $this->db->getTimeLimit('fb', 'I', $this->partyCode, $this->scrapeFull);
+        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'fb', 'I', $this->scrapeFull);
 
         $pageCount = 0;
         $imgCount  = 0;
@@ -307,8 +298,9 @@ class FacebookService
      * @param  string $requestFields
      * @return array
      */
-    public function getEvents($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
+    public function getEvents() {
+        $requestFields = 'events{start_time,updated_time,name,cover,description,place,attending_count,interested_count,comments.limit(0).summary(true)}';
+        $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('events'))) {
             $this->log->notice("    - Facebook events not found for " . $this->partyCode);
@@ -317,7 +309,7 @@ class FacebookService
 
         $this->log->info("    + Getting event details...");
         $fdEvents  = $graphNode->getField('events');
-        $timeLimit = $this->db->getTimeLimit('fb', 'E', $this->partyCode, $this->scrapeFull);
+        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'fb', 'E', $this->scrapeFull);
 
         $pageCount = 0;
         $eveCount  = 0;

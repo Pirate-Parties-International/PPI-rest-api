@@ -98,6 +98,8 @@ class DatabaseService
     }
 
 
+
+
     /**
      * Builds or updates a Metadata object
      * @param  string $code
@@ -175,25 +177,12 @@ class DatabaseService
      * @param  bool   $scrapeFull
      * @return int
      */
-    public function getTimeLimit($type, $subType, $partyCode, $scrapeFull = false) {
-        $fbLaunch  = strtotime("04 February 2004"); // Facebook launch date
-        $ytLaunch  = strtotime("14 February 2005"); // YouTube launch date
-        $twLaunch  = strtotime("15 July 2006");     // Twitter launch date
-        $gpLaunch  = strtotime("28 June 2011");     // Google+ launch date
-        $timeLimit = strtotime("-1 year");          // our time limit
+    public function getTimeLimit($partyCode, $type, $subType, $scrapeFull = false) {
+        $timeLimit = strtotime("-1 year"); // our time limit
 
         if ($scrapeFull) { // if user requested a full scrape
             $this->log->info("      - Full scrape requested, getting all... ");
-            switch ($type) {
-                case 'tw':
-                    $limit = $twLaunch;
-                    break;
-                case 'fb':
-                    $limit = $fbLaunch;
-                    break;
-                default:
-                    $limit = $ytLaunch;
-            }
+            $limit = $this->getLaunchDate($type);
             return $limit;
         }
 
@@ -221,12 +210,78 @@ class DatabaseService
                 $limit = $timeLimit;
                 break;
             case 'fb':
-                $limit = ($subType == 'T') ? $timeLimit : $fbLaunch;
+                $limit = ($subType == 'T') ? $timeLimit : $this->getLaunchDate('fb');
                 break;
             default:
-                $limit = $ytLaunch;
+                $limit = $this->getLaunchDate('yt');
         }
+
         return $limit;
     }
 
+
+    /**
+     * Queries for a party's latest statistic
+     * @param  string $partyCode
+     * @param  string $statType
+     * @param  string $subType
+     * @param  bool   $scrapeFull
+     * @return Statistic
+     */
+    public function getStatLimit($partyCode, $statType, $subType, $scrapeFull = false) {
+        if ($scrapeFull) {
+            $this->log->debug("     + Full scrape requested, counting all");
+            $limit['time']  = $this->getLaunchDate($statType);
+            $limit['value'] = 0;
+            return $limit;
+        }
+
+        $stat = $this->em
+            ->getRepository('AppBundle:Statistic')
+            ->findOneBy([
+                'code'      => $partyCode,
+                'type'      => $statType,
+                'subType'   => $subType
+                ],[
+                'timestamp' => 'DESC'
+                ]
+            );
+
+        if (empty($stat)) {
+            $this->log->debug("     + No data found, counting all");
+            $limit['time']  = $this->getLaunchDate($statType);
+            $limit['value'] = 0;
+            return $limit;
+        }
+
+        $this->log->debug("     + (Latest count: " . $stat->getValue() . " at " . $stat->getTimestamp()->format('H:i:s Y/m/d') . ")");
+        $limit['time']  = $stat->getTimestamp()->getTimestamp();
+        $limit['value'] = $stat->getValue();
+        return $limit;
+    }
+
+
+    /**
+     * Returns the launch date of various sites
+     * @param  string $site
+     * @return int
+     */
+    public function getLaunchDate($site) {
+        switch ($site) {
+            case 'fb': // Facebook launch date
+                $date = strtotime("04 February 2004");
+                break;
+            case 'yt': // YouTube launch date
+                $date = strtotime("14 February 2005");
+                break;
+            case 'tw': // Twitter launch date
+                $date = strtotime("15 July 2006");
+                break;
+            case 'g+': // Google+ launch date
+                $date = strtotime("28 June 2011");
+                break;
+        }
+
+        return $date;
+    }
 }

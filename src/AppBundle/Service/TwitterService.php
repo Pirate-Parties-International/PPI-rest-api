@@ -144,7 +144,7 @@ class TwitterService
         }
 
         $this->log->info("    + Getting tweet details...");
-        $timeLimit = $this->db->getTimeLimit('tw', 'T', $this->partyCode, $this->scrapeFull);
+        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'tw', 'T', $this->scrapeFull);
 
         $pageCount = 0;
         $txtCount  = 0;

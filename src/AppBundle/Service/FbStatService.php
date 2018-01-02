@@ -49,9 +49,10 @@ class FbStatService
      * @param  stting $requestFields
      * @return array
      */
-    public function getPageInfo($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
-        $array = [];
+    public function getPageInfo() {
+        $requestFields = 'cover,engagement,talking_about_count,about,emails,single_line_address';
+        $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
+        $array         = [];
 
         if (empty($graphNode) || is_null($graphNode->getField('engagement'))) {
             $this->log->notice("    - Facebook info not found for " . $this->partyCode);
@@ -142,30 +143,46 @@ class FbStatService
      * @param  string $requestFields
      * @return int
      */
-    public function getPostCount($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
+    public function getPostCount() {
+        $requestFields = 'posts{created_time}';
+        $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('posts'))) {
-            $this->log->notice("    - Facebook text posts not counted for " . $this->partyCode);
+            $this->log->notice("    - Error while counting Facebook text posts for " . $this->partyCode);
             return false;
         }
         // var_dump($graphNode); exit;
 
+        $fdPcount = $graphNode->getField('posts');
+        if (empty($fdPcount)) {
+            $this->log->notice("    - Error while counting Facebook text posts for " . $this->partyCode);
+            return false;
+        }
+
         $this->log->info("    + Counting text posts...");
-        $fdPcount  = $graphNode->getField('posts');
+        $oldCount  = $this->db->getStatLimit($this->partyCode, 'fb', 'T');
         $pageCount = 0;
         $temp      = [];
 
         do {
             $this->log->debug("       + Page " . $pageCount);
-            foreach ($fdPcount as $key => $post) {
-                $temp['posts'][] = ['id' => $post->getField('id')]; // count all posts
-            }
-            $pageCount++;
-        } while ($fdPcount = $this->fb->next($fdPcount)); // while next page is not null
 
-        $postCount = isset($temp['posts']) ? count($temp['posts']) : 0;
-        if ($postCount == 0) {
+            foreach ($fdPcount as $key => $post) {
+                $timeCheck = $post->getField('created_time')->getTimestamp(); // check time of last scraped post
+
+                if ($timeCheck > $oldCount['time']) {
+                    $temp['posts'][] = ['time' => $timeCheck];
+                }
+            }
+
+            $pageCount++;
+
+        } while ($timeCheck > $oldCount['time'] && $fdPcount = $this->fb->next($fdPcount)); // while next page is not null
+
+        $postCount  = isset($temp['posts']) ? count($temp['posts']) : 0;
+        $totalCount = $oldCount['value'] + $postCount;
+
+        if ($totalCount == 0) {
             return false;
         }
 
@@ -173,10 +190,11 @@ class FbStatService
             $this->partyCode,
             Statistic::TYPE_FACEBOOK,
             Statistic::SUBTYPE_POSTS,
-            $postCount
+            $totalCount
         );
 
-        $this->log->info("      + Total " . $postCount . " text posts found");
+        $this->log->debug("       + " . $postCount . " new text posts found");
+        $this->log->info("      + Total " . $totalCount . " text posts to date");
         return true;
     }
 
@@ -186,11 +204,12 @@ class FbStatService
      * @param  string $requestFields
      * @return int
      */
-    public function getImageCount($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
+    public function getImageCount() {
+        $requestFields = 'albums{count}';
+        $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('albums'))) {
-            $this->log->notice("    - Facebook images not counted for " . $this->partyCode);
+            $this->log->notice("    - Error while counting Facebook images for " . $this->partyCode);
             return false;
         }
         // var_dump($graphNode); exit;
@@ -228,11 +247,12 @@ class FbStatService
      * @param  string $requestFields
      * @return int
      */
-    public function getVideoCount($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
+    public function getVideoCount() {
+        $requestFields = 'videos{id}';
+        $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('videos'))) {
-            $this->log->notice("    - Facebook videos not counted for " . $this->partyCode);
+            $this->log->notice("    - Error while counting Facebook videos for " . $this->partyCode);
             return false;
         }
         // var_dump($graphNode); exit;
@@ -245,7 +265,7 @@ class FbStatService
         do {
             $this->log->debug("       + Page " . $pageCount);
             foreach ($fdVcount as $key => $post) {
-                $temp['videos'][] = ['id' => $post->getField('id')]; // count all posts
+                $temp['videos'][] = ['id' => $post->getField('id')];
             }
             $pageCount++;
         } while ($fdVcount = $this->fb->next($fdVcount)); // while next page is not null
@@ -272,11 +292,12 @@ class FbStatService
      * @param  string $requestFields
      * @return int
      */
-    public function getEventCount($requestFields) {
-        $graphNode = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
+    public function getEventCount() {
+        $requestFields = 'events{id}';
+        $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('events'))) {
-            $this->log->notice("    - Facebook events not counted for " . $this->partyCode);
+            $this->log->notice("    - Error while counting Facebook events for " . $this->partyCode);
             return false;
         }
         // var_dump($graphNode); exit;
