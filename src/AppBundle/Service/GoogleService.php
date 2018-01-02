@@ -39,7 +39,7 @@ class GoogleService
      * @param  string $googleId
      * @return array
      */
-    public function getYoutubeData($partyCode, $googleId) {
+    public function getYoutubeData($partyCode, $googleId, $scrapeData = false) {
         $this->partyCode = $partyCode;
         $this->googleId  = $googleId;
         $this->yt        = $this->connect->getNewGoogle($googleId, true);
@@ -52,6 +52,10 @@ class GoogleService
         $out = $this->getYtStats($data->statistics);
         if (!empty($out)) {
             $this->log->info("    + Info and stats... ok");
+        }
+
+        if ($scrapeData == 'info') {
+            return $out;
         }
 
         $playlist = $data->contentDetails->relatedPlaylists->uploads;

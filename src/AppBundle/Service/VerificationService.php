@@ -62,18 +62,6 @@ class VerificationService
         $dataName = "all data";
 
         if ($options['data']) {
-            switch ($options['site']) {
-                case 'fb':
-                case null:
-                    $options['site'] = 'fb';
-                    $siteName = "Facebook";
-                    break;
-                default:
-                    $this->log->error("- ERROR: Search term \"" . $options['data'] . "\" is only valid for Facebook");
-                    $this->log->notice("# Process halted");
-                    exit;
-            }
-
             switch ($options['data']) {
                 case 'info':
                 case 'data':
@@ -107,6 +95,21 @@ class VerificationService
                     $this->log->notice("# Process halted");
                     exit;
             }
+
+            if ($options['data'] != 'info') {
+                switch ($options['site']) {
+                    case 'fb':
+                    case null:
+                        $options['site'] = 'fb';
+                        $siteName = "Facebook";
+                        break;
+                    default:
+                        $this->log->error("- ERROR: Search term \"" . $options['data'] . "\" is only valid for Facebook");
+                        $this->log->notice("# Process halted");
+                        exit;
+                }
+            }
+
         }
 
         $this->log->info("### Scraping " . $siteName . " for " . $dataName);

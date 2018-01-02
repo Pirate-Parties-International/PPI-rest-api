@@ -168,7 +168,7 @@ class ScraperCommand extends ContainerAwareCommand
 
         $this->log->info("  + Starting Twitter import");
         $twData = $this->container->get('TwitterService')
-            ->getTwitterData($partyCode, $socialNetworks['twitter']['username'], $this->scrapeFull);
+            ->getTwitterData($partyCode, $socialNetworks['twitter']['username'], $this->scrapeData, $this->scrapeFull);
 
         if (!$twData) {
             $this->log->notice("  - ERROR while retrieving Twitter data for " . $partyCode);
@@ -221,7 +221,7 @@ class ScraperCommand extends ContainerAwareCommand
 
         $this->log->info("  + Starting Youtube import");
         $ytData = $this->container->get('GoogleService')
-            ->getYoutubeData($partyCode, $socialNetworks['youtube']);
+            ->getYoutubeData($partyCode, $socialNetworks['youtube'], $this->scrapeData);
 
         if (!$ytData) {
             $this->log->notice("  - ERROR while retrieving Youtube data for " . $partyCode);

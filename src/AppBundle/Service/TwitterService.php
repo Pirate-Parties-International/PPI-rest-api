@@ -40,7 +40,7 @@ class TwitterService
      * @param  bool   $scrapeFull
      * @return array
      */
-    public function getTwitterData($partyCode, $twUsername, $scrapeFull = false) {
+    public function getTwitterData($partyCode, $twUsername, $scrapeData = false, $scrapeFull = false) {
         $this->scrapeFull = $scrapeFull;
         $this->partyCode  = $partyCode;
         $this->twUsername = $twUsername;
@@ -57,6 +57,10 @@ class TwitterService
         if (!empty($out)) {
             $this->log->info("    + Info and stats... ok");
             $this->log->info("      + Total " . $out['tweets'] . " tweets found");
+        }
+
+        if ($scrapeData == 'info') {
+            return $out;
         }
 
         $temp = $this->getTweets();
