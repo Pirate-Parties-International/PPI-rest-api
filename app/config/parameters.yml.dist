@@ -28,3 +28,5 @@ parameters:
     tw_oauth_access_token_secret: ~
 
     gplus_api_key: ~
+
+    sentry_dsn: ~
