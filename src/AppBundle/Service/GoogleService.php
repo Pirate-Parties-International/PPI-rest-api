@@ -58,9 +58,11 @@ class GoogleService
             return $out;
         }
 
-        $playlist = $data->contentDetails->relatedPlaylists->uploads;
-        $videos   = $this->yt->getPlaylistItemsByPlaylistId($playlist);
-        $vidCount = 0;
+        $playlist  = $data->contentDetails->relatedPlaylists->uploads;
+        $videos    = $this->yt->getPlaylistItemsByPlaylistId($playlist);
+        $vidCount  = 0;
+        $loopCount = 0;
+        $temp      = [];
 
         if (empty($videos)) {
             $this->log->notice("    - Youtube videos not found for " . $this->partyCode);
@@ -69,8 +71,19 @@ class GoogleService
 
         $this->log->info("    + Getting video details...");
         foreach ($videos as $key => $vid) {
+            if (in_array($vid->snippet->resourceId->videoId, $temp, true)) {
+                // if video was already scraped this session
+                $loopCount++;
+                continue;
+            }
+            $temp[] = $vid->snippet->resourceId->videoId;
+
             $this->getVideoDetails($vid);
             $vidCount++;
+        }
+
+        if ($loopCount > 0) {
+            $this->log->warning("     - Youtube video scraping for " . $this->partyCode . " looped " . $loopCount . " times");
         }
 
         $this->log->info("      + " . $vidCount . " videos found and processed");

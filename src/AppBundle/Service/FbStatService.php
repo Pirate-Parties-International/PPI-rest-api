@@ -144,7 +144,7 @@ class FbStatService
      * @return int
      */
     public function getPostCount() {
-        $requestFields = 'posts{created_time}';
+        $requestFields = 'posts{id,created_time}';
         $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('posts'))) {
@@ -162,6 +162,7 @@ class FbStatService
         $this->log->info("    + Counting text posts...");
         $oldCount  = $this->db->getStatLimit($this->partyCode, 'fb', 'T');
         $pageCount = 0;
+        $loopCount = 0;
         $temp      = [];
 
         do {
@@ -170,14 +171,24 @@ class FbStatService
             foreach ($fdPcount as $key => $post) {
                 $timeCheck = $post->getField('created_time')->getTimestamp(); // check time of last scraped post
 
+                if (in_array($post->getField('id'), $temp, true)) {
+                    // if post was already counted this session
+                    $loopCount++;
+                    continue;
+                }
+
                 if ($timeCheck > $oldCount['time']) {
-                    $temp['posts'][] = ['time' => $timeCheck];
+                    $temp['posts'][] = $post->getField('id');
                 }
             }
 
             $pageCount++;
 
         } while ($timeCheck > $oldCount['time'] && $fdPcount = $this->fb->next($fdPcount)); // while next page is not null
+
+        if ($loopCount > 0) {
+            $this->log->warning("     - Facebook post counting for " . $this->partyCode . " looped " . $loopCount . " times");
+        }
 
         $postCount  = isset($temp['posts']) ? count($temp['posts']) : 0;
         $totalCount = $oldCount['value'] + $postCount;
@@ -205,7 +216,7 @@ class FbStatService
      * @return int
      */
     public function getImageCount() {
-        $requestFields = 'albums{count}';
+        $requestFields = 'albums{id,count}';
         $graphNode     = $this->connect->getFbGraphNode($this->fbPageId, $requestFields);
 
         if (empty($graphNode) || is_null($graphNode->getField('albums'))) {
@@ -217,12 +228,24 @@ class FbStatService
         $this->log->info("    + Counting images...");
         $fdAlbums   = $graphNode->getField('albums');
         $pageCount  = 0;
+        $loopCount  = 0;
         $photoCount = [];
 
         foreach ($fdAlbums as $key => $album) {
+            if (in_array($album->getField('id'), $temp, true)) {
+                // if album was already counted this session
+                $loopCount++;
+                continue;
+            }
+            $temp[] = $album->getField('id');
+
             $this->log->debug("       + Page " . $pageCount);
             $photoCount[] = $album->getField('count');
             $pageCount++;
+        }
+
+        if ($loopCount > 0) {
+            $this->log->warning("     - Facebook image counting for " . $this->partyCode . " looped " . $loopCount . " times");
         }
 
         $imageCount = array_sum($photoCount);
@@ -260,15 +283,25 @@ class FbStatService
         $this->log->info("    + Counting videos...");
         $fdVcount  = $graphNode->getField('videos');
         $pageCount = 0;
+        $loopCount = 0;
         $temp      = [];
 
         do {
             $this->log->debug("       + Page " . $pageCount);
             foreach ($fdVcount as $key => $post) {
-                $temp['videos'][] = ['id' => $post->getField('id')];
+                if (in_array($post->getField('id'), $temp, true)) {
+                    // if video was already counted this session
+                    $loopCount++;
+                    continue;
+                }
+                $temp['videos'][] = $post->getField('id');
             }
             $pageCount++;
         } while ($fdVcount = $this->fb->next($fdVcount)); // while next page is not null
+
+        if ($loopCount > 0) {
+            $this->log->warning("     - Facebook video counting for " . $this->partyCode . " looped " . $loopCount . " times");
+        }
 
         $videoCount = isset($temp['videos']) ? count($temp['videos']) : 0;
         if ($videoCount == 0) {
@@ -305,15 +338,25 @@ class FbStatService
         $this->log->info("    + Counting events...");
         $fdEvents  = $graphNode->getField('events');
         $pageCount = 0;
+        $loopCount = 0;
         $temp      = [];
 
         do {
             $this->log->debug("       + Page " . $pageCount);
             foreach ($fdEvents as $key => $event) {
-                $temp['events'][] = ['id' => $event->getField('id')];
+                if (in_array($event->getField('id'), $temp, true)) {
+                    // if event was already counted this session
+                    $loopCount++;
+                    continue;
+                }
+                $temp['events'][] = $event->getField('id');
             }
             $pageCount++;
         } while ($fdEvents = $this->fb->next($fdEvents)); // while next page is not null
+
+        if ($loopCount > 0) {
+            $this->log->warning("     - Facebook event counting for " . $this->partyCode . " looped " . $loopCount . " times");
+        }
 
         $eventCount = isset($temp['events']) ? count($temp['events']) : 0;
         if ($eventCount == 0) {

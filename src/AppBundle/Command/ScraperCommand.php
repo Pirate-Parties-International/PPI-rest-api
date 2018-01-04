@@ -79,7 +79,7 @@ class ScraperCommand extends ContainerAwareCommand
 
             $socialNetworks = $party->getSocialNetworks();
             if (empty($socialNetworks)) {
-                $this->log->warning("- Social Network information missing for " . $partyCode);
+                $this->log->notice(" - Social Network information missing for " . $partyCode);
                 continue;
             }
 
@@ -135,7 +135,7 @@ class ScraperCommand extends ContainerAwareCommand
     public function scrapeFacebook($partyCode, $socialNetworks)
     {
         if (empty($socialNetworks['facebook']) || empty($socialNetworks['facebook']['username'])) {
-            $this->log->warning(" - Facebook data not found for " . $partyCode);
+            $this->log->notice("  - Facebook data not found for " . $partyCode);
             return false;
         }
 
@@ -162,7 +162,7 @@ class ScraperCommand extends ContainerAwareCommand
     public function scrapeTwitter($partyCode, $socialNetworks)
     {
         if (empty($socialNetworks['twitter']) || empty($socialNetworks['twitter']['username'])) {
-            $this->log->warning(" - Twitter data not found for " . $partyCode);
+            $this->log->notice("  - Twitter data not found for " . $partyCode);
             return false;
         }
 
@@ -189,7 +189,7 @@ class ScraperCommand extends ContainerAwareCommand
     public function scrapeGooglePlus($partyCode, $socialNetworks)
     {
         if (empty($socialNetworks['googlePlus'])) {
-            $this->log->warning(" - Google+ data not found for " . $partyCode);
+            $this->log->notice("  - Google+ data not found for " . $partyCode);
             return false;
         }
 
@@ -215,7 +215,7 @@ class ScraperCommand extends ContainerAwareCommand
     public function scrapeYoutube($partyCode, $socialNetworks)
     {
         if (empty($socialNetworks['youtube'])) {
-            $this->log->warning(" - Youtube data not found for " . $partyCode);
+            $this->log->notice("  - Youtube data not found for " . $partyCode);
             return false;
         }
 

@@ -111,11 +111,20 @@ class FacebookService
         $pageCount = 0;
         $txtCount  = 0;
         $vidCount  = 0;
+        $loopCount = 0;
+        $temp      = [];
 
         do {
             $this->log->debug("       + Page " . $pageCount);
 
             foreach ($fdPosts as $key => $post) {
+                if (in_array($post->getField('id'), $temp, true)) {
+                    // if post was already scraped this session
+                    $loopCount++;
+                    continue;
+                }
+                $temp[] = $post->getField('id');
+
                 $type = $post->getField('type');
                 // types = 'status', 'link', 'photo', 'video', 'event'
 
@@ -137,6 +146,10 @@ class FacebookService
 
         } while ($timeCheck > $timeLimit && $fdPosts = $this->fb->next($fdPosts));
         // while next page is not null and within our time limit
+
+        if ($loopCount > 0) {
+            $this->log->warning("     - Facebook post scraping for " . $this->partyCode . " looped " . $loopCount . " times");
+        }
 
         $out['posts']  = $txtCount;
         $out['videos'] = $vidCount;
@@ -214,6 +227,8 @@ class FacebookService
 
         $pageCount = 0;
         $imgCount  = 0;
+        $loopCount = 0;
+        $temp      = [];
 
         foreach ($fdAlbums as $key => $album) {
             $photoCount[] = $album->getField('photo_count');
@@ -226,6 +241,13 @@ class FacebookService
             do {
                 $this->log->debug("       + Page " . $pageCount);
                 foreach ($fdPhotos as $key => $photo) {
+                    if (in_array($photo->getField('picture'), $temp, true)) {
+                        // if image was already scraped this session
+                        $loopCount++;
+                        continue;
+                    }
+                    $temp[] = $photo->getField('picture');
+
                     $this->getImageDetails($photo, $album);
                     $imgCount++;
                 }
@@ -235,6 +257,10 @@ class FacebookService
 
             } while ($timeCheck > $timeLimit && $fdPhotos = $this->fb->next($fdPhotos));
             // while next page is not null and within our time limit
+        }
+
+        if ($loopCount > 0) {
+            $this->log->warning("     - Facebook image scraping for " . $this->partyCode . " looped " . $loopCount . " times");
         }
 
         $out['imageCount'] = array_sum($photoCount);
@@ -313,10 +339,19 @@ class FacebookService
 
         $pageCount = 0;
         $eveCount  = 0;
+        $loopCount = 0;
+        $temp      = [];
 
         do { // process current page of results
             $this->log->debug("       + Page " . $pageCount);
             foreach ($fdEvents as $key => $event) {
+                if (in_array($event->getField('id'), $temp, true)) {
+                    // if event was already scraped this session
+                    $loopCount++;
+                    continue;
+                }
+                $temp[] = $event->getField('id');
+
                 $this->getEventDetails($event);
                 $eveCount++;
             }
@@ -326,6 +361,10 @@ class FacebookService
 
         } while ($timeCheck > $timeLimit && $fdEvents = $this->fb->next($fdEvents));
         // while next page is not null and within our time limit
+
+        if ($loopCount > 0) {
+            $this->log->warning("     - Facebook event scraping for " . $this->partyCode . " looped " . $loopCount . " times");
+        }
 
         $out['eventCount'] = $eveCount;
         $out['events']     = true;

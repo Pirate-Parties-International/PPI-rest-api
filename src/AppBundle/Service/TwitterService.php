@@ -154,11 +154,20 @@ class TwitterService
         $txtCount  = 0;
         $imgCount  = 0;
         $vidCount  = 0;
+        $loopCount = 0;
+        $temp      = [];
 
         do { // process current page of results
             $this->log->debug("       + Page " . $pageCount);
 
             foreach($tweetData as $item) {
+                if (in_array($item->id, $temp, true)) {
+                    // if tweet was already scraped this session
+                    $loopCount++;
+                    continue;
+                }
+                $temp[] = $item->id;
+
                 $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
                 // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
 
@@ -181,6 +190,10 @@ class TwitterService
 
         } while ($timeCheck > $timeLimit && $pageCount < 100);
         // while tweet times are more recent than the limit as set above, up to 5000
+
+        if ($loopCount > 0) {
+            $this->log->warning("     - Tweet scraping for " . $this->partyCode . " looped " . $loopCount . " times");
+        }
 
         $out['posts']     = $txtCount;
         $out['images']    = $imgCount;
