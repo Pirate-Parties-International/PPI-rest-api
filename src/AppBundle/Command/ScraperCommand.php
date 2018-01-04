@@ -144,7 +144,7 @@ class ScraperCommand extends ContainerAwareCommand
             ->getFBData($partyCode, $socialNetworks['facebook']['username'], $this->scrapeData, $this->scrapeFull);
 
         if (!$fbData) {
-            $this->log->notice("  - ERROR while retrieving FB data for " . $partyCode);
+            $this->log->warning(" - ERROR while retrieving FB data for " . $partyCode);
             return false;
         }
 
@@ -171,7 +171,7 @@ class ScraperCommand extends ContainerAwareCommand
             ->getTwitterData($partyCode, $socialNetworks['twitter']['username'], $this->scrapeData, $this->scrapeFull);
 
         if (!$twData) {
-            $this->log->notice("  - ERROR while retrieving Twitter data for " . $partyCode);
+            $this->log->warning(" - ERROR while retrieving Twitter data for " . $partyCode);
             return false;
         }
 
@@ -198,7 +198,7 @@ class ScraperCommand extends ContainerAwareCommand
             ->getGooglePlusData($partyCode, $socialNetworks['googlePlus']);
 
         if (empty($gData)) {
-            $this->log->notice("  - ERROR while retrieving Google+ data for " . $partyCode);
+            $this->log->warning(" - ERROR while retrieving Google+ data for " . $partyCode);
             return false;
         }
 
@@ -224,7 +224,7 @@ class ScraperCommand extends ContainerAwareCommand
             ->getYoutubeData($partyCode, $socialNetworks['youtube'], $this->scrapeData);
 
         if (!$ytData) {
-            $this->log->notice("  - ERROR while retrieving Youtube data for " . $partyCode);
+            $this->log->warning(" - ERROR while retrieving Youtube data for " . $partyCode);
             return false;
         }
 

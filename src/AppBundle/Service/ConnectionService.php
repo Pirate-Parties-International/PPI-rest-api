@@ -217,7 +217,7 @@ class ConnectionService
         // $this->log->debug("       + (" . $limitCheck['remaining'] . " requests remaining, resetting at " . date('H:i:s', $limitCheck['reset']) . ") ");
 
         if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
-            $this->log->notice("  - Rate limit reached! Resuming at " . date('H:i:s', $limitCheck['reset']) . "...");
+            $this->log->warning(" - Rate limit reached! Resuming at " . date('H:i:s', $limitCheck['reset']) . "...");
             time_sleep_until($limitCheck['reset']);
         }
     }

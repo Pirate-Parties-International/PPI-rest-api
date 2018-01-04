@@ -49,7 +49,7 @@ class TwitterService
         $data = $this->connect->getTwRequest($this->tw, $twUsername);
 
         if (!isset($data->statuses_count)) {
-            $this->log->warning("  - Twitter data not found for " . $this->partyCode);
+            $this->log->notice("   - Twitter data not found for " . $this->partyCode);
             return false;
         }
 
