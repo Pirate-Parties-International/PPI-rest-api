@@ -230,6 +230,7 @@ class FbStatService
         $pageCount  = 0;
         $loopCount  = 0;
         $photoCount = [];
+        $temp       = [];
 
         foreach ($fdAlbums as $key => $album) {
             if (in_array($album->getField('id'), $temp, true)) {
