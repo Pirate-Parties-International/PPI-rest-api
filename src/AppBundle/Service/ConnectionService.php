@@ -26,17 +26,17 @@ class ConnectionService
 
 
     public function exception_handler($e) {
-        $message = $e->getMessage();
-        $this->log->error($message);
-
         if ($message == "Application request limit reached") {
             $this->getFbRateLimit();
+        } else {
+            $message = $e->getMessage();
+            $this->log->error($message);
         }
     }
 
 
     /**
-     * Builds a Facebook Throttle Exception to test error handling
+     * Throws a Facebook Throttle Exception to test error handling
      */
     public function testFbRateLimit() {
         $e = new FacebookThrottleException("Application request limit reached");
@@ -90,17 +90,14 @@ class ConnectionService
 
         } catch(Facebook\Exceptions\FacebookThrottleException $e) {
             // When the app hits the rate limit
-            $this->log->error($fbPageId . " - " . $e->getMessage());
             $response = $this->getFbRateLimit($request);
 
         } catch(\Exception $e) {
-            $this->log->error($fbPageId . " - Exception: " . $e->getMessage());
-
             if ($e->getMessage() == "Application request limit reached") {
-                $this->getFbRateLimit($request);
-
+                $response = $this->getFbRateLimit($request);
             } else {
-            return false;
+                $this->log->error($fbPageId . " - Exception: " . $e->getMessage());
+                return false;
             }
         }
 
@@ -118,6 +115,8 @@ class ConnectionService
      */
     public function getFbRateLimit($request = null) {
         $connected = false;
+
+        $this->log->warning(" - Facebook rate limit reached!");
 
         if (is_null($request)) {
             $request = $this->fb->request('GET', $this->fbPageId, ['fields' => 'engagement']);
@@ -217,7 +216,7 @@ class ConnectionService
         // $this->log->debug("       + (" . $limitCheck['remaining'] . " requests remaining, resetting at " . date('H:i:s', $limitCheck['reset']) . ") ");
 
         if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
-            $this->log->warning(" - Rate limit reached! Resuming at " . date('H:i:s', $limitCheck['reset']) . "...");
+            $this->log->notice("  - Twitter rate limit reached! Resuming at " . date('H:i:s', $limitCheck['reset']) . "...");
             time_sleep_until($limitCheck['reset']);
         }
     }

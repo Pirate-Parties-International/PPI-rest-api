@@ -59,7 +59,7 @@ class ImageService
             try {
                 $imgData = file_get_contents($imgSrc, false, $ctx);
             } catch (\Exception $e) {
-                $this->log->warning($e->getMessage());
+                $this->log->notice($e->getMessage());
                 if ($imgBkp) { // try backup if available
                     try {
                         $imgData = file_get_contents($imgBkp, false, $ctx);
@@ -75,7 +75,7 @@ class ImageService
             try {
                 file_put_contents($imgPath, $imgData);
             } catch (\Exception $e) {
-                $this->log->warning($e->getMessage());
+                $this->log->notice($e->getMessage());
             }
         }
 
@@ -110,7 +110,7 @@ class ImageService
         try {
             $imgData = file_get_contents($imgSrc, false, $ctx);
         } catch (\Exception $e) {
-            $this->log->warning($e->getMessage());
+            $this->log->notice($e->getMessage());
         }
 
         if (empty($imgData)) {
