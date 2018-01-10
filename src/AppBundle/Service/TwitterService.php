@@ -171,14 +171,16 @@ class TwitterService
                 $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
                 // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
 
-                $tweet = $this->getTweetDetails($item, $twTime);
-
-                if ($tweet === 'txt') {
+                if (empty($item->entities->media)) {
+                    $this->getTweetDetails($item, $twTime);
                     $txtCount++;
+
                 } else {
+                    $tweet = $this->getMedia($item, $twTime);
                     $imgCount += $tweet['img'];
                     $vidCount += $tweet['vid'];
                 }
+
             }
 
             $timeCheck = $twTime->getTimestamp(); // check time of last tweet scraped
@@ -210,16 +212,7 @@ class TwitterService
      * @return string
      */
     public function getTweetDetails($item, $twTime) {
-        if (!empty($item->full_text)) {
-            $twText = $item->full_text;
-        } else if (!empty($item->text)) {
-            $twText = $item->text;
-        } else $twText = null;
-
-        if (!empty($item->entities->media)) { // if tweet contains media
-            $tweet = $this->getMediaDetails($item, $twTime, $twText);
-            return $tweet;
-        }
+        $twText = $this->getTwText($item);
 
         $allData = [
             'id'       => $item->id,
@@ -241,8 +234,37 @@ class TwitterService
             $item->favorite_count,
             $allData
         );
+    }
 
-        return 'txt';
+
+    /**
+     * Determines the type of media that a tweet contains
+     * @param  object $item
+     * @param  object $twTime
+     * @return array
+     */
+    public function getMedia($item, $twTime) {
+        $imgCount = 0;
+        $vidCount = 0;
+
+        $media = $item->extended_entities->media;
+
+        foreach ($media as $photo) {
+            if ($photo->type == 'video') {
+                $subType = SocialMedia::SUBTYPE_VIDEO;
+                $vidCount++;
+
+            } else { // if type == 'photo' or 'animted_gif'
+                $subType = SocialMedia::SUBTYPE_IMAGE;
+                $imgCount++;
+            }
+
+            $this->getMediaDetails($item, $twTime, $photo, $subType);
+        }
+
+        $count['img'] = $imgCount;
+        $count['vid'] = $vidCount;
+        return $count;
     }
 
 
@@ -250,57 +272,58 @@ class TwitterService
      * Retrieves the details of an image or video
      * @param  object $item
      * @param  object $twTime
-     * @param  string $twText
+     * @param  string $photo
      * @return array
      */
-    public function getMediaDetails($item, $twTime, $twText) {
-        $media = $item->extended_entities->media;
+    public function getMediaDetails($item, $twTime, $photo, $subType) {
+        $twText = $this->getTwText($item);
 
-        $imgCount = 0;
-        $vidCount = 0;
+        $imgSrc = $photo->media_url . ":small";
+        $imgId  = $photo->id;
+        $img    = $this->container
+            ->get('ImageService')
+            ->saveImage('tw', $this->partyCode, $imgSrc, $imgId);
 
-        foreach ($media as $photo) { // if tweet contains multiple images
-            if ($photo->type == 'video') {
-                $subType = SocialMedia::SUBTYPE_VIDEO;
-                $vidCount++;
-            } else { // if type == 'photo' or 'animated_gif'
-                $subType = SocialMedia::SUBTYPE_IMAGE;
-                $imgCount++;
-            }
+        $allData = [
+            'id'         => $imgId,
+            'posted'     => $twTime->format('Y-m-d H:i:s'), // string
+            'text'       => $twText,
+            'image'      => $img,
+            'img_source' => $imgSrc,
+            'url'        => 'https://twitter.com/statuses/' . $item->id,
+            'likes'      => $item->favorite_count,
+            'retweets'   => $item->retweet_count
+            ];
 
-            $imgSrc = $photo->media_url . ":small";
-            $imgId  = $photo->id;
-            $img    = $this->container
-                ->get('ImageService')
-                ->saveImage('tw', $this->partyCode, $imgSrc, $imgId);
+        $this->db->addSocial(
+            $this->partyCode,
+            SocialMedia::TYPE_TWITTER,
+            $subType,
+            $item->id,
+            $twTime, // DateTime
+            $twText,
+            $img,
+            $item->favorite_count,
+            $allData
+        );
+    }
 
-            $allData = [
-                'id'         => $imgId,
-                'posted'     => $twTime->format('Y-m-d H:i:s'), // string
-                'text'       => $twText,
-                'image'      => $img,
-                'img_source' => $imgSrc,
-                'url'        => 'https://twitter.com/statuses/' . $item->id,
-                'likes'      => $item->favorite_count,
-                'retweets'   => $item->retweet_count
-                ];
 
-            $this->db->addSocial(
-                $this->partyCode,
-                SocialMedia::TYPE_TWITTER,
-                $subType,
-                $item->id,
-                $twTime, // DateTime
-                $twText,
-                $img,
-                $item->favorite_count,
-                $allData
-            );
+    /**
+    * Returns text field of a tweet
+    * @param  object $item
+    * @return string
+    */
+    public function getTwText($item) {
+        if (!empty($item->full_text)) {
+            return $item->full_text;
         }
 
-        $count['img'] = $imgCount;
-        $count['vid'] = $vidCount;
-        return $count;
+        if (!empty($item->text)) {
+            return $item->text;
+        }
+
+        return null;
     }
 
 }
