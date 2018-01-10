@@ -23,6 +23,7 @@ class PatchCommand extends ContainerAwareCommand
             ->addOption('stats',      'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
             ->addOption('exturls',    'u', InputOption::VALUE_NONE, "Decode Facebook's external image urls")
             ->addOption('duplicates', 'd', InputOption::VALUE_NONE, "Scan the social media database for duplicate entries")
+            ->addOption('metadata',   'm', InputOption::VALUE_NONE, "Convert metadata 'value' field to utf8mb4")
         ;
     }
 
@@ -60,6 +61,10 @@ class PatchCommand extends ContainerAwareCommand
             case $input->getOption('duplicates');
                 $output->writeln('##### Patching duplicate social media posts #####');
                 $this->patchDuplicateEntries();
+                break;
+            case $input->getOption('metadata');
+                $output->writeln('##### Patching metadata charset #####');
+                $this->patchMetadata();
                 break;
             default:
                 $output->writeln("Invalid option.");
@@ -314,7 +319,8 @@ class PatchCommand extends ContainerAwareCommand
 
 
 /////
-// Charset for 'postText' field (--charset, -c)
+// Charset for social_media 'postText' field (--charset, -c)
+// Charset for metadata 'value' field (--metadata, -m)
 //
 // The database was originally encoded to utf8, which is the standard.
 // This made it impossible to log 4-byte characters, such as emojis or certain languages like Japanese and Chinese.
@@ -388,6 +394,65 @@ class PatchCommand extends ContainerAwareCommand
         $query->execute();
     }
 
+
+    /**
+     * Same patch for metadata
+     */
+    public function patchMetadata() {
+        $old = $this->checkMetadata();
+
+        if ($old == 'utf8mb4') {
+            echo ", no fix needed.\n";
+            return;
+        }
+
+        echo ", fix needed.\n";
+        $this->getConfirmation();
+        $this->fixMetadata();
+        $new = $this->checkMetadata();
+
+        if ($new == 'utf8mb4') {
+            echo ", great success! :D\n";
+            return;
+        }
+
+        echo ", process failed. :(\n";
+        echo "  Your database may need to be altered manually. Contact us on github if you need help.\n";
+    }
+
+    /**
+     * Checks current charset
+     */
+    public function checkMetadata() {
+        $db_name = $this->container->getParameter('database_name');
+
+        $sql1 = "SELECT character_set_name
+            FROM information_schema.columns
+            WHERE table_schema = '$db_name'
+            AND table_name = 'metadata'
+            AND column_name = 'value';";
+
+        $query = $this->em->getConnection()->prepare($sql1);
+        $query->execute();
+        $response = $query->fetchAll();
+        $answer = $response[0]['character_set_name'];
+
+        echo "  Current character set is ".$answer;
+        return $answer;
+    }
+
+    /**
+     * Converts charset to 4-byte compatible utf8mb4
+     */
+    public function fixMetadata() {
+        $sql = "ALTER TABLE metadata
+            CHANGE value value LONGTEXT
+            CHARACTER SET utf8mb4
+            COLLATE utf8mb4_unicode_ci;";
+
+        $query = $this->em->getConnection()->prepare($sql);
+        $query->execute();
+    }
 
 /////
 // Twitter images (--twitter, -t)
