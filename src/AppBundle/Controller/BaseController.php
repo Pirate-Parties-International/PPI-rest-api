@@ -123,12 +123,23 @@ class BaseController extends Controller
             $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
 
         } else { // this is really slow, will timeout if no party code is specified
-            $allSocial    = $social->findBy($terms, [$orderBy => $direction]);
-            $recentSocial = $this->getRecentSocial($allSocial, $recent);
-            $socialMedia  = array_slice($recentSocial, $offset, $limit, true);
+            $vars = [
+                'code'      => $code,
+                'type'      => $type,
+                'subType'   => $subType,
+                'orderBy'   => $orderBy,
+                'direction' => $direction,
+                'limit'     => $limit,
+                'offset'    => $offset,
+                'recent'    => $recent
+            ];
+
+            $socialMedia = $this->getSocialDql($vars);
+            // $socialMedia = $this->getSocialFindBy($vars, $terms, $social);
         }
 
         // echo gettype($socialMedia); die;
+        var_dump($socialMedia); die;
 
         if ($fields) {
             $socialMedia = $this->getSelectSocial($socialMedia, $fields);
@@ -139,11 +150,60 @@ class BaseController extends Controller
 
 
     /**
-    * Builds an array of recent social media posts
-    * @param  array $allSocial
-    * @param  int   $timeLimit
-    * @return array
-    */
+     * Return social media array via dql
+     * @param  array $terms
+     * @return array
+     */
+    public function getSocialDql($vars) {
+        $query = $this->getDoctrine()->getManager()
+            ->createQueryBuilder()
+            ->select('p')
+            ->from('AppBundle:SocialMedia', 'p');
+
+        if ($vars['code']) {
+            $query->where(sprintf("p.code = '%s'", $vars['code']));
+        }
+        if ($vars['type']) {
+            $query->andwhere(sprintf("p.type = '%s'", $vars['type']));
+        }
+        if ($vars['subType']) {
+            $query->andwhere(sprintf("p.subType = '%s'", $vars['subType']));
+        }
+
+        $recentString = date('Y-m-d H:i:s', $vars['recent']);
+        $query->andWhere(sprintf("p.postTime > '%s'", $recentString));
+
+        $query->setFirstResult($vars['offset'])
+            ->setMaxresults($vars['limit'])
+            ->orderBy(sprintf("p.%s", $vars['orderBy']), $vars['direction']);
+
+        $socialMedia = $query->getQuery()->getResult();
+
+        return $socialMedia;
+    }
+
+
+    /**
+     * Returns social media array via findBy
+     * @param  array  $terms
+     * @param  object $social
+     * @return array
+     */
+    public function getSocialFindBy($vars, $terms, $social) {
+        $allSocial    = $social->findBy($terms, [$vars['orderBy'] => $vars['direction']]);
+        $recentSocial = $this->getRecentSocial($allSocial, $vars['recent']);
+        $socialMedia  = array_slice($recentSocial, $vars['offset'], $vars['limit'], true);
+
+        return $socialMedia;
+    }
+
+
+    /**
+     * Builds an array of recent social media posts
+     * @param  array $allSocial
+     * @param  int   $timeLimit
+     * @return array
+     */
     public function getRecentSocial($allSocial, $timeLimit) {
         $recentSocial = [];
 
