@@ -95,9 +95,10 @@ class BaseController extends Controller
     * @param  string $orderBy <optional>
     * @param  int    $limit   <optional>
     * @param  int    $offset  <optional>
+    * @param  int    $recent  <optional>
     * @return array
     */
-    public function getAllSocial($code = null, $type = null, $subType = null, $fields = null, $orderBy = null, $direction = null, $limit = 100, $offset = 0) {
+    public function getAllSocial($code = null, $type = null, $subType = null, $fields = null, $orderBy = null, $direction = null, $limit = 100, $offset = 0, $recent = null) {
         $social = $this->getDoctrine()
             ->getRepository('AppBundle:SocialMedia');
 
@@ -118,13 +119,42 @@ class BaseController extends Controller
             $terms['subType'] = $subType;
         }
 
-        $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
+        if (!$recent) {
+            $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
+
+        } else { // this is pretty slow, so avoid unless necessary
+            $allSocial    = $social->findBy($terms, [$orderBy => $direction]);
+            $recentSocial = $this->getRecentSocial($allSocial, $recent);
+            $socialMedia  = array_slice($recentSocial, $offset, $limit, true);
+        }
+        // echo gettype($socialMedia); die;
 
         if ($fields) {
             $socialMedia = $this->getSelectSocial($socialMedia, $fields);
         }
 
         return $socialMedia;
+    }
+
+
+    /**
+    * Builds an array of recent social media posts
+    * @param  array $allSocial
+    * @param  int   $timeLimit
+    * @return array
+    */
+    public function getRecentSocial($allSocial, $timeLimit) {
+        $recentSocial = [];
+
+        foreach ($allSocial as $post) {
+            $postTime = $post->getPostTime()->getTimestamp();
+
+            if ($postTime > $timeLimit) {
+                $recentSocial[] = $post;
+            }
+        }
+
+        return $recentSocial;
     }
 
 
