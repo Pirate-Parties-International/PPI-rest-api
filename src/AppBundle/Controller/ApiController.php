@@ -142,7 +142,8 @@ class ApiController extends DataController
      *      {"name"="order_by", "dataType"="string", "required"="false", "description"="Order to return results", "pattern"="code | likes | date"},
      *      {"name"="direction", "dataType"="string", "required"="false", "description"="Order to sort results", "pattern"="asc | desc"},
      *      {"name"="limit", "dataType"="int", "required"="false", "description"="Number of results to return (default 100)"},
-     *      {"name"="offset", "dataType"="int", "required"="false", "description"="Start point of results"}
+     *      {"name"="offset", "dataType"="int", "required"="false", "description"="Start point of results"},
+     *      {"name"="recent", "dataType"="string", "required"="false", "description"="Time limit to return most recent posts only (e.g '1 day', '2 weeks', '6 months' etc.)"}
      *  },
      *  statusCodes={
      *          200="Returned when successful.",
@@ -161,6 +162,7 @@ class ApiController extends DataController
         $direction = isset($_GET['direction']) ? $_GET['direction'] : null;
         $limit     = isset($_GET['limit'])     ? $_GET['limit']     : 100;
         $offset    = isset($_GET['offset'])    ? $_GET['offset']    : 0;
+        $recent    = isset($_GET['recent'])    ? $_GET['recent']    : null;
 
         switch ($orderBy) {
             case null:
@@ -189,8 +191,14 @@ class ApiController extends DataController
                 return new JsonResponse(array("error"=>"Bad request: '".$direction."' is not a valid parameter for the field 'direction'."), 400);
         }
 
+        if ($recent) {
+            $exChar = ["\"", "'", "-"];
+            $string = str_replace($exChar, "", $recent);
+            $recent = strtotime("-" . $string);
+        }
+
         // run through BaseController
-        $data = $this->getAllSocial($code, $type, $subType, $fields, $orderBy, $direction, $limit, $offset);
+        $data = $this->getAllSocial($code, $type, $subType, $fields, $orderBy, $direction, $limit, $offset, $recent);
 
         if (empty($data)) {
             return new JsonResponse(array("error"=>"No data found."), 404);

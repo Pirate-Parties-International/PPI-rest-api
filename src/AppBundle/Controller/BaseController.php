@@ -122,11 +122,12 @@ class BaseController extends Controller
         if (!$recent) {
             $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
 
-        } else { // this is pretty slow, so avoid unless necessary
+        } else { // this is really slow, will timeout if no party code is specified
             $allSocial    = $social->findBy($terms, [$orderBy => $direction]);
             $recentSocial = $this->getRecentSocial($allSocial, $recent);
             $socialMedia  = array_slice($recentSocial, $offset, $limit, true);
         }
+
         // echo gettype($socialMedia); die;
 
         if ($fields) {
