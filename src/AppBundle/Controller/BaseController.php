@@ -254,7 +254,8 @@ class BaseController extends Controller
 
 
     /**
-     * Returns the percentage of a post's engagement per total audience (i.e. page likes)
+     * Returns the value of a post's engagement per total audience
+     * (i.e. page likes, followers, subscribers, etc.)
      * @param  object $item
      * @return float
      */
@@ -262,17 +263,24 @@ class BaseController extends Controller
         switch ($item->getType()) {
             case 'fb':
                 $statType = Stat::TYPE_FACEBOOK;
+                $subType  = Stat::SUBTYPE_LIKES;
                 break;
             case 'tw':
                 $statType = Stat::TYPE_TWITTER;
+                $subType  = Stat::SUBTYPE_FOLLOWERS;
                 break;
             case 'yt':
                 $statType = Stat::TYPE_YOUTUBE;
+                $subType  = Stat::SUBTYPE_SUBSCRIBERS;
+                break;
+            case 'g+':
+                $statType = Stat::TYPE_GOOGLEPLUS;
+                $subType  = Stat::SUBTYPE_FOLLOWERS;
                 break;
             }
 
         $engagement = $this->getPostEngagement($item);
-        $totalReach = $this->getStat($item->getCode(), $statType, Stat::SUBTYPE_LIKES);
+        $totalReach = $this->getStat($item->getCode(), $statType, $subType);
 
         return $engagement / $totalReach;
     }
