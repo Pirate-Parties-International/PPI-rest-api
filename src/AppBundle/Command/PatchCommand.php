@@ -24,6 +24,7 @@ class PatchCommand extends ContainerAwareCommand
             ->addOption('exturls',    'u', InputOption::VALUE_NONE, "Decode Facebook's external image urls")
             ->addOption('duplicates', 'd', InputOption::VALUE_NONE, "Scan the social media database for duplicate entries")
             ->addOption('metadata',   'm', InputOption::VALUE_NONE, "Convert metadata 'value' field to utf8mb4")
+            ->addOption('party',      'y', InputOption::VALUE_OPTIONAL, "Choose a single party to patch, by code")
         ;
     }
 
@@ -34,6 +35,8 @@ class PatchCommand extends ContainerAwareCommand
         $this->output = $output;
         $this->logger = $this->getContainer()->get('logger');
         $logger = $this->logger;
+
+        $partyCode = $input->getOption('party');
 
         switch (true) { // add more options here
             case $input->getOption('twitter'):
@@ -60,7 +63,7 @@ class PatchCommand extends ContainerAwareCommand
                 break;
             case $input->getOption('duplicates');
                 $output->writeln('##### Patching duplicate social media posts #####');
-                $this->patchDuplicateEntries();
+                $this->patchDuplicateEntries($partyCode);
                 break;
             case $input->getOption('metadata');
                 $output->writeln('##### Patching metadata charset #####');
@@ -93,28 +96,47 @@ class PatchCommand extends ContainerAwareCommand
 // This patch locates those posts in the database and deletes the duplicates, leaving only the most recent copy.
 // Only run this if you know there are duplicate entries. It takes too long to waste time running it needlessly.
 /////
-    public function patchDuplicateEntries() {
+    public function patchDuplicateEntries($partyCode = null) {
         $this->getConfirmation();
         $time = new \DateTime('now');
         echo "# NOTE: This will take a long time. Go and make yourself a cup of tea. The time is now ".$time->format('H:i:s').".\n";
         echo "  Checking database... ";
-        $posts = $this->em->getRepository('AppBundle:SocialMedia')->findAll();
-        echo "patching...";
+
+        if (is_null($partyCode)) {
+            $posts = $this->em->getRepository('AppBundle:SocialMedia')->findAll();
+            echo "patching...";
+        } else {
+            echo "patching " . $partyCode . "...";
+            $posts = $this->em->getRepository('AppBundle:SocialMedia')->findBy(['code' => $partyCode], ['id' => 'DESC']);
+        }
 
         foreach ($posts as $prime) {
-            $dupes = $this->em->getRepository('AppBundle:SocialMedia')->findBy([
-                'postId'    => $prime->getPostId(),
-                'postText'  => $prime->getPostText(),
-                'postImage' => $prime->getPostImage(),
-                ]);
+            if (!is_null($partyCode)) {
+                $terms['code'] = $partyCode;
+            }
+
+            $terms['type']      = $prime->getType();
+            $terms['subType']   = $prime->getSubType();
+            $terms['postId']    = $prime->getPostId();
+            $terms['postText']  = $prime->getPostText();
+            $terms['postImage'] = $prime->getPostImage();
+
+            $dupes = $this->em->getRepository('AppBundle:SocialMedia')->findBy($terms, ['id' => 'DESC']);
 
             foreach ($dupes as $dupe) {
                 if ($dupe->getId() < $prime->getId()) {
-                    echo " duplicate found, deleting...";
-                    // echo "\nprime id = ".$prime->getId().", dupe id = ".$dupe->getId();
-                    // echo ", prime post id = ".$prime->getPostId().", dupe post id = ".$dupe->getPostId();
-                    // echo ", prime text = ".$prime->getPostText().", dupe text = ".$dupe->getPostText();
-                    // echo ", prime image = ".$prime->getPostImage().", dupe image = ".$dupe->getPostImage();
+                    echo " duplicate found...";
+                    // echo "\n prime type = " . $prime->getType() . "-" . $prime->getSubType();
+                    // echo ", id = " . $prime->getId() . ", post id = " . $prime->getPostId();
+                    // echo ", time = " . $prime->getPostTime()->format('Y-m-d H:i:s');
+                    // echo "\n  dupe type = " . $dupe->getType() . "-" . $dupe->getSubType();
+                    // echo ", id = " . $dupe->getId() . ", post id = " . $dupe->getPostId();
+                    // echo ", time = " . $dupe->getPostTime()->format('Y-m-d H:i:s');
+                    // echo "\n prime text = " . $prime->getPostText();
+                    // echo "\n  dupe text = " . $dupe->getPostText();
+                    // echo "\n prime image = " . $prime->getPostImage();
+                    // echo "\n  dupe image = " . $dupe->getPostImage() . "\n";
+                    echo " deleting...";
                     $this->em->remove($dupe);
                     $this->em->flush();
                     echo " done...";

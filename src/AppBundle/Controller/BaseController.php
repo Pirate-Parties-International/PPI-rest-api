@@ -153,21 +153,21 @@ class BaseController extends Controller
 
                 if ($field == 'time') {
                     if ($temp['sub_type'] != 'E') {
-                        $temp['post_'.$field] = isset($data['posted']) ? $data['posted'] : null;
+                        $temp['post_' . $field] = isset($data['posted']) ? $data['posted'] : null;
 
-                    } else $temp['post_'.$field] = isset($data['start_time']) ? $data['start_time'] : null;
+                    } else $temp['post_' . $field] = isset($data['start_time']) ? $data['start_time'] : null;
 
                 } else if ($field == 'shares' && $temp['type'] == 'tw') {
-                    $temp['post_'.$field] = isset($data['retweets']) ? $data['retweets'] : null;
+                    $temp['post_' . $field] = isset($data['retweets']) ? $data['retweets'] : null;
 
                 } else if ($field == 'engagement') {
-                    $temp['post_'.$field] = $this->getPostEngagement($social);
+                    $temp['post_' . $field] = $this->getPostEngagement($social);
 
                 } else if ($field == 'reach') {
-                    $temp['post_'.$field] = $this->getPostReach($social);
+                    $temp['post_' . $field] = $this->getPostReach($social);
 
                 } else {
-                    $temp['post_'.$field] = isset($data[$field]) ? $data[$field] : null;
+                    $temp['post_' . $field] = isset($data[$field]) ? $data[$field] : null;
                 }
             }
 
