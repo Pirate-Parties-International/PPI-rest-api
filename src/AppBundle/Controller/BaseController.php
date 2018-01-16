@@ -135,7 +135,6 @@ class BaseController extends Controller
     * @return array
     */
     public function getSelectSocial($socialMedia, $fields) {
-
         $fields = str_replace(' ', '', $fields);
         $terms  = explode(',', $fields);
 
@@ -159,8 +158,12 @@ class BaseController extends Controller
                 } else if ($field == 'shares' && $temp['type'] == 'tw') {
                     $temp['post_'.$field] = isset($data['retweets']) ? $data['retweets'] : null;
 
-                } else $temp['post_'.$field] = isset($data[$field]) ? $data[$field] : null;
+                } else if ($field == 'engagement') {
+                    $temp['post_'.$field] = $this->getPostEngagement($social);
 
+                } else {
+                    $temp['post_'.$field] = isset($data[$field]) ? $data[$field] : null;
+                }
             }
 
             $out[] = $temp;
@@ -217,6 +220,32 @@ class BaseController extends Controller
         }
 
         return $meta->getValue();
+    }
+
+
+    /**
+     * Returns the total engagement score of a post
+     * @param  object $item
+     * @return int
+     */
+    public function getPostEngagement($item) {
+        $postType = $item->getType();
+        $data     = $item->getPostData();
+        // var_dump($item); die;
+        $likes     = isset($data['likes'])     ? $data['likes']     : 0;
+        $reactions = isset($data['reactions']) ? $data['reactions'] : 0;
+        $shares    = isset($data['shares'])    ? $data['shares']    : 0;
+        $retweets  = isset($data['retweets'])  ? $data['retweets']  : 0;
+        $comments  = isset($data['comments'])  ? $data['comments']  : 0;
+
+        switch ($postType) {
+            case 'fb':
+                return $reactions + $shares + $comments;
+            case 'tw':
+                return $likes + $retweets + $comments;
+            default:
+                return $likes + $shares + $comments;
+        }
     }
 
 }
