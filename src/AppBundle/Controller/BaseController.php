@@ -4,6 +4,8 @@ namespace AppBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
+use AppBundle\Entity\Statistic as Stat;
+
 class BaseController extends Controller
 {
     /**
@@ -161,6 +163,9 @@ class BaseController extends Controller
                 } else if ($field == 'engagement') {
                     $temp['post_'.$field] = $this->getPostEngagement($social);
 
+                } else if ($field == 'reach') {
+                    $temp['post_'.$field] = $this->getPostReach($social);
+
                 } else {
                     $temp['post_'.$field] = isset($data[$field]) ? $data[$field] : null;
                 }
@@ -229,7 +234,6 @@ class BaseController extends Controller
      * @return int
      */
     public function getPostEngagement($item) {
-        $postType = $item->getType();
         $data     = $item->getPostData();
         // var_dump($item); die;
         $likes     = isset($data['likes'])     ? $data['likes']     : 0;
@@ -238,7 +242,7 @@ class BaseController extends Controller
         $retweets  = isset($data['retweets'])  ? $data['retweets']  : 0;
         $comments  = isset($data['comments'])  ? $data['comments']  : 0;
 
-        switch ($postType) {
+        switch ($item->getType()) {
             case 'fb':
                 return $reactions + $shares + $comments;
             case 'tw':
@@ -246,6 +250,31 @@ class BaseController extends Controller
             default:
                 return $likes + $shares + $comments;
         }
+    }
+
+
+    /**
+     * Returns the percentage of a post's engagement per total audience (i.e. page likes)
+     * @param  object $item
+     * @return float
+     */
+    public function getPostReach($item) {
+        switch ($item->getType()) {
+            case 'fb':
+                $statType = Stat::TYPE_FACEBOOK;
+                break;
+            case 'tw':
+                $statType = Stat::TYPE_TWITTER;
+                break;
+            case 'yt':
+                $statType = Stat::TYPE_YOUTUBE;
+                break;
+            }
+
+        $engagement = $this->getPostEngagement($item);
+        $totalReach = $this->getStat($item->getCode(), $statType, Stat::SUBTYPE_LIKES);
+
+        return $engagement / $totalReach;
     }
 
 }
