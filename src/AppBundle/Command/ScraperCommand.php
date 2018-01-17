@@ -53,6 +53,9 @@ class ScraperCommand extends ContainerAwareCommand
         $this->log->notice("##### Starting scraper #####");
         $startTime = new \DateTime('now');
 
+        $this->log->info("### Checking population data");
+        $this->container->get('PopulationService')->getPopulation();
+
         $options = $this->verify->verifyInput($input);
         $this->scrapeParty = $options['party'];  // if null, get all
         $this->scrapeStart = $options['resume']; // if null, get all

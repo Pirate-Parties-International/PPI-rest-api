@@ -10,6 +10,7 @@
 /bin/
 /composer.phar
 /web/img/uploads/
+/etc/population.json
 *~
 
 *.sublime*
