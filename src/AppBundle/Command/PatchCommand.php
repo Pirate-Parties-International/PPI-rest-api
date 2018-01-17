@@ -17,14 +17,15 @@ class PatchCommand extends ContainerAwareCommand
 		$this
 			->setName('papi:patch')
 			->setDescription('Patches existing db entries')
-            ->addOption('twitter',    't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
             ->addOption('charset',    'c', InputOption::VALUE_NONE, "Convert 'postText' field to utf8mb4 character set")
+            ->addOption('metadata',   'm', InputOption::VALUE_NONE, "Convert metadata 'value' field to utf8mb4 character set")
+            ->addOption('twitter',    't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
             ->addOption('postdata',   'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
             ->addOption('stats',      'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
             ->addOption('exturls',    'u', InputOption::VALUE_NONE, "Decode Facebook's external image urls")
             ->addOption('duplicates', 'd', InputOption::VALUE_NONE, "Scan the social media database for duplicate entries")
-            ->addOption('metadata',   'm', InputOption::VALUE_NONE, "Convert metadata 'value' field to utf8mb4")
             ->addOption('party',      'y', InputOption::VALUE_OPTIONAL, "Choose a single party to patch, by code")
+            ->addOption('resume',     'z', InputOption::VALUE_OPTIONAL, "Choose a party to resume patching from, if interrupted")
         ;
     }
 
@@ -33,40 +34,40 @@ class PatchCommand extends ContainerAwareCommand
         $this->em = $this->container->get('doctrine')->getManager();
 
         $this->output = $output;
-        $this->logger = $this->getContainer()->get('logger');
-        $logger = $this->logger;
+        $this->log    = $this->getContainer()->get('logger');
 
-        $partyCode = $input->getOption('party');
 
         switch (true) { // add more options here
             case $input->getOption('twitter'):
-                $output->writeln("##### Patching Twitter images #####");
+                $this->log->notice("##### Patching Twitter images #####");
                 $this->getConfirmation();
                 $this->patchTwitterImages();
                 break;
             case $input->getOption('charset'):
-                $output->writeln("##### Patching 'postText' charset #####");
+                $this->log->notice("##### Patching 'postText' charset #####");
                 $this->patchCharset();
                 break;
             case $input->getOption('postdata'):
-                $output->writeln("##### Patching 'postData' array keys #####");
+                $this->log->notice("##### Patching 'postData' array keys #####");
                 $this->getConfirmation();
                 $this->patchPostData();
                 break;
             case $input->getOption('stats');
-                $output->writeln("##### Patching stat codes #####");
+                $this->log->notice("##### Patching stat codes #####");
                 $this->patchStatCodes();
                 break;
             case $input->getOption('exturls');
-                $output->writeln("##### Patching external image urls #####");
+                $this->log->notice("##### Patching external image urls #####");
                 $this->patchEncodedUrls();
                 break;
             case $input->getOption('duplicates');
-                $output->writeln('##### Patching duplicate social media posts #####');
-                $this->patchDuplicateEntries($partyCode);
+                $this->log->notice('##### Patching duplicate social media posts #####');
+                $partyCode   = $input->getOption('party');
+                $resumePoint = $input->getOption('resume');
+                $this->patchDuplicateEntries($partyCode, $resumePoint);
                 break;
             case $input->getOption('metadata');
-                $output->writeln('##### Patching metadata charset #####');
+                $this->log->notice('##### Patching metadata charset #####');
                 $this->patchMetadata();
                 break;
             default:
@@ -75,15 +76,15 @@ class PatchCommand extends ContainerAwareCommand
     }
 
     public function getConfirmation() {
-        echo "### CAUTION: THIS WILL ALTER THE DATABASE! ###\n";
-        echo "  It is recommended to make a backup of your database before performing this action.\n";
-        echo "  Do you wish to continue? y/n - ";
+        $this->log->notice("### CAUTION: THIS WILL ALTER THE DATABASE! ###");
+        $this->output->writeln("  It is recommended to make a backup of your database before performing this action.");
+        $this->output->write("  Do you wish to continue? y/n - ");
 
         $handle = fopen ("php://stdin","r");
         $line = fgets($handle);
 
         if (trim($line) != 'y' && trim($line) != 'yes'){
-            echo "  Process aborted.\n";
+            $this->log->notice("Process aborted.");
             exit;
         }
     }
@@ -96,54 +97,86 @@ class PatchCommand extends ContainerAwareCommand
 // This patch locates those posts in the database and deletes the duplicates, leaving only the most recent copy.
 // Only run this if you know there are duplicate entries. It takes too long to waste time running it needlessly.
 /////
-    public function patchDuplicateEntries($partyCode = null) {
+    public function patchDuplicateEntries($partyCode = null, $resumePoint = null) {
         $this->getConfirmation();
         $time = new \DateTime('now');
-        echo "# NOTE: This will take a long time. Go and make yourself a cup of tea. The time is now ".$time->format('H:i:s').".\n";
-        echo "  Checking database... ";
+        $this->log->info("# NOTE: This will take a long time. Go and make yourself a cup of tea. The time is now ".$time->format('H:i:s').".");
+        $this->log->info("Checking database... ");
 
         if (is_null($partyCode)) {
-            $posts = $this->em->getRepository('AppBundle:SocialMedia')->findAll();
-            echo "patching...";
+            $social = $this->em->getRepository('AppBundle:SocialMedia')->findAll();
+            $size   = sizeof($social);
+            $this->log->info($size . " total posts found...");
+            $this->log->info("Estimated time to process... " . ceil((($size / 4) / 60) / 60) . "-" . ceil((($size / 3) / 60) / 60) . " hours...");
+
+            $parties = $this->container->get('DatabaseService')->getAllParties();
         } else {
-            echo "patching " . $partyCode . "...";
-            $posts = $this->em->getRepository('AppBundle:SocialMedia')->findBy(['code' => $partyCode], ['id' => 'DESC']);
+            $parties = $this->container->get('DatabaseService')->getOneParty($partyCode);
         }
 
-        foreach ($posts as $prime) {
-            if (!is_null($partyCode)) {
-                $terms['code'] = $partyCode;
+        foreach ($parties as $party) {
+            if (!is_null($resumePoint) && ($party->getCode() < strtoupper($resumePoint))) {
+                $this->log->debug("Skipping " . $party->getCode());
+                continue;
             }
 
-            $terms['type']      = $prime->getType();
-            $terms['subType']   = $prime->getSubType();
-            $terms['postId']    = $prime->getPostId();
-            $terms['postText']  = $prime->getPostText();
-            $terms['postImage'] = $prime->getPostImage();
+            $this->log->info("Getting posts from " . $party->getCode());
+            $posts = $this->em->getRepository('AppBundle:SocialMedia')->findBy(['code' => $party->getCode()], ['id' => 'DESC']);
+            $size  = sizeof($posts);
+            $this->log->info($size . " posts found...");
+            $this->log->info("Estimated time to process... " . ceil(($size / 4) / 60) . "-" . ceil(($size / 3) / 60) . " minutes...");
 
-            $dupes = $this->em->getRepository('AppBundle:SocialMedia')->findBy($terms, ['id' => 'DESC']);
+            $this->output->write("Patching...");
+            $postCount = 0;
+            foreach ($posts as $prime) {
+                $postCount++;
+                $terms = [
+                    'code'      => $party->getCode(),
+                    'type'      => $prime->getType(),
+                    'subType'   => $prime->getSubType(),
+                    'postId'    => $prime->getPostId(),
+                    'postText'  => $prime->getPostText(),
+                    'postImage' => $prime->getPostImage()
+                    ];
 
-            foreach ($dupes as $dupe) {
-                if ($dupe->getId() < $prime->getId()) {
-                    echo " duplicate found...";
-                    // echo "\n prime type = " . $prime->getType() . "-" . $prime->getSubType();
-                    // echo ", id = " . $prime->getId() . ", post id = " . $prime->getPostId();
-                    // echo ", time = " . $prime->getPostTime()->format('Y-m-d H:i:s');
-                    // echo "\n  dupe type = " . $dupe->getType() . "-" . $dupe->getSubType();
-                    // echo ", id = " . $dupe->getId() . ", post id = " . $dupe->getPostId();
-                    // echo ", time = " . $dupe->getPostTime()->format('Y-m-d H:i:s');
-                    // echo "\n prime text = " . $prime->getPostText();
-                    // echo "\n  dupe text = " . $dupe->getPostText();
-                    // echo "\n prime image = " . $prime->getPostImage();
-                    // echo "\n  dupe image = " . $dupe->getPostImage() . "\n";
-                    echo " deleting...";
-                    $this->em->remove($dupe);
-                    $this->em->flush();
-                    echo " done...";
-                } else echo ".";
+                $dupes = $this->em->getRepository('AppBundle:SocialMedia')->findBy($terms, ['id' => 'DESC']);
+
+                if (sizeof($dupes) == 1) {
+                    // $this->log->debug($postCount . " - No duplicates found for " . $prime->getPostId());
+                    $this->output->write(".");
+                    continue;
+                }
+
+                foreach ($dupes as $dupe) {
+                    $this->log->notice($postCount . " - " . sizeof($dupes) . " duplicates found for " . $prime->getPostId());
+
+                    if ($dupe->getId() < $prime->getId()) {
+                        $this->output->write("prime type = " . $prime->getType() . "-" . $prime->getSubType());
+                        $this->output->write(", id = " . $prime->getId() . ", post id = " . $prime->getPostId());
+                        $this->output->writeln(", time = " . $prime->getPostTime()->format('Y-m-d H:i:s'));
+                        $this->output->write(" dupe type = " . $dupe->getType() . "-" . $dupe->getSubType());
+                        $this->output->write(", id = " . $dupe->getId() . ", post id = " . $dupe->getPostId());
+                        $this->output->writeln(", time = " . $dupe->getPostTime()->format('Y-m-d H:i:s'));
+                        $this->output->writeln("prime text = " . $prime->getPostText());
+                        $this->output->writeln(" dupe text = " . $dupe->getPostText());
+                        $this->output->writeln("prime image = " . $prime->getPostImage());
+                        $this->output->writeln(" dupe image = " . $dupe->getPostImage());
+                        $this->log->info("Deleting...");
+                        $this->em->remove($dupe);
+                        $this->em->flush();
+                        $this->log->info("Done...");
+                    }
+                }
             }
+
+            $mid  = new \Datetime('now');
+            $diff = $time->diff($mid);
+            $this->log->info("Done with " . $party->getCode() . " in " . $diff->format('%H:%I:%S'));
         }
-        echo "\n  All done.";
+
+        $end  = new \Datetime('now');
+        $diff = $time->diff($end);
+        $this->log->notice("All done in " . $diff->format('H:%I:%S'));
     }
 
 
@@ -157,10 +190,10 @@ class PatchCommand extends ContainerAwareCommand
     public function patchEncodedUrls () {
         $this->getConfirmation();
 
-        echo "  Checking database... ";
+        $this->log->info("  Checking database... ");
         $posts = $this->em->getRepository('AppBundle:SocialMedia')->findBy(['type' => 'fb']);
 
-        echo "patching...";
+        $this->log->info("patching...");
         $patchCount = 0;
         foreach ($posts as $post) {
             $data   = $post->getPostData();
@@ -178,18 +211,18 @@ class PatchCommand extends ContainerAwareCommand
                 $this->em->persist($post);
 
                 $patchCount++;
-                echo ".";
+                $this->output->write(".");
             }
         }
 
         if (!$patchCount) {
-            echo "\n  The database is up to date. No patch needed.\n";
+            $this->log->info("The database is up to date. No patch needed.");
             exit;
         }
 
-        echo "\n  ".$patchCount." entries patched... saving to DB...\n";
+        $this->log->notice($patchCount . " entries patched... saving to DB...");
         $this->em->flush();
-        echo "  All done.\n";
+        $this->log->notice("All done.");
     }
 
 
@@ -205,56 +238,56 @@ class PatchCommand extends ContainerAwareCommand
         $posts = $this->em->getRepository('AppBundle:Statistic')->findBy(['subType' => 'P']);
 
         if (empty($posts)) {
-            echo "  The database is up to date. No patch needed.\n";
+            $this->log->notice("The database is up to date. No patch needed.");
             exit;
         }
 
         $this->getConfirmation();
 
-        echo "  Checking tweets... ";
+        $this->log->info("Checking tweets...");
         $tweets = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'tw', 'subType' => 'P']);
 
         if (!empty($tweets)) {
-            echo "patching...";
+            $this->log->info("patching...");
 
             foreach ($tweets as $tweet) {
                 $tweet->setSubType('T');
                 $this->em->persist($tweet);
-                echo ".";
+                $this->output->write(".");
             }
 
-            echo "\n    All patched, saving to DB... ";
+            $this->log->notice("All patched, saving to DB...");
             $this->em->flush();
-            echo "done.\n";
+            $this->log->info("Done");
 
-        } else echo "no patch needed.\n";
+        } else $this->log->notice("No patch needed.");
 
-        echo "  Checking Facebook statuses... ";
+        $this->log->notice("Checking Facebook statuses...");
         $statuses = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'fb', 'subType' => 'P']);
 
         if (!empty($statuses)) {
-            echo "patching...";
+            $this->log->info("patching...");
 
             $talking = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'fb', 'subType' => 'T']);
             foreach ($talking as $talk) {
                 $talk->setSubType('A');
                 $this->em->persist($talk);
-                echo ".";
+                $this->output->write(".");
             }
 
             foreach ($statuses as $status) {
                 $status->setSubType('T');
                 $this->em->persist($status);
-                echo ".";
+                $this->output->write(".");
             }
 
-            echo "\n    All patched, saving to DB... ";
+            $this->log->notice("All patched, saving to DB...");
             $this->em->flush();
-            echo "done.\n";
+            $this->log->info("Done.");
 
-        } else echo "no patch needed.\n";
+        } else $this->log->notice("No patch needed.");
 
-        echo "  All done.\n";
+        $this->log->notice("All done.");
     }
 
 
@@ -267,9 +300,9 @@ class PatchCommand extends ContainerAwareCommand
 // This patch alters these fields for posts already in the database.
 /////
     public function patchPostData() {
-        echo "  Getting posts from DB...\n";
+        $this->log->notice("Getting posts from DB...");
         $socialMedia = $this->em->getRepository('AppBundle:SocialMedia')->findAll();
-        echo "  Patching...";
+        $this->log->info("Patching...");
  
         foreach ($socialMedia as $social) {
             $temp = $social->getPostData();
@@ -285,7 +318,7 @@ class PatchCommand extends ContainerAwareCommand
                 if ($type == 'tw' && !is_null($img)) {
                     $temp['img_source'] = $temp['image'];
                     $temp['image'] = $img;
-                    echo ".";
+                    $this->output->write(".");
 
                 } else if ($type == 'yt') {
                     $temp['text'] = $temp['title'];
@@ -293,7 +326,7 @@ class PatchCommand extends ContainerAwareCommand
                     $temp['img_source'] = $temp['thumb'];
                     unset($temp['title']);
                     unset($temp['thumb']);
-                    echo ".";
+                    $this->output->write(".");
 
                 } else if ($type == 'fb') {
                     switch ($social->getSubType()) {
@@ -303,7 +336,7 @@ class PatchCommand extends ContainerAwareCommand
                             $temp['img_source'] = $temp['source'];
                             unset($temp['caption']);
                             unset($temp['source']);
-                            echo ".";
+                            $this->output->write(".");
                             break;
 
                         case 'E': // events
@@ -315,7 +348,7 @@ class PatchCommand extends ContainerAwareCommand
                             $temp['address'] = $temp['details']['address'];
                             unset($temp['name']);
                             unset($temp['details']);
-                            echo ".";
+                            $this->output->write(".");
                             break;
 
                         case 'T': // text posts
@@ -327,16 +360,16 @@ class PatchCommand extends ContainerAwareCommand
                             unset($temp['message']);
                             unset($temp['story']);
                             unset($temp['link']['thumb']);
-                            echo ".";
+                            $this->output->write(".");
                     }
                 }
                 $social->setPostData($temp);
                 $this->em->persist($social);
             }
         }
-        echo "\n  All patched. Saving to DB...\n";
+        $this->log->info("All patched. Saving to DB...");
         $this->em->flush();
-        echo "  Done.\n";
+        $this->log->notice("Done.");
     }
 
 
@@ -350,40 +383,42 @@ class PatchCommand extends ContainerAwareCommand
 // This patch alters the social media postText field to use utf8mb4, which supports 4-byte characters.
 /////
     public function patchCharset() {
-    	$old = $this->checkCharset();
+        $old = $this->checkCharset();
+		$this->log->info("Current character set is ".$old['char'].", data type is ".$old['data']);
 
-		if ($old['char'] == 'utf8mb4' && $old['data'] == 'longtext') {
-			echo ", no fix needed.\n";
-			return;
-		}
+        if ($old['char'] == 'utf8mb4' && $old['data'] == 'longtext') {
+            $this->log->info("No patch needed.");
+            return;
+        }
 
-		echo ", fix needed.\n";
-		$this->getConfirmation();
-		$this->fixCharset();
-		$new = $this->checkCharset();
+        $this->log->info("Patching...");
+        $this->getConfirmation();
+        $this->fixCharset();
+        $new = $this->checkCharset();
+        $this->log->info("Character set is now ".$new['char'].", data type is ".$new['data']);
 
-		if ($new['char'] == 'utf8mb4' && $new['data'] == 'longtext') {
-			echo ", great success! :D\n";
-			return;
-		}
+        if ($new['char'] == 'utf8mb4' && $new['data'] == 'longtext') {
+            $this->log->info("Great success! :D");
+            return;
+        }
 
-        echo ", process failed. :(\n";
-        echo "  Your database may need to be altered manually. Contact us on github if you need help.\n";
+        $this->log->info("Process failed. :(");
+        $this->log->info("Your database may need to be altered manually. Contact us on github if you need help.");
     }
 
     /**
      * Checks current charset
      */
     public function checkCharset() {
-    	$db_name = $this->container->getParameter('database_name');
+        $db_name = $this->container->getParameter('database_name');
 
-    	$sql1 = "SELECT character_set_name
-    		FROM information_schema.columns
-    		WHERE table_schema = '$db_name'
-    		AND table_name = 'social_media'
-    		AND column_name = 'postText';";
+        $sql1 = "SELECT character_set_name
+            FROM information_schema.columns
+            WHERE table_schema = '$db_name'
+            AND table_name = 'social_media'
+            AND column_name = 'postText';";
 
-    	$query = $this->em->getConnection()->prepare($sql1);
+        $query = $this->em->getConnection()->prepare($sql1);
         $query->execute();
         $answer['char'] = $query->fetchAll();
 
@@ -397,9 +432,8 @@ class PatchCommand extends ContainerAwareCommand
         $query->execute();
         $answer['data'] = $query->fetchAll();
 
-    	$array['char'] = $answer['char'][0]['character_set_name'];
+        $array['char'] = $answer['char'][0]['character_set_name'];
         $array['data'] = $answer['data'][0]['data_type'];
-		echo "  Current character set is ".$array['char'].", data type is ".$array['data'];
 		return $array;
     }
 
@@ -422,24 +456,26 @@ class PatchCommand extends ContainerAwareCommand
      */
     public function patchMetadata() {
         $old = $this->checkMetadata();
+        $this->log->info("Current character set is " . $old);
 
         if ($old == 'utf8mb4') {
-            echo ", no fix needed.\n";
+            $this->log->info("No patch needed.");
             return;
         }
 
-        echo ", fix needed.\n";
+        $this->log->info("Patching...");
         $this->getConfirmation();
         $this->fixMetadata();
         $new = $this->checkMetadata();
+        $this->log->info("Charset is now " . $new);
 
         if ($new == 'utf8mb4') {
-            echo ", great success! :D\n";
+            $this->log->info("Great success! :D");
             return;
         }
 
-        echo ", process failed. :(\n";
-        echo "  Your database may need to be altered manually. Contact us on github if you need help.\n";
+        $this->log->info("Process failed. :(");
+        $this->log->info("Your database may need to be altered manually. Contact us on github if you need help.");
     }
 
     /**
@@ -448,18 +484,17 @@ class PatchCommand extends ContainerAwareCommand
     public function checkMetadata() {
         $db_name = $this->container->getParameter('database_name');
 
-        $sql1 = "SELECT character_set_name
+        $sql = "SELECT character_set_name
             FROM information_schema.columns
             WHERE table_schema = '$db_name'
             AND table_name = 'metadata'
             AND column_name = 'value';";
 
-        $query = $this->em->getConnection()->prepare($sql1);
+        $query = $this->em->getConnection()->prepare($sql);
         $query->execute();
         $response = $query->fetchAll();
         $answer = $response[0]['character_set_name'];
 
-        echo "  Current character set is ".$answer;
         return $answer;
     }
 
@@ -497,7 +532,7 @@ class PatchCommand extends ContainerAwareCommand
 		}
 
 		$this->em->flush();
-		echo "  All done.\n";
+		$this->log->notice("All done.");
 	}
 
 	/**
@@ -506,18 +541,18 @@ class PatchCommand extends ContainerAwareCommand
 	 */
 	public function getPostIdFromUrl($post) {
 		$oldId = $post->getPostId();
-		echo "  postId = ".$oldId;
+		$this->output->write("postId = ".$oldId);
 		$postData = $post->getPostData();
 		$postUrl = $postData['url'];
 		$newId = substr($postUrl, -18);
-		echo ", postUrl = ".$postUrl.", newId = ".$newId;
+		$this->output->write(", postUrl = ".$postUrl.", newId = ".$newId);
 
 		if ($oldId !== $newId) {
-			echo ", replacing...\n";
+			$this->output->writeln(", replacing...");
 			$post->setPostId($newId);
 			$this->em->persist($post);
 		} else {
-			echo ", no fix needed.\n";
+			$this->output->writeln(", no fix needed.");
 		}
 	}
 
