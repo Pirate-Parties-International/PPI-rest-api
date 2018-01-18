@@ -20,13 +20,30 @@ class PopulationService
 
 
     /**
+     * Returns population data for a party, if available
+     * @param  string $partyCode
+     * @return int
+     */
+    public function getPopulation($partyCode) {
+        $filePath = $this->getFilePath();
+
+        if (!file_exists($filePath)) {
+            $this->log->warning("Population data missing for " . $partyCode);
+            return null;
+        }
+
+        $json  = file_get_contents($filePath);
+        $array = json_decode($json, true);
+
+        return $array[$partyCode];
+    }
+
+
+    /**
      * Retrieves population stats from api.population.io and saves to a json file
      */
-    public function getPopulation() {
-        $appRoot  = $this->container->get('kernel')->getRootDir() . '/..';
-        $filePath = $appRoot . '/etc/population.json';
-
-        $current = $this->checkLocalData($filePath);
+    public function getPopulationData() {
+        $current = $this->checkLocalData();
         if ($current) {
             return;
         }
@@ -55,6 +72,7 @@ class PopulationService
 
         $this->log->info("    + Saving new data to file");
         $out = json_encode($temp);
+        $filePath = $this->getFilePath();
         file_put_contents($filePath, $out);
         $this->log->notice("# Done");
     }
@@ -101,7 +119,9 @@ class PopulationService
      * @param  string $filePath
      * @return bool
      */
-    public function checkLocalData($filePath) {
+    public function checkLocalData() {
+        $filePath = $this->getFilePath();
+
         if (!file_exists($filePath)) {
             $this->log->notice("- Population data does not exist");
             file_put_contents($filePath, '');
@@ -127,7 +147,19 @@ class PopulationService
         }
 
         $this->log->notice("+ Population data is up-to-date");
-        return true;
+        return $filePath;
+    }
+
+
+    /**
+     * Returns path to local json file where population data is stored
+     * @return string
+     */
+    public function getFilePath() {
+        $appRoot  = $this->container->get('kernel')->getRootDir() . '/..';
+        $filePath = $appRoot . '/etc/population.json';
+
+        return $filePath;
     }
 
 }

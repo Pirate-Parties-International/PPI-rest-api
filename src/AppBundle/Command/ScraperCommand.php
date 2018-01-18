@@ -54,7 +54,7 @@ class ScraperCommand extends ContainerAwareCommand
         $startTime = new \DateTime('now');
 
         $this->log->info("### Checking population data");
-        $this->container->get('PopulationService')->getPopulation();
+        $this->container->get('PopulationService')->getPopulationData();
 
         $options = $this->verify->verifyInput($input);
         $this->scrapeParty = $options['party'];  // if null, get all

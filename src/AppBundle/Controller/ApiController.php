@@ -138,7 +138,7 @@ class ApiController extends DataController
      *      {"name"="type", "dataType"="string", "required"="false", "description"="Get only Facebook, Twitter or YouTube posts", "pattern"="fb | tw | yt"},
      *      {"name"="sub_type", "dataType"="string", "required"="false", "description"="Get only text posts, images, videos or events", "pattern"="t | i | v | e"},
      *      {"name"="fields", "dataType"="string", "requied"="false", "description"="Choose specific fields to be returned, separated by commas (e.g. 'text,time,img_source')",
-     *          "pattern"="time | updated | text | description | image | img_source | album | link | url | likes | reactions | comments | shares | views | place | address | attending | interested"},
+     *          "pattern"="time | updated | text | description | image | img_source | album | link | url | likes | reactions | comments | shares | views | total_engagement | audience_reach | reach_per_capita | place | address | attending | interested"},
      *      {"name"="order_by", "dataType"="string", "required"="false", "description"="Order to return results", "pattern"="code | likes | date"},
      *      {"name"="direction", "dataType"="string", "required"="false", "description"="Order to sort results", "pattern"="asc | desc"},
      *      {"name"="limit", "dataType"="int", "required"="false", "description"="Number of results to return (default 100)"},

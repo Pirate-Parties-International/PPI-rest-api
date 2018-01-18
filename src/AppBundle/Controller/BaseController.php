@@ -160,11 +160,14 @@ class BaseController extends Controller
                 } else if ($field == 'shares' && $temp['type'] == 'tw') {
                     $temp['post_' . $field] = isset($data['retweets']) ? $data['retweets'] : null;
 
-                } else if ($field == 'engagement') {
+                } else if ($field == 'total_engagement') {
                     $temp['post_' . $field] = $this->getPostEngagement($social);
 
-                } else if ($field == 'reach') {
+                } else if ($field == 'audience_reach') {
                     $temp['post_' . $field] = $this->getPostReach($social);
+
+                } else if ($field == 'reach_per_capita') {
+                    $temp['post_' . $field] = $this->getPostPerCapita($social);
 
                 } else {
                     $temp['post_' . $field] = isset($data[$field]) ? $data[$field] : null;
@@ -234,19 +237,22 @@ class BaseController extends Controller
      * @return int
      */
     public function getPostEngagement($item) {
-        $data     = $item->getPostData();
-        // var_dump($item); die;
+        $data = $item->getPostData();
+
+        $comments  = isset($data['comments'])  ? $data['comments']  : 0;
         $likes     = isset($data['likes'])     ? $data['likes']     : 0;
         $reactions = isset($data['reactions']) ? $data['reactions'] : 0;
-        $shares    = isset($data['shares'])    ? $data['shares']    : 0;
         $retweets  = isset($data['retweets'])  ? $data['retweets']  : 0;
-        $comments  = isset($data['comments'])  ? $data['comments']  : 0;
+        $shares    = isset($data['shares'])    ? $data['shares']    : 0;
+        $views     = isset($data['views'])     ? $data['views']     : 0;
 
         switch ($item->getType()) {
             case 'fb':
                 return $reactions + $shares + $comments;
             case 'tw':
                 return $likes + $retweets + $comments;
+            case 'yt':
+                return $views + $likes + $comments;
             default:
                 return $likes + $shares + $comments;
         }
@@ -254,8 +260,8 @@ class BaseController extends Controller
 
 
     /**
-     * Returns the value of a post's engagement per total audience
-     * (i.e. page likes, followers, subscribers, etc.)
+     * Returns the percentage of a post's engagement per total audience
+     * (i.e. followers, subscribers, etc.)
      * @param  object $item
      * @return float
      */
@@ -279,10 +285,34 @@ class BaseController extends Controller
                 break;
             }
 
-        $engagement = $this->getPostEngagement($item);
-        $totalReach = $this->getStat($item->getCode(), $statType, $subType);
+        $engagement   = $this->getPostEngagement($item);
+        $totalReach   = $this->getStat($item->getCode(), $statType, $subType);
+        $reachPercent = $totalReach / 100;
 
-        return $engagement / $totalReach;
+        return $engagement / $reachPercent;
+    }
+
+
+    /**
+     * Returns the percentage of a post's engagement per capita
+     * @param  object $item
+     * @return int
+     */
+    public function getPostPerCapita($item) {
+        $partyCode = strtoupper($item->getCode());
+
+        $population = $this->container
+            ->get('PopulationService')
+            ->getPopulation($partyCode);
+
+        if (is_null($population)) {
+            return null;
+        }
+
+        $engagement = $this->getPostEngagement($item);
+        $popPercent = $population / 100;
+
+        return $engagement / $popPercent;
     }
 
 }
