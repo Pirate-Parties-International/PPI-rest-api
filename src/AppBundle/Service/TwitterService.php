@@ -212,7 +212,8 @@ class TwitterService
      * @return string
      */
     public function getTweetDetails($item, $twTime) {
-        $twText = $this->getTwText($item);
+        $twText   = $this->getTwText($item);
+        $rtStatus = $this->getRtStatus($item);
 
         $allData = [
             'id'       => $item->id,
@@ -220,7 +221,8 @@ class TwitterService
             'text'     => $twText,
             'url'      => 'https://twitter.com/statuses/' . $item->id,
             'likes'    => $item->favorite_count,
-            'retweets' => $item->retweet_count
+            'retweets' => $item->retweet_count,
+            'reply_to' => $rtStatus
             ];
 
         $this->db->addSocial(
@@ -276,7 +278,8 @@ class TwitterService
      * @return array
      */
     public function getMediaDetails($item, $twTime, $photo, $subType) {
-        $twText = $this->getTwText($item);
+        $twText   = $this->getTwText($item);
+        $rtStatus = $this->getRtStatus($item);
 
         $imgSrc = $photo->media_url . ":small";
         $imgId  = $photo->id;
@@ -292,7 +295,8 @@ class TwitterService
             'img_source' => $imgSrc,
             'url'        => 'https://twitter.com/statuses/' . $item->id,
             'likes'      => $item->favorite_count,
-            'retweets'   => $item->retweet_count
+            'retweets'   => $item->retweet_count,
+            'reply_to'   => $rtStatus
             ];
 
         $this->db->addSocial(
@@ -321,6 +325,24 @@ class TwitterService
 
         if (!empty($item->text)) {
             return $item->text;
+        }
+
+        return null;
+    }
+
+
+    /**
+     * Checks if a tweet is a retweet or reply
+     * @param  object $item
+     * @return string
+     */
+    public function getRtStatus($item) {
+        if (isset($item->retweeted_status)) {
+            return ['retweet' => $item->retweeted_status->id];
+        }
+
+        if (isset($item->quoted_status_id)) {
+            return ['reply' => $item->quoted_status_id];
         }
 
         return null;
