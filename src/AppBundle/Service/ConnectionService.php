@@ -247,9 +247,10 @@ class ConnectionService
     /**
      * Sends request via cURL
      * @param  string $url
+     * @param  string $googleId <optional>
      * @return string
      */
-    public function curl($url) {
+    public function curl($url, $googleId = null) {
         // Get cURL resource
         $curl = curl_init();
         // Set some options - we are passing in a useragent too here

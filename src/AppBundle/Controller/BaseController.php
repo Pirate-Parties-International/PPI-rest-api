@@ -4,6 +4,8 @@ namespace AppBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
+use AppBundle\Entity\Statistic as Stat;
+
 class BaseController extends Controller
 {
     /**
@@ -135,7 +137,6 @@ class BaseController extends Controller
     * @return array
     */
     public function getSelectSocial($socialMedia, $fields) {
-
         $fields = str_replace(' ', '', $fields);
         $terms  = explode(',', $fields);
 
@@ -152,15 +153,25 @@ class BaseController extends Controller
 
                 if ($field == 'time') {
                     if ($temp['sub_type'] != 'E') {
-                        $temp['post_'.$field] = isset($data['posted']) ? $data['posted'] : null;
+                        $temp['post_' . $field] = isset($data['posted']) ? $data['posted'] : null;
 
-                    } else $temp['post_'.$field] = isset($data['start_time']) ? $data['start_time'] : null;
+                    } else $temp['post_' . $field] = isset($data['start_time']) ? $data['start_time'] : null;
 
                 } else if ($field == 'shares' && $temp['type'] == 'tw') {
-                    $temp['post_'.$field] = isset($data['retweets']) ? $data['retweets'] : null;
+                    $temp['post_' . $field] = isset($data['retweets']) ? $data['retweets'] : null;
 
-                } else $temp['post_'.$field] = isset($data[$field]) ? $data[$field] : null;
+                } else if ($field == 'total_engagement') {
+                    $temp['post_' . $field] = $this->getPostEngagement($social);
 
+                } else if ($field == 'audience_reach') {
+                    $temp['post_' . $field] = $this->getPostReach($social);
+
+                } else if ($field == 'reach_per_capita') {
+                    $temp['post_' . $field] = $this->getPostPerCapita($social);
+
+                } else {
+                    $temp['post_' . $field] = isset($data[$field]) ? $data[$field] : null;
+                }
             }
 
             $out[] = $temp;
@@ -217,6 +228,91 @@ class BaseController extends Controller
         }
 
         return $meta->getValue();
+    }
+
+
+    /**
+     * Returns the total engagement score of a post
+     * @param  object $item
+     * @return int
+     */
+    public function getPostEngagement($item) {
+        $data = $item->getPostData();
+
+        $comments  = isset($data['comments'])  ? $data['comments']  : 0;
+        $likes     = isset($data['likes'])     ? $data['likes']     : 0;
+        $reactions = isset($data['reactions']) ? $data['reactions'] : 0;
+        $retweets  = isset($data['retweets'])  ? $data['retweets']  : 0;
+        $shares    = isset($data['shares'])    ? $data['shares']    : 0;
+        $views     = isset($data['views'])     ? $data['views']     : 0;
+
+        switch ($item->getType()) {
+            case 'fb':
+                return $reactions + $shares + $comments;
+            case 'tw':
+                return $likes + $retweets + $comments;
+            case 'yt':
+                return $views + $likes + $comments;
+            default:
+                return $likes + $shares + $comments;
+        }
+    }
+
+
+    /**
+     * Returns the percentage of a post's engagement per total audience
+     * (i.e. followers, subscribers, etc.)
+     * @param  object $item
+     * @return float
+     */
+    public function getPostReach($item) {
+        switch ($item->getType()) {
+            case 'fb':
+                $statType = Stat::TYPE_FACEBOOK;
+                $subType  = Stat::SUBTYPE_LIKES;
+                break;
+            case 'tw':
+                $statType = Stat::TYPE_TWITTER;
+                $subType  = Stat::SUBTYPE_FOLLOWERS;
+                break;
+            case 'yt':
+                $statType = Stat::TYPE_YOUTUBE;
+                $subType  = Stat::SUBTYPE_SUBSCRIBERS;
+                break;
+            case 'g+':
+                $statType = Stat::TYPE_GOOGLEPLUS;
+                $subType  = Stat::SUBTYPE_FOLLOWERS;
+                break;
+            }
+
+        $engagement   = $this->getPostEngagement($item);
+        $totalReach   = $this->getStat($item->getCode(), $statType, $subType);
+        $reachPercent = $totalReach / 100;
+
+        return $engagement / $reachPercent;
+    }
+
+
+    /**
+     * Returns the percentage of a post's engagement per capita
+     * @param  object $item
+     * @return int
+     */
+    public function getPostPerCapita($item) {
+        $partyCode = strtoupper($item->getCode());
+
+        $population = $this->container
+            ->get('PopulationService')
+            ->getPopulation($partyCode);
+
+        if (is_null($population)) {
+            return null;
+        }
+
+        $engagement = $this->getPostEngagement($item);
+        $popPercent = $population / 100;
+
+        return $engagement / $popPercent;
     }
 
 }

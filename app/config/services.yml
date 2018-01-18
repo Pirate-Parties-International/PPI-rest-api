@@ -39,3 +39,7 @@ services:
     VerificationService:
         class: AppBundle\Service\VerificationService
         autowire: true
+
+    PopulationService:
+        class: AppBundle\Service\PopulationService
+        autowire: true
