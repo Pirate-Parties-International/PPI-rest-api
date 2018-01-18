@@ -28,12 +28,17 @@ class PopulationService
         $filePath = $this->getFilePath();
 
         if (!file_exists($filePath)) {
-            $this->log->warning("Population data missing for " . $partyCode);
+            $this->log->warning("Population data missing");
             return null;
         }
 
         $json  = file_get_contents($filePath);
         $array = json_decode($json, true);
+
+        if (!isset($array[$partyCode])) {
+            $this->log->warning("Population data missing for " . $partyCode);
+            return null;
+        }
 
         return $array[$partyCode];
     }
@@ -45,7 +50,7 @@ class PopulationService
     public function getPopulationData() {
         $current = $this->checkLocalData();
         if ($current) {
-            return;
+            return true;
         }
 
         $this->log->notice("  + Collecting new data...");
@@ -124,7 +129,6 @@ class PopulationService
 
         if (!file_exists($filePath)) {
             $this->log->notice("- Population data does not exist");
-            file_put_contents($filePath, '');
             return false;
         }
 

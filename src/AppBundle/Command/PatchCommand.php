@@ -17,7 +17,7 @@ class PatchCommand extends ContainerAwareCommand
 		$this
 			->setName('papi:patch')
 			->setDescription('Patches existing db entries')
-            ->addOption('charset',    'c', InputOption::VALUE_NONE, "Convert 'postText' field to utf8mb4 character set")
+            ->addOption('charset',    'c', InputOption::VALUE_NONE, "Convert social_media 'postText' field to utf8mb4 character set")
             ->addOption('metadata',   'm', InputOption::VALUE_NONE, "Convert metadata 'value' field to utf8mb4 character set")
             ->addOption('twitter',    't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
             ->addOption('postdata',   'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
@@ -100,14 +100,18 @@ class PatchCommand extends ContainerAwareCommand
     public function patchDuplicateEntries($partyCode = null, $resumePoint = null) {
         $this->getConfirmation();
         $time = new \DateTime('now');
-        $this->log->info("# NOTE: This will take a long time. Go and make yourself a cup of tea. The time is now ".$time->format('H:i:s').".");
+        $this->log->notice("# NOTE: This will take a long time. Go and make yourself a cup of tea. The time is now ".$time->format('H:i:s').".");
         $this->log->info("Checking database... ");
 
         if (is_null($partyCode)) {
             $social = $this->em->getRepository('AppBundle:SocialMedia')->findAll();
-            $size   = sizeof($social);
+
+            $size = sizeof($social);
             $this->log->info($size . " total posts found...");
-            $this->log->info("Estimated time to process... " . ceil((($size / 4) / 60) / 60) . "-" . ceil((($size / 3) / 60) / 60) . " hours...");
+
+            $estLow  = ($size / 4) / 60; // estimation of minutes based on 4 posts per second
+            $estHigh = ($size / 3) / 60; // estimation of minutes based on 3 posts per second
+            $this->log->info("Estimated time to process all posts... " . ceil($estLow / 60) . "-" . ceil($estHigh / 60) . " hours...");
 
             $parties = $this->container->get('DatabaseService')->getAllParties();
         } else {
@@ -122,11 +126,15 @@ class PatchCommand extends ContainerAwareCommand
 
             $this->log->info("Getting posts from " . $party->getCode());
             $posts = $this->em->getRepository('AppBundle:SocialMedia')->findBy(['code' => $party->getCode()], ['id' => 'DESC']);
-            $size  = sizeof($posts);
-            $this->log->info($size . " posts found...");
-            $this->log->info("Estimated time to process... " . ceil(($size / 4) / 60) . "-" . ceil(($size / 3) / 60) . " minutes...");
 
-            $this->output->write("Patching...");
+            $size = sizeof($posts);
+            $this->log->info($size . " posts found...");
+
+            $estLow  = ($size / 4) / 60; // estimation of minutes based on 4 posts per second
+            $estHigh = ($size / 3) / 60; // estimation of minutes based on 3 posts per second
+            $this->log->info("Estimated time to process " . $party->getCode() . "... " . ceil($estLow) . "-" . ceil($estHigh) . " minutes...");
+
+            $this->output->write("Processing...");
             $postCount = 0;
             foreach ($posts as $prime) {
                 $postCount++;
@@ -143,7 +151,7 @@ class PatchCommand extends ContainerAwareCommand
 
                 if (sizeof($dupes) == 1) {
                     // $this->log->debug($postCount . " - No duplicates found for " . $prime->getPostId());
-                    $this->output->write(".");
+                    $this->output->write($postCount . ",");
                     continue;
                 }
 
@@ -200,7 +208,7 @@ class PatchCommand extends ContainerAwareCommand
             $imgSrc = $data['img_source'];
 
             if ($imgSrc && strpos($imgSrc, 'external.xx.fbcdn.net')) {
-                $stPos  = strpos($imgSrc, '&url=')+5;
+                $stPos  = strpos($imgSrc, '&url=') +5;
                 $edPos  = strpos($imgSrc, '&cfs=');
                 $length = $edPos - $stPos;
                 $temp   = substr($imgSrc, $stPos, $length);
@@ -211,8 +219,8 @@ class PatchCommand extends ContainerAwareCommand
                 $this->em->persist($post);
 
                 $patchCount++;
-                $this->output->write(".");
             }
+            $this->output->write($patchCount . ",");
         }
 
         if (!$patchCount) {
@@ -248,7 +256,7 @@ class PatchCommand extends ContainerAwareCommand
         $tweets = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'tw', 'subType' => 'P']);
 
         if (!empty($tweets)) {
-            $this->log->info("patching...");
+            $this->log->info("Patching...");
 
             foreach ($tweets as $tweet) {
                 $tweet->setSubType('T');
@@ -266,7 +274,7 @@ class PatchCommand extends ContainerAwareCommand
         $statuses = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'fb', 'subType' => 'P']);
 
         if (!empty($statuses)) {
-            $this->log->info("patching...");
+            $this->log->info("Patching...");
 
             $talking = $this->em->getRepository('AppBundle:Statistic')->findBy(['type' => 'fb', 'subType' => 'T']);
             foreach ($talking as $talk) {
@@ -384,7 +392,7 @@ class PatchCommand extends ContainerAwareCommand
 /////
     public function patchCharset() {
         $old = $this->checkCharset();
-		$this->log->info("Current character set is ".$old['char'].", data type is ".$old['data']);
+		$this->log->info("Current character set is " . $old['char'] . ", data type is " . $old['data']);
 
         if ($old['char'] == 'utf8mb4' && $old['data'] == 'longtext') {
             $this->log->info("No patch needed.");
@@ -395,7 +403,7 @@ class PatchCommand extends ContainerAwareCommand
         $this->getConfirmation();
         $this->fixCharset();
         $new = $this->checkCharset();
-        $this->log->info("Character set is now ".$new['char'].", data type is ".$new['data']);
+        $this->log->info("Character set is now " . $new['char'] . ", data type is " . $new['data']);
 
         if ($new['char'] == 'utf8mb4' && $new['data'] == 'longtext') {
             $this->log->info("Great success! :D");
@@ -541,11 +549,11 @@ class PatchCommand extends ContainerAwareCommand
 	 */
 	public function getPostIdFromUrl($post) {
 		$oldId = $post->getPostId();
-		$this->output->write("postId = ".$oldId);
+		$this->output->write("postId = " . $oldId);
 		$postData = $post->getPostData();
 		$postUrl = $postData['url'];
 		$newId = substr($postUrl, -18);
-		$this->output->write(", postUrl = ".$postUrl.", newId = ".$newId);
+		$this->output->write(", postUrl = " . $postUrl . ", newId = " . $newId);
 
 		if ($oldId !== $newId) {
 			$this->output->writeln(", replacing...");
