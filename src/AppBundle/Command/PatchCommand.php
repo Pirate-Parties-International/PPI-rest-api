@@ -100,7 +100,7 @@ class PatchCommand extends ContainerAwareCommand
     public function patchDuplicateEntries($partyCode = null, $resumePoint = null) {
         $this->getConfirmation();
         $time = new \DateTime('now');
-        $this->log->notice("# NOTE: This will take a long time. Go and make yourself a cup of tea. The time is now ".$time->format('H:i:s').".");
+        $this->log->notice("# NOTE: This will take a long time. Go and make yourself a cup of tea. The time is now " . $time->format('H:i:s') . ".");
         $this->log->info("Checking database... ");
 
         if (is_null($partyCode)) {
