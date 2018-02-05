@@ -97,12 +97,10 @@ class BaseController extends Controller
     * @param  string $orderBy <optional>
     * @param  int    $limit   <optional>
     * @param  int    $offset  <optional>
+    * @param  int    $recent  <optional>
     * @return array
     */
-    public function getAllSocial($code = null, $type = null, $subType = null, $fields = null, $orderBy = null, $direction = null, $limit = 100, $offset = 0) {
-        $social = $this->getDoctrine()
-            ->getRepository('AppBundle:SocialMedia');
-
+    public function getAllSocial($code = null, $type = null, $subType = null, $fields = null, $orderBy = null, $direction = null, $limit = 100, $offset = 0, $recent = null) {
         $terms   = [];
         $orderBy = is_null($orderBy) ? 'postTime' : $orderBy;
 
@@ -110,21 +108,60 @@ class BaseController extends Controller
             $direction = ($orderBy == 'code') ? 'ASC' : 'DESC';
         }
 
-        if ($code) {
-            $terms['code'] = $code;
-        }
-        if ($type) {
-            $terms['type'] = $type;
-        }
-        if ($subType) {
-            $terms['subType'] = $subType;
-        }
+        $terms = [
+            'code'      => $code,
+            'type'      => $type,
+            'subType'   => $subType,
+            'orderBy'   => $orderBy,
+            'direction' => $direction,
+            'limit'     => $limit,
+            'offset'    => $offset,
+            'recent'    => $recent
+        ];
 
-        $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
+        $socialMedia = $this->getSocialDql($terms);
 
         if ($fields) {
             $socialMedia = $this->getSelectSocial($socialMedia, $fields);
         }
+
+        return $socialMedia;
+    }
+
+
+    /**
+     * Return social media array via dql
+     * @param  array $terms
+     * @return array
+     */
+    public function getSocialDql($vars) {
+        $query = $this->getDoctrine()->getManager()
+            ->createQueryBuilder()
+            ->select('p')
+            ->from('AppBundle:SocialMedia', 'p');
+
+        if ($vars['code']) {
+            $query->where(sprintf("p.code = '%s'", $vars['code']));
+        }
+
+        if ($vars['type']) {
+            $query->andwhere(sprintf("p.type = '%s'", $vars['type']));
+        }
+
+        if ($vars['subType']) {
+            $query->andwhere(sprintf("p.subType = '%s'", $vars['subType']));
+        }
+
+        if ($vars['recent']) {
+            $recentString = date('Y-m-d H:i:s', $vars['recent']);
+            $query->andWhere(sprintf("p.postTime > '%s'", $recentString));
+        }
+
+        $query->setFirstResult($vars['offset'])
+            ->setMaxresults($vars['limit'])
+            ->orderBy(sprintf("p.%s", $vars['orderBy']), $vars['direction']);
+
+        $socialMedia = $query->getQuery()->getResult();
 
         return $socialMedia;
     }

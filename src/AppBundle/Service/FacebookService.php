@@ -106,7 +106,6 @@ class FacebookService
 
         $this->log->info("    + Getting post details...");
         $fdPosts   = $graphNode->getField('posts');
-        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'fb', 'T', $this->scrapeFull);
 
         $pageCount = 0;
         $txtCount  = 0;
@@ -114,16 +113,19 @@ class FacebookService
         $loopCount = 0;
         $temp      = [];
 
+        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'fb', 'T', $this->scrapeFull);
+
         do {
             $this->log->debug("       + Page " . $pageCount);
 
             foreach ($fdPosts as $key => $post) {
-                if (in_array($post->getField('id'), $temp, true)) {
+                $id = $post->getField('id');
+
+                if (in_array($id, $temp, true)) {
                     // if post was already scraped this session
                     $loopCount++;
                     continue;
                 }
-                $temp[] = $post->getField('id');
 
                 $type = $post->getField('type');
                 // types = 'status', 'link', 'photo', 'video', 'event'
@@ -138,7 +140,7 @@ class FacebookService
                     $txtCount++;
                 }
 
-                $this->getPostDetails($post, $subType);
+                $temp[$id] = $this->getPostDetails($post, $subType);
             }
 
             $timeCheck = $post->getField('created_time')->getTimestamp(); // check time of last scraped post
@@ -150,6 +152,8 @@ class FacebookService
         if ($loopCount > 0) {
             $this->log->warning("     - Facebook post scraping for " . $this->partyCode . " looped " . $loopCount . " times");
         }
+
+        $this->db->processSocialMedia($temp);
 
         $out['posts']  = $txtCount;
         $out['videos'] = $vidCount;
@@ -194,18 +198,21 @@ class FacebookService
             'shares'     => $shareCount
             ];
 
-        $this->db->addSocial(
-            $this->partyCode,
-            SocialMedia::TYPE_FACEBOOK,
-            $subType,
-            $post->getField('id'),
-            $post->getField('updated_time'), // DateTime
-            $text,
-            $img,
-            $reactionCount,
-            $allData
-        );
+        $out = [
+            'code'    => $this->partyCode,
+            'type'    => SocialMedia::TYPE_FACEBOOK,
+            'subtype' => $subType,
+            'id'      => $post->getField('id'),
+            'time'    => $post->getField('updated_time'), // DateTime
+            'text'    => $text,
+            'img'     => $img,
+            'likes'   => $reactionCount,
+            'allData' => $allData
+            ];
+
+        return $out;
     }
+
 
     /**
      * Processes images
@@ -223,12 +230,13 @@ class FacebookService
 
         $this->log->info("    + Getting image details...");
         $fdAlbums  = $graphNode->getField('albums');
-        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'fb', 'I', $this->scrapeFull);
 
         $pageCount = 0;
         $imgCount  = 0;
         $loopCount = 0;
         $temp      = [];
+
+        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'fb', 'I', $this->scrapeFull);
 
         foreach ($fdAlbums as $key => $album) {
             $photoCount[] = $album->getField('photo_count');
@@ -240,15 +248,17 @@ class FacebookService
 
             do {
                 $this->log->debug("       + Page " . $pageCount);
+
                 foreach ($fdPhotos as $key => $photo) {
-                    if (in_array($photo->getField('picture'), $temp, true)) {
+                    $id = $photo->getField('picture');
+
+                    if (in_array($id, $temp, true)) {
                         // if image was already scraped this session
                         $loopCount++;
                         continue;
                     }
-                    $temp[] = $photo->getField('picture');
 
-                    $this->getImageDetails($photo, $album);
+                    $temp[$id] = $this->getImageDetails($photo, $album);
                     $imgCount++;
                 }
 
@@ -262,6 +272,8 @@ class FacebookService
         if ($loopCount > 0) {
             $this->log->warning("     - Facebook image scraping for " . $this->partyCode . " looped " . $loopCount . " times");
         }
+
+        $this->db->processSocialMedia($temp);
 
         $out['imageCount'] = array_sum($photoCount);
         $out['images']     = $imgCount;
@@ -305,17 +317,19 @@ class FacebookService
             'shares'     => $shareCount
         ];
 
-        $this->db->addSocial(
-            $this->partyCode,
-            SocialMedia::TYPE_FACEBOOK,
-            SocialMedia::SUBTYPE_IMAGE,
-            $photo->getField('id'),
-            $photo->getField('updated_time'), // DateTime
-            $photo->getField('name'),
-            $img,
-            $reactionCount,
-            $allData
-        );
+        $out = [
+            'code'    => $this->partyCode,
+            'type'    => SocialMedia::TYPE_FACEBOOK,
+            'subtype' => SocialMedia::SUBTYPE_IMAGE,
+            'id'      => $photo->getField('id'),
+            'time'    => $photo->getField('updated_time'), // DateTime
+            'text'    => $photo->getField('name'),
+            'img'     => $img,
+            'likes'   => $reactionCount,
+            'allData' => $allData
+            ];
+
+        return $out;
     }
 
 
@@ -335,24 +349,27 @@ class FacebookService
 
         $this->log->info("    + Getting event details...");
         $fdEvents  = $graphNode->getField('events');
-        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'fb', 'E', $this->scrapeFull);
 
         $pageCount = 0;
         $eveCount  = 0;
         $loopCount = 0;
         $temp      = [];
 
+        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'fb', 'E', $this->scrapeFull);
+
         do { // process current page of results
             $this->log->debug("       + Page " . $pageCount);
+
             foreach ($fdEvents as $key => $event) {
-                if (in_array($event->getField('id'), $temp, true)) {
+                $id = $event->getField('id');
+
+                if (in_array($id, $temp, true)) {
                     // if event was already scraped this session
                     $loopCount++;
                     continue;
                 }
-                $temp[] = $event->getField('id');
 
-                $this->getEventDetails($event);
+                $temp[$id] = $this->getEventDetails($event);
                 $eveCount++;
             }
 
@@ -365,6 +382,8 @@ class FacebookService
         if ($loopCount > 0) {
             $this->log->warning("     - Facebook event scraping for " . $this->partyCode . " looped " . $loopCount . " times");
         }
+
+        $this->db->processSocialMedia($temp);
 
         $out['eventCount'] = $eveCount;
         $out['events']     = true;
@@ -421,17 +440,19 @@ class FacebookService
             'comments'    => $commentCount
         ];
 
-        $this->db->addSocial(
-            $this->partyCode,
-            SocialMedia::TYPE_FACEBOOK,
-            SocialMedia::SUBTYPE_EVENT,
-            $event->getField('id'),
-            $event->getField('updated_time'), // DateTime
-            $event->getField('name'),
-            $img,
-            $event->getField('interested_count'),
-            $allData
-        );
+        $out = [
+            'code'    => $this->partyCode,
+            'type'    => SocialMedia::TYPE_FACEBOOK,
+            'subtype' => SocialMedia::SUBTYPE_EVENT,
+            'id'      => $event->getField('id'),
+            'time'    => $event->getField('updated_time'), // DateTime
+            'text'    => $event->getField('name'),
+            'img'     => $img,
+            'likes'   => $event->getField('interested_count'),
+            'allData' => $allData
+            ];
+
+        return $out;
     }
 
 }

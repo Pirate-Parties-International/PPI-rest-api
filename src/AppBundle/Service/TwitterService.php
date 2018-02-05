@@ -148,7 +148,6 @@ class TwitterService
         }
 
         $this->log->info("    + Getting tweet details...");
-        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'tw', 'T', $this->scrapeFull);
 
         $pageCount = 0;
         $txtCount  = 0;
@@ -157,37 +156,45 @@ class TwitterService
         $loopCount = 0;
         $temp      = [];
 
+        $timeLimit = $this->db->getTimeLimit($this->partyCode, 'tw', 'T', $this->scrapeFull);
+
         do { // process current page of results
             $this->log->debug("       + Page " . $pageCount);
 
             foreach($tweetData as $item) {
-                if (in_array($item->id, $temp, true)) {
+                $id = $item->id;
+
+                if (in_array($id, $temp, true)) {
                     // if tweet was already scraped this session
                     $loopCount++;
                     continue;
                 }
-                $temp[] = $item->id;
 
                 $twTime = \DateTime::createFromFormat('D M d H:i:s P Y', $item->created_at);
                 // original string e.g. 'Mon Sep 08 15:19:11 +0000 2014'
 
                 if (empty($item->entities->media)) {
-                    $this->getTweetDetails($item, $twTime);
+                    $temp[$id] = $this->getTweetDetails($item, $twTime);
                     $txtCount++;
 
                 } else {
-                    $tweet = $this->getMedia($item, $twTime);
-                    $imgCount += $tweet['img'];
-                    $vidCount += $tweet['vid'];
-                }
+                    $media = $this->getMedia($item, $twTime);
 
+                    $imgCount += $media['imgCount'];
+                    $vidCount += $media['vidCount'];
+
+                    foreach ($media as $item) {
+                        $img        = $item['img'];
+                        $temp[$img] = $item;
+                    }
+                }
             }
 
             $timeCheck = $twTime->getTimestamp(); // check time of last tweet scraped
             $this->connect->getTwRateLimit($this->tw);
 
             // make new request to get next page of results
-            $tweetData = $this->connect->getTwRequest($this->tw, $this->twUsername, true, $item->id);
+            $tweetData = $this->connect->getTwRequest($this->tw, $this->twUsername, true, $id);
             $pageCount++;
 
         } while ($timeCheck > $timeLimit && $pageCount < 100);
@@ -196,6 +203,8 @@ class TwitterService
         if ($loopCount > 0) {
             $this->log->warning("     - Tweet scraping for " . $this->partyCode . " looped " . $loopCount . " times");
         }
+
+        $this->db->processSocialMedia($temp);
 
         $out['posts']     = $txtCount;
         $out['images']    = $imgCount;
@@ -212,7 +221,8 @@ class TwitterService
      * @return string
      */
     public function getTweetDetails($item, $twTime) {
-        $twText = $this->getTwText($item);
+        $twText   = $this->getTwText($item);
+        $rtStatus = $this->getRtStatus($item);
 
         $allData = [
             'id'       => $item->id,
@@ -220,20 +230,23 @@ class TwitterService
             'text'     => $twText,
             'url'      => 'https://twitter.com/statuses/' . $item->id,
             'likes'    => $item->favorite_count,
-            'retweets' => $item->retweet_count
+            'retweets' => $item->retweet_count,
+            'reply_to' => $rtStatus
             ];
 
-        $this->db->addSocial(
-            $this->partyCode,
-            SocialMedia::TYPE_TWITTER,
-            SocialMedia::SUBTYPE_TEXT,
-            $item->id,
-            $twTime, // DateTime
-            $twText,
-            null,
-            $item->favorite_count,
-            $allData
-        );
+        $out = [
+            'code'    => $this->partyCode,
+            'type'    => SocialMedia::TYPE_TWITTER,
+            'subtype' => SocialMedia::SUBTYPE_TEXT,
+            'id'      => $item->id,
+            'time'    => $twTime, // DateTime
+            'text'    => $twText,
+            'img'     => null,
+            'likes'   => $item->favorite_count,
+            'allData' => $allData
+            ];
+
+        return $out;
     }
 
 
@@ -246,10 +259,19 @@ class TwitterService
     public function getMedia($item, $twTime) {
         $imgCount = 0;
         $vidCount = 0;
+        $out      = [];
 
         $media = $item->extended_entities->media;
 
         foreach ($media as $photo) {
+            $id = $photo->media_url;
+
+            if (in_array($id, $out, true)) {
+                // if tweet was already scraped this session
+                $loopCount++;
+                continue;
+            }
+
             if ($photo->type == 'video') {
                 $subType = SocialMedia::SUBTYPE_VIDEO;
                 $vidCount++;
@@ -259,12 +281,12 @@ class TwitterService
                 $imgCount++;
             }
 
-            $this->getMediaDetails($item, $twTime, $photo, $subType);
+            $out[$id] = $this->getMediaDetails($item, $twTime, $photo, $subType);
         }
 
-        $count['img'] = $imgCount;
-        $count['vid'] = $vidCount;
-        return $count;
+        $out['imgCount'] = $imgCount;
+        $out['vidCount'] = $vidCount;
+        return $out;
     }
 
 
@@ -276,7 +298,8 @@ class TwitterService
      * @return array
      */
     public function getMediaDetails($item, $twTime, $photo, $subType) {
-        $twText = $this->getTwText($item);
+        $twText   = $this->getTwText($item);
+        $rtStatus = $this->getRtStatus($item);
 
         $imgSrc = $photo->media_url . ":small";
         $imgId  = $photo->id;
@@ -292,20 +315,23 @@ class TwitterService
             'img_source' => $imgSrc,
             'url'        => 'https://twitter.com/statuses/' . $item->id,
             'likes'      => $item->favorite_count,
-            'retweets'   => $item->retweet_count
+            'retweets'   => $item->retweet_count,
+            'reply_to'   => $rtStatus
             ];
 
-        $this->db->addSocial(
-            $this->partyCode,
-            SocialMedia::TYPE_TWITTER,
-            $subType,
-            $item->id,
-            $twTime, // DateTime
-            $twText,
-            $img,
-            $item->favorite_count,
-            $allData
-        );
+        $out = [
+            'code'    => $this->partyCode,
+            'type'    => SocialMedia::TYPE_TWITTER,
+            'subtype' => $subType,
+            'id'      => $item->id,
+            'time'    => $twTime, // DateTime
+            'text'    => $twText,
+            'img'     => $img,
+            'likes'   => $item->favorite_count,
+            'allData' => $allData
+            ];
+
+        return $out;
     }
 
 
@@ -321,6 +347,24 @@ class TwitterService
 
         if (!empty($item->text)) {
             return $item->text;
+        }
+
+        return null;
+    }
+
+
+    /**
+     * Checks if a tweet is a retweet or reply
+     * @param  object $item
+     * @return string
+     */
+    public function getRtStatus($item) {
+        if (isset($item->retweeted_status)) {
+            return ['retweet' => $item->retweeted_status->id];
+        }
+
+        if (isset($item->quoted_status_id)) {
+            return ['reply' => $item->quoted_status_id];
         }
 
         return null;

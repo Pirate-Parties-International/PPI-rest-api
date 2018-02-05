@@ -98,8 +98,6 @@ class DatabaseService
     }
 
 
-
-
     /**
      * Builds or updates a Metadata object
      * @param  string $code
@@ -131,7 +129,42 @@ class DatabaseService
 
 
     /**
+     * Processes social media posts before adding them to the database
+     * @param  array  $posts
+     * @return null
+     */
+    public function processSocialMedia($posts) {
+        $this->log->debug("     + Persisting to database");
+
+        $postCount = 0;
+
+        foreach ($posts as $post) {
+            if (!isset($post['id'])) {
+                continue;
+            }
+
+            $this->addSocial(
+                $post['code'],
+                $post['type'],
+                $post['subtype'],
+                $post['id'],
+                $post['time'],
+                $post['text'],
+                $post['img'],
+                $post['likes'],
+                $post['allData']
+            );
+
+            $postCount++;
+        }
+
+        $this->log->debug("       + " . $postCount . " items persisted");
+    }
+
+
+    /**
      * Builds or updates a SocialMedia object
+     * @param  string   $code
      * @param  string   $type
      * @param  string   $subType
      * @param  string   $postId
@@ -145,7 +178,10 @@ class DatabaseService
     public function addSocial($code, $type, $subType, $postId, $postTime, $postText, $postImage, $postLikes, $postData) {
         $p = $this->em
             ->getRepository('AppBundle:SocialMedia')
-            ->findOneByPostId($postId);
+            ->findOneBy([
+                'postId'    => $postId,
+                'postImage' => $postImage
+                ]);
 
         if (!$p) {
             $p = new SocialMedia();
@@ -200,7 +236,7 @@ class DatabaseService
         if (!empty($p)) {
             $this->log->info("      + Database !empty, updating... ");
             $limit = $p->getPostTime()->getTimestamp();
-            $this->log->debug("       + (Lastest databse entry: " . date('d/m/Y', $limit) . ")");
+            $this->log->debug("       + (Latest entry: " . date('d/m/Y', $limit) . ")");
             return $limit;
         }
 
@@ -254,7 +290,7 @@ class DatabaseService
             return $limit;
         }
 
-        $this->log->debug("     + (Latest count: " . $stat->getValue() . " at " . $stat->getTimestamp()->format('H:i:s Y/m/d') . ")");
+        $this->log->debug("     + (Latest count: " . $stat->getValue() . " at " . $stat->getTimestamp()->format('H:i:s d/m/Y') . ")");
         $limit['time']  = $stat->getTimestamp()->getTimestamp();
         $limit['value'] = $stat->getValue();
         return $limit;
@@ -284,4 +320,5 @@ class DatabaseService
 
         return $date;
     }
+
 }
