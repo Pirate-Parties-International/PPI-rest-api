@@ -99,9 +99,6 @@ class BaseController extends Controller
     * @return array
     */
     public function getAllSocial($code = null, $type = null, $subType = null, $fields = null, $orderBy = null, $direction = null, $limit = 100, $offset = 0, $recent = null) {
-        $social = $this->getDoctrine()
-            ->getRepository('AppBundle:SocialMedia');
-
         $terms   = [];
         $orderBy = is_null($orderBy) ? 'postTime' : $orderBy;
 
@@ -109,37 +106,18 @@ class BaseController extends Controller
             $direction = ($orderBy == 'code') ? 'ASC' : 'DESC';
         }
 
-        if ($code) {
-            $terms['code'] = $code;
-        }
-        if ($type) {
-            $terms['type'] = $type;
-        }
-        if ($subType) {
-            $terms['subType'] = $subType;
-        }
+        $terms = [
+            'code'      => $code,
+            'type'      => $type,
+            'subType'   => $subType,
+            'orderBy'   => $orderBy,
+            'direction' => $direction,
+            'limit'     => $limit,
+            'offset'    => $offset,
+            'recent'    => $recent
+        ];
 
-        if (!$recent) {
-            $socialMedia = $social->findBy($terms, [$orderBy => $direction], $limit, $offset);
-
-        } else { // this is really slow, will timeout if no party code is specified
-            $vars = [
-                'code'      => $code,
-                'type'      => $type,
-                'subType'   => $subType,
-                'orderBy'   => $orderBy,
-                'direction' => $direction,
-                'limit'     => $limit,
-                'offset'    => $offset,
-                'recent'    => $recent
-            ];
-
-            $socialMedia = $this->getSocialDql($vars);
-            // $socialMedia = $this->getSocialFindBy($vars, $terms, $social);
-        }
-
-        // echo gettype($socialMedia); die;
-        var_dump($socialMedia); die;
+        $socialMedia = $this->getSocialDql($terms);
 
         if ($fields) {
             $socialMedia = $this->getSelectSocial($socialMedia, $fields);
@@ -163,15 +141,19 @@ class BaseController extends Controller
         if ($vars['code']) {
             $query->where(sprintf("p.code = '%s'", $vars['code']));
         }
+
         if ($vars['type']) {
             $query->andwhere(sprintf("p.type = '%s'", $vars['type']));
         }
+
         if ($vars['subType']) {
             $query->andwhere(sprintf("p.subType = '%s'", $vars['subType']));
         }
 
-        $recentString = date('Y-m-d H:i:s', $vars['recent']);
-        $query->andWhere(sprintf("p.postTime > '%s'", $recentString));
+        if ($vars['recent']) {
+            $recentString = date('Y-m-d H:i:s', $vars['recent']);
+            $query->andWhere(sprintf("p.postTime > '%s'", $recentString));
+        }
 
         $query->setFirstResult($vars['offset'])
             ->setMaxresults($vars['limit'])
@@ -180,42 +162,6 @@ class BaseController extends Controller
         $socialMedia = $query->getQuery()->getResult();
 
         return $socialMedia;
-    }
-
-
-    /**
-     * Returns social media array via findBy
-     * @param  array  $terms
-     * @param  object $social
-     * @return array
-     */
-    public function getSocialFindBy($vars, $terms, $social) {
-        $allSocial    = $social->findBy($terms, [$vars['orderBy'] => $vars['direction']]);
-        $recentSocial = $this->getRecentSocial($allSocial, $vars['recent']);
-        $socialMedia  = array_slice($recentSocial, $vars['offset'], $vars['limit'], true);
-
-        return $socialMedia;
-    }
-
-
-    /**
-     * Builds an array of recent social media posts
-     * @param  array $allSocial
-     * @param  int   $timeLimit
-     * @return array
-     */
-    public function getRecentSocial($allSocial, $timeLimit) {
-        $recentSocial = [];
-
-        foreach ($allSocial as $post) {
-            $postTime = $post->getPostTime()->getTimestamp();
-
-            if ($postTime > $timeLimit) {
-                $recentSocial[] = $post;
-            }
-        }
-
-        return $recentSocial;
     }
 
 
