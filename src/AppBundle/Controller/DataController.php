@@ -8,7 +8,7 @@ use AppBundle\Entity\Metadata as Meta;
 use AppBundle\Entity\Statistic as Stat;
 use AppBundle\Entity\SocialMedia as Sm;
 
-class DataController extends BaseController
+class DataController extends SocialController
 {
     /**
      * Returns local path to a party's cover image, if available

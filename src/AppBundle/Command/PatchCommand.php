@@ -155,9 +155,9 @@ class PatchCommand extends ContainerAwareCommand
                     continue;
                 }
 
-                foreach ($dupes as $dupe) {
-                    $this->log->notice($postCount . " - " . sizeof($dupes) . " duplicates found for " . $prime->getPostId());
+                $this->log->notice($postCount . " - " . (sizeof($dupes) -1) . " duplicates found for " . $prime->getPostId());
 
+                foreach ($dupes as $dupe) {
                     if ($dupe->getId() < $prime->getId()) {
                         $this->output->write("prime type = " . $prime->getType() . "-" . $prime->getSubType());
                         $this->output->write(", id = " . $prime->getId() . ", post id = " . $prime->getPostId());

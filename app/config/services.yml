@@ -9,37 +9,45 @@ services:
 #        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
 
     ConnectionService:
-        class: AppBundle\Service\ConnectionService
+        class: AppBundle\Services\ConnectionService
         autowire: true
 
     DatabaseService:
-        class: AppBundle\Service\DatabaseService
+        class: AppBundle\Services\DatabaseService
         autowire: true
 
     ImageService:
-        class: AppBundle\Service\ImageService
+        class: AppBundle\Services\ImageService
         autowire: true
 
     FacebookService:
-        class: AppBundle\Service\FacebookService
+        class: AppBundle\Services\Facebook\FacebookService
         autowire: true
 
-    FbStatService:
-        class: AppBundle\Service\FbStatService
+    FbPostService:
+        class: AppBundle\Services\Facebook\FbPostService
+        autowire: true
+
+    FbImageService:
+        class: AppBundle\Services\Facebook\FbImageService
+        autowire: true
+
+    FbEventService:
+        class: AppBundle\Services\Facebook\FbEventService
         autowire: true
 
     TwitterService:
-        class: AppBundle\Service\TwitterService
+        class: AppBundle\Services\TwitterService
         autowire: true
 
     GoogleService:
-        class: AppBundle\Service\GoogleService
+        class: AppBundle\Services\GoogleService
         autowire: true
 
     VerificationService:
-        class: AppBundle\Service\VerificationService
+        class: AppBundle\Services\VerificationService
         autowire: true
 
     PopulationService:
-        class: AppBundle\Service\PopulationService
+        class: AppBundle\Services\PopulationService
         autowire: true
