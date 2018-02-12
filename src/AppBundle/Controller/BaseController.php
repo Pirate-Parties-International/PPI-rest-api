@@ -181,6 +181,10 @@ class BaseController extends Controller
         foreach ($socialMedia as $social) {
             $data = $social->getPostData();
 
+            if (in_array('no_retweets', $terms) && !empty($data['reply_to'])) {
+                continue;
+            }
+
             $temp = [
                 'code'     => $social->getCode(),
                 'type'     => $social->getType(),
