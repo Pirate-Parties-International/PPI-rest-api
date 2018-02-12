@@ -46,6 +46,7 @@ class PopulationService
 
     /**
      * Retrieves population stats from api.population.io and saves to a json file
+     * @return null
      */
     public function getPopulationData() {
         $current = $this->checkLocalData();

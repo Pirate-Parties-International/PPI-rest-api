@@ -134,32 +134,32 @@ class BaseController extends Controller
      * @param  array $terms
      * @return array
      */
-    public function getSocialDql($vars) {
+    public function getSocialDql($terms) {
         $query = $this->getDoctrine()->getManager()
             ->createQueryBuilder()
             ->select('p')
             ->from('AppBundle:SocialMedia', 'p');
 
-        if ($vars['code']) {
-            $query->where(sprintf("p.code = '%s'", $vars['code']));
+        if ($terms['code']) {
+            $query->where(sprintf("p.code = '%s'", $terms['code']));
         }
 
-        if ($vars['type']) {
-            $query->andwhere(sprintf("p.type = '%s'", $vars['type']));
+        if ($terms['type']) {
+            $query->andwhere(sprintf("p.type = '%s'", $terms['type']));
         }
 
-        if ($vars['subType']) {
-            $query->andwhere(sprintf("p.subType = '%s'", $vars['subType']));
+        if ($terms['subType']) {
+            $query->andwhere(sprintf("p.subType = '%s'", $terms['subType']));
         }
 
-        if ($vars['recent']) {
-            $recentString = date('Y-m-d H:i:s', $vars['recent']);
+        if ($terms['recent']) {
+            $recentString = date('Y-m-d H:i:s', $terms['recent']);
             $query->andWhere(sprintf("p.postTime > '%s'", $recentString));
         }
 
-        $query->setFirstResult($vars['offset'])
-            ->setMaxresults($vars['limit'])
-            ->orderBy(sprintf("p.%s", $vars['orderBy']), $vars['direction']);
+        $query->setFirstResult($terms['offset'])
+            ->setMaxresults($terms['limit'])
+            ->orderBy(sprintf("p.%s", $terms['orderBy']), $terms['direction']);
 
         $socialMedia = $query->getQuery()->getResult();
 
@@ -176,9 +176,11 @@ class BaseController extends Controller
     public function getSelectSocial($socialMedia, $fields) {
         $fields = str_replace(' ', '', $fields);
         $terms  = explode(',', $fields);
+        $out    = [];
 
         foreach ($socialMedia as $social) {
             $data = $social->getPostData();
+
             $temp = [
                 'code'     => $social->getCode(),
                 'type'     => $social->getType(),
@@ -188,7 +190,7 @@ class BaseController extends Controller
 
             foreach ($terms as $field) {
 
-                if ($field == 'time') {
+                if ($field == 'time' || $field == 'date') {
                     if ($temp['sub_type'] != 'E') {
                         $temp['post_' . $field] = isset($data['posted']) ? $data['posted'] : null;
 
