@@ -125,10 +125,21 @@ class PatchCommand extends ContainerAwareCommand
             }
 
             $this->log->info("Getting posts from " . $party->getCode());
-            $posts = $this->em->getRepository('AppBundle:SocialMedia')->findBy(['code' => $party->getCode()], ['id' => 'DESC']);
+
+            $dateLimit  = strtotime("-6 months");
+            $dateString = date('Y-m-d H:i:s', $dateLimit);
+
+            $posts = $this->em->createQueryBuilder()->select('p')
+                ->from('AppBundle:SocialMedia', 'p')
+                ->where(sprintf("p.code = '%s'", $party->getCode()))
+                ->andWhere(sprintf("p.postTime > '%s'", $dateString))
+                ->orderBy("p.id", 'DESC')
+                ->getQuery()->getResult();
+
+            // $posts = $this->em->getRepository('AppBundle:SocialMedia')->findBy(['code' => $party->getCode()], ['id' => 'DESC']);
 
             $size = sizeof($posts);
-            $this->log->info($size . " posts found...");
+            $this->log->info($size . " posts found from the past 6 months");
 
             $estLow  = ($size / 4) / 60; // estimation of minutes based on 4 posts per second
             $estHigh = ($size / 3) / 60; // estimation of minutes based on 3 posts per second
@@ -155,6 +166,7 @@ class PatchCommand extends ContainerAwareCommand
                     continue;
                 }
 
+                $this->output->writeln("");
                 $this->log->notice($postCount . " - " . (sizeof($dupes) -1) . " duplicates found for " . $prime->getPostId());
 
                 foreach ($dupes as $dupe) {
