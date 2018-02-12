@@ -197,7 +197,7 @@ class ApiController extends DataController
             $recent = strtotime("-" . $string);
         }
 
-        // run through BaseController
+        // run through SocialController
         $data = $this->getAllSocial($code, $type, $subType, $fields, $orderBy, $direction, $limit, $offset, $recent);
 
         if (empty($data)) {

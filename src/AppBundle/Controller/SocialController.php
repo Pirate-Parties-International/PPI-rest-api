@@ -133,12 +133,10 @@ class SocialController extends BaseController
                 ];
 
             foreach ($terms as $field) {
-
                 if ($field == 'time' || $field == 'date') {
-                    if ($temp['sub_type'] != 'E') {
-                        $temp['post_' . $field] = isset($data['posted']) ? $data['posted'] : null;
-
-                    } else $temp['post_' . $field] = isset($data['start_time']) ? $data['start_time'] : null;
+                    if ($temp['sub_type'] == 'E') {
+                        $temp['post_' . $field] = isset($data['start_time']) ? $data['start_time'] : null;
+                    } else $temp['post_' . $field] = isset($data['posted']) ? $data['posted'] : null;
                     continue;
                 }
 
@@ -155,7 +153,7 @@ class SocialController extends BaseController
                         $temp['post_audience_reach']   = $this->getPostReach($social);
                         break;
                     case 'reach_per_capita':
-                        $temp['post_reach_per_capita'] = $this->getPostPerCapita($social);
+                        $temp['post_reach_per_capita'] = $this->getPostReachPerCapita($social);
                         break;
                     default:
                         $temp['post_' . $field] = isset($data[$field]) ? $data[$field] : null;
@@ -236,7 +234,7 @@ class SocialController extends BaseController
      * @param  object $item
      * @return int
      */
-    public function getPostPerCapita($item) {
+    public function getPostReachPerCapita($item) {
         $partyCode = strtoupper($item->getCode());
 
         $population = $this->container

@@ -1,5 +1,5 @@
 <?php
-namespace AppBundle\Service;
+namespace AppBundle\Services;
 
 use Doctrine\ORM\EntityManager;
 use Symfony\Component\HttpFoundation\Response;
@@ -134,7 +134,7 @@ class DatabaseService
      * @return null
      */
     public function processSocialMedia($posts) {
-        $this->log->debug("     + Persisting to database");
+        $this->log->debug("     + Persisting...");
 
         $postCount = 0;
 

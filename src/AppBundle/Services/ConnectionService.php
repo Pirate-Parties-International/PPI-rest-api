@@ -1,5 +1,5 @@
 <?php
-namespace AppBundle\Service;
+namespace AppBundle\Services;
 
 use Symfony\Component\DependencyInjection\Container;
 
@@ -32,17 +32,6 @@ class ConnectionService
             $message = $e->getMessage();
             $this->log->error($message);
         }
-    }
-
-
-    /**
-     * Throws a Facebook Throttle Exception to test error handling
-     */
-    public function testFbRateLimit() {
-        $e = new FacebookThrottleException("Application request limit reached");
-        // $e->setCode(4);
-        // $e->setMessage("Application request limit reached");
-        throw $e;
     }
 
 
@@ -129,8 +118,6 @@ class ConnectionService
                 $this->log->notice("  - Please wait until " . date('H:i:s', $waitUntil) . "...");
                 time_sleep_until($waitUntil);
 
-                // $this->testFbRateLimit();
-
                 $response = $this->fb->getClient()->sendRequest($request);
                 $connected = true;
 
@@ -180,7 +167,6 @@ class ConnectionService
 	        $field .= '&tweet_mode=extended&count=100';
 	        $field .= $maxId ? ('&max_id=' . $maxId) : null;
     	}
-    	// echo "\n" . $url . $field;
 
     	try {
 		    $data = $tw

@@ -7,20 +7,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 class BaseController extends Controller
 {
     /**
-     * Queries for a single party
-     * @param  string $code
-     * @return Party
-     */
-    public function getOneParty($code) {
-        $party = $this->getDoctrine()
-            ->getRepository('AppBundle:Party')
-            ->findOneByCode($code);
-
-        return $party;
-    }
-
-
-    /**
      * Queries for all parties
      * @param  bool   $showDefunct      <optional>
      * @param  string $membershipFilter <optional>
@@ -63,6 +49,20 @@ class BaseController extends Controller
         }
 
         return $allData;
+    }
+
+
+    /**
+     * Queries for a single party
+     * @param  string $code
+     * @return Party
+     */
+    public function getOneParty($code) {
+        $party = $this->getDoctrine()
+            ->getRepository('AppBundle:Party')
+            ->findOneByCode($code);
+
+        return $party;
     }
 
 
