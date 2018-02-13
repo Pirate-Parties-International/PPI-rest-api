@@ -26,10 +26,11 @@ class ConnectionService
 
 
     public function exception_handler($e) {
+        $message = $e->getMessage();
+
         if ($message == "Application request limit reached") {
             $this->getFbRateLimit();
         } else {
-            $message = $e->getMessage();
             $this->log->error($message);
         }
     }
