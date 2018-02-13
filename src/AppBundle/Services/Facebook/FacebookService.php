@@ -64,7 +64,7 @@ class FacebookService
         }
 
         if ($scrapeData == null || $scrapeData == 'posts') {
-            $temp = $this->fbPosts->getPosts($partyCode, $fbPageId, $scrapeFull);
+            $temp = $this->fbPosts->getPosts($partyCode, $fbPageId, $fb, $scrapeFull);
             $out['posts']  = isset($temp['posts'])  ? $temp['posts']  : null;
             $out['videos'] = isset($temp['videos']) ? $temp['videos'] : null;
         }
