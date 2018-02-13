@@ -11,14 +11,16 @@ use AppBundle\Command\ScraperCommand;
 class ImageService
 {
     private   $container;
-    protected $db;
     protected $log;
+    protected $connect;
+    protected $db;
 
     public function __construct(Container $container) {
         $this->container = $container;
-        $this->db        = $this->container->get('DatabaseService');
         $this->log       = $this->container->get('logger');
-        @set_exception_handler(array($this->container->get('ConnectionService'), 'exception_handler'));
+        $this->connect   = $this->container->get('ConnectionService');
+        $this->db        = $this->container->get('DatabaseService');
+        @set_exception_handler(array($this->connect, 'exception_handler'));
     }
 
 
@@ -48,21 +50,14 @@ class ImageService
             mkdir($imgRoot, 0755, true);
         }
 
-        $ctx = stream_context_create(array(
-            'http' => array(
-                'timeout' => 15
-                )
-            )
-        );
-
         if (!file_exists($imgPath)) { // check if file exists on disk before saving
             try {
-                $imgData = file_get_contents($imgSrc, false, $ctx);
+                $imgData = $this->connect->curl($imgSrc);
             } catch (\Exception $e) {
                 $this->log->notice($e->getMessage());
                 if ($imgBkp) { // try backup if available
                     try {
-                        $imgData = file_get_contents($imgBkp, false, $ctx);
+                        $imgData = $this->connect->curl($imgBkp);
                         $this->log->info("    + Backup successful");
                     } catch (\Exception $e) {
                         $this->log->notice("    - Backup unsuccessful");
@@ -100,15 +95,8 @@ class ImageService
         preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
         $imgFmt = $matches[1];
 
-        $ctx = stream_context_create(array(
-            'http' => array(
-                'timeout' => 5
-                )
-            )
-        );
-
         try {
-            $imgData = file_get_contents($imgSrc, false, $ctx);
+            $imgData = $this->connect->curl($imgSrc);
         } catch (\Exception $e) {
             $this->log->notice($e->getMessage());
         }
