@@ -17,12 +17,12 @@ class PatchCommand extends ContainerAwareCommand
 			->setName('papi:patch')
 			->setDescription('Patches existing db entries')
             ->addOption('charset',    'c', InputOption::VALUE_NONE, "Convert social_media 'postText' field to utf8mb4 character set")
-            ->addOption('metadata',   'm', InputOption::VALUE_NONE, "Convert metadata 'value' field to utf8mb4 character set")
-            ->addOption('twitter',    't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
-            ->addOption('postdata',   'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
-            ->addOption('stats',      'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
-            ->addOption('exturls',    'u', InputOption::VALUE_NONE, "Decode Facebook's external image urls")
             ->addOption('duplicates', 'd', InputOption::VALUE_NONE, "Scan the social media database for duplicate entries")
+            ->addOption('metadata',   'm', InputOption::VALUE_NONE, "Convert metadata 'value' field to utf8mb4 character set")
+            ->addOption('postdata',   'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
+            ->addOption('twitter',    't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
+            ->addOption('exturls',    'u', InputOption::VALUE_NONE, "Decode Facebook's external image urls")
+            ->addOption('stats',      'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
         ;
     }
 

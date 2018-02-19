@@ -74,7 +74,7 @@ class SocialMedia
     /**
      * @var string
      *
-     * @ORM\Column(name="postText", type="text", nullable=true)
+     * @ORM\Column(name="postText", type="text", nullable=true, options={"collation":"utf8mb4_unicode_ci"})
      */
     private $postText;
 
