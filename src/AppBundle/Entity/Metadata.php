@@ -42,7 +42,7 @@ class Metadata
     /**
      * @var string
      *
-     * @ORM\Column(name="value", type="text")
+     * @ORM\Column(name="value", type="text", options={"collation":"utf8mb4_unicode_ci"})
      */
     private $value;
 

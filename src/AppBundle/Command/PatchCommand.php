@@ -7,7 +7,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-
 use AppBundle\Entity\SocialMedia;
 use Pirates\PapiInfo\Compile;
 
@@ -18,14 +17,12 @@ class PatchCommand extends ContainerAwareCommand
 			->setName('papi:patch')
 			->setDescription('Patches existing db entries')
             ->addOption('charset',    'c', InputOption::VALUE_NONE, "Convert social_media 'postText' field to utf8mb4 character set")
-            ->addOption('metadata',   'm', InputOption::VALUE_NONE, "Convert metadata 'value' field to utf8mb4 character set")
-            ->addOption('twitter',    't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
-            ->addOption('postdata',   'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
-            ->addOption('stats',      'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
-            ->addOption('exturls',    'u', InputOption::VALUE_NONE, "Decode Facebook's external image urls")
             ->addOption('duplicates', 'd', InputOption::VALUE_NONE, "Scan the social media database for duplicate entries")
-            ->addOption('party',      'y', InputOption::VALUE_OPTIONAL, "Choose a single party to patch, by code")
-            ->addOption('resume',     'z', InputOption::VALUE_OPTIONAL, "Choose a party to resume patching from, if interrupted")
+            ->addOption('metadata',   'm', InputOption::VALUE_NONE, "Convert metadata 'value' field to utf8mb4 character set")
+            ->addOption('postdata',   'p', InputOption::VALUE_NONE, "Rename certain 'postData' array keys for consistency")
+            ->addOption('twitter',    't', InputOption::VALUE_NONE, "Fix 'postId' field in Twitter images and videos")
+            ->addOption('exturls',    'u', InputOption::VALUE_NONE, "Decode Facebook's external image urls")
+            ->addOption('stats',      'x', InputOption::VALUE_NONE, "Alter Twitter and Facebook stat codes for consistency")
         ;
     }
 
@@ -35,7 +32,6 @@ class PatchCommand extends ContainerAwareCommand
 
         $this->output = $output;
         $this->log    = $this->getContainer()->get('logger');
-
 
         switch (true) { // add more options here
             case $input->getOption('twitter'):
@@ -62,9 +58,7 @@ class PatchCommand extends ContainerAwareCommand
                 break;
             case $input->getOption('duplicates');
                 $this->log->notice('##### Patching duplicate social media posts #####');
-                $partyCode   = $input->getOption('party');
-                $resumePoint = $input->getOption('resume');
-                $this->patchDuplicateEntries($partyCode, $resumePoint);
+                $this->patchDuplicateEntries();
                 break;
             case $input->getOption('metadata');
                 $this->log->notice('##### Patching metadata charset #####');
@@ -95,108 +89,20 @@ class PatchCommand extends ContainerAwareCommand
 //
 // Occasionally the scraper will bug out and add duplicate entries of the same social media posts.
 // This patch locates those posts in the database and deletes the duplicates, leaving only the most recent copy.
-// Only run this if you know there are duplicate entries. It takes too long to waste time running it needlessly.
 /////
-    public function patchDuplicateEntries($partyCode = null, $resumePoint = null) {
+    public function patchDuplicateEntries() {
         $this->getConfirmation();
-        $time = new \DateTime('now');
-        $this->log->notice("# NOTE: This will take a long time. Go and make yourself a cup of tea. The time is now " . $time->format('H:i:s') . ".");
-        $this->log->info("Checking database... ");
+        $this->log->notice("Deleting duplicates...");
 
-        if (is_null($partyCode)) {
-            $social = $this->em->getRepository('AppBundle:SocialMedia')->findAll();
+        $sql = "DELETE s1 FROM social_media s1
+                INNER JOIN social_media s2
+                WHERE s1.postId = s2.postId
+                AND s1.postImage = s2.postImage
+                AND s1.id < s2.id;";
 
-            $size = sizeof($social);
-            $this->log->info($size . " total posts found...");
-
-            $estLow  = ($size / 4) / 60; // estimation of minutes based on 4 posts per second
-            $estHigh = ($size / 3) / 60; // estimation of minutes based on 3 posts per second
-            $this->log->info("Estimated time to process all posts... " . ceil($estLow / 60) . "-" . ceil($estHigh / 60) . " hours...");
-
-            $parties = $this->container->get('DatabaseService')->getAllParties();
-        } else {
-            $parties = $this->container->get('DatabaseService')->getOneParty($partyCode);
-        }
-
-        foreach ($parties as $party) {
-            if (!is_null($resumePoint) && ($party->getCode() < strtoupper($resumePoint))) {
-                $this->log->debug("Skipping " . $party->getCode());
-                continue;
-            }
-
-            $this->log->info("Getting posts from " . $party->getCode());
-
-            $dateLimit  = strtotime("-6 months");
-            $dateString = date('Y-m-d H:i:s', $dateLimit);
-
-            $posts = $this->em->createQueryBuilder()->select('p')
-                ->from('AppBundle:SocialMedia', 'p')
-                ->where(sprintf("p.code = '%s'", $party->getCode()))
-                ->andWhere(sprintf("p.postTime > '%s'", $dateString))
-                ->orderBy("p.id", 'DESC')
-                ->getQuery()->getResult();
-
-            // $posts = $this->em->getRepository('AppBundle:SocialMedia')->findBy(['code' => $party->getCode()], ['id' => 'DESC']);
-
-            $size = sizeof($posts);
-            $this->log->info($size . " posts found from the past 6 months");
-
-            $estLow  = ($size / 4) / 60; // estimation of minutes based on 4 posts per second
-            $estHigh = ($size / 3) / 60; // estimation of minutes based on 3 posts per second
-            $this->log->info("Estimated time to process " . $party->getCode() . "... " . ceil($estLow) . "-" . ceil($estHigh) . " minutes...");
-
-            $this->output->write("Processing...");
-            $postCount = 0;
-            foreach ($posts as $prime) {
-                $postCount++;
-                $terms = [
-                    'code'      => $party->getCode(),
-                    'type'      => $prime->getType(),
-                    'subType'   => $prime->getSubType(),
-                    'postId'    => $prime->getPostId(),
-                    'postText'  => $prime->getPostText(),
-                    'postImage' => $prime->getPostImage()
-                    ];
-
-                $dupes = $this->em->getRepository('AppBundle:SocialMedia')->findBy($terms, ['id' => 'DESC']);
-
-                if (sizeof($dupes) == 1) {
-                    // $this->log->debug($postCount . " - No duplicates found for " . $prime->getPostId());
-                    $this->output->write($postCount . ",");
-                    continue;
-                }
-
-                $this->output->writeln("");
-                $this->log->notice($postCount . " - " . (sizeof($dupes) -1) . " duplicates found for " . $prime->getPostId());
-
-                foreach ($dupes as $dupe) {
-                    if ($dupe->getId() < $prime->getId()) {
-                        $this->output->write("prime type = " . $prime->getType() . "-" . $prime->getSubType());
-                        $this->output->write(", id = " . $prime->getId() . ", post id = " . $prime->getPostId());
-                        $this->output->writeln(", time = " . $prime->getPostTime()->format('Y-m-d H:i:s'));
-                        $this->output->write(" dupe type = " . $dupe->getType() . "-" . $dupe->getSubType());
-                        $this->output->write(", id = " . $dupe->getId() . ", post id = " . $dupe->getPostId());
-                        $this->output->writeln(", time = " . $dupe->getPostTime()->format('Y-m-d H:i:s'));
-                        $this->output->writeln("prime text = " . $prime->getPostText());
-                        $this->output->writeln(" dupe text = " . $dupe->getPostText());
-                        $this->output->writeln("prime image = " . $prime->getPostImage());
-                        $this->output->writeln(" dupe image = " . $dupe->getPostImage());
-                        $this->log->info("Deleting...");
-                        $this->em->remove($dupe);
-                        $this->em->flush();
-                        $this->log->info("Done...");
-                    }
-                }
-            }
-
-            $mid  = new \Datetime('now');
-            $diff = $time->diff($mid);
-            $this->log->info("Done with " . $party->getCode() . " in " . $diff->format('%H:%I:%S'));
-        }
-
-        $end  = new \Datetime('now');
-        $diff = $time->diff($end);
-        $this->log->notice("All done in " . $diff->format('H:%I:%S'));
+        $query = $this->em->getConnection()->prepare($sql);
+        $query->execute();
+        $this->log->notice("Done.");
     }
 
 
