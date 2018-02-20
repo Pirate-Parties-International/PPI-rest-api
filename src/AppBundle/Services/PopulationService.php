@@ -9,13 +9,27 @@ class PopulationService
     protected $em;
     protected $log;
     protected $connect;
+    protected $filePath;
 
     public function __construct(Container $container) {
         $this->container = $container;
         $this->em        = $this->container->get('doctrine')->getManager();
         $this->log       = $this->container->get('logger');
         $this->connect   = $this->container->get('ConnectionService');
+        $this->filePath  = $this->getFilePath();
         @set_exception_handler([$this->connect, 'exception_handler']);
+    }
+
+
+    /**
+     * Returns path to local json file where population data is stored
+     * @return string
+     */
+    public function getFilePath() {
+        $appRoot  = $this->container->get('kernel')->getRootDir() . '/..';
+        $filePath = $appRoot . '/etc/population.json';
+
+        return $filePath;
     }
 
 
@@ -25,14 +39,12 @@ class PopulationService
      * @return int
      */
     public function getPopulation($partyCode) {
-        $filePath = $this->getFilePath();
-
-        if (!file_exists($filePath)) {
+        if (!file_exists($this->filePath)) {
             $this->log->warning("Population data missing");
             return null;
         }
 
-        $json  = file_get_contents($filePath);
+        $json  = file_get_contents($this->filePath);
         $array = json_decode($json, true);
 
         if (!isset($array[$partyCode])) {
@@ -71,15 +83,14 @@ class PopulationService
             }
 
             $data = $arr['total_population']['population'];
-            $this->log->debug("     + Population for " . $party->getCode() . " = " . $data);
+            $this->log->debug("     + " . $party->getCode() . ": " . $data);
 
             $temp[$party->getCode()] = $data;
         }
 
         $this->log->info("    + Saving new data to file");
-        $out = json_encode($temp);
-        $filePath = $this->getFilePath();
-        file_put_contents($filePath, $out);
+        $out = json_encode($temp, JSON_PRETTY_PRINT);
+        file_put_contents($this->filePath, $out);
         $this->log->notice("# Done");
     }
 
@@ -126,14 +137,12 @@ class PopulationService
      * @return bool
      */
     public function checkLocalData() {
-        $filePath = $this->getFilePath();
-
-        if (!file_exists($filePath)) {
+        if (!file_exists($this->filePath)) {
             $this->log->notice("- Population data does not exist");
             return false;
         }
 
-        $json  = file_get_contents($filePath);
+        $json  = file_get_contents($this->filePath);
         $array = json_decode($json, true);
 
         $timeLimit = strtotime('-1 month');
@@ -152,19 +161,7 @@ class PopulationService
         }
 
         $this->log->notice("+ Population data is up-to-date");
-        return $filePath;
-    }
-
-
-    /**
-     * Returns path to local json file where population data is stored
-     * @return string
-     */
-    public function getFilePath() {
-        $appRoot  = $this->container->get('kernel')->getRootDir() . '/..';
-        $filePath = $appRoot . '/etc/population.json';
-
-        return $filePath;
+        return true;
     }
 
 }
