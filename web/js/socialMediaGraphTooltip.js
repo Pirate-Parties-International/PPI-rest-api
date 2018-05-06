@@ -8,6 +8,7 @@
         var HalfAyearInMS = 15778463000;
         var everySeventhDate;
         var socialMediaDates = [];
+        var socialMediaDatesNoLimit = []
         //get data through the api
 
 
@@ -37,29 +38,24 @@
             for (var i = statsArrayLength; i > 0; i--){
                 isoDate = Date.parse(socialMediaStatsArray[i]["date"]);
                 //we only want to limit ourselves to every 7th datapoint if we have enough datapoints to begin with
-                if ( socialMediaStatsArray.length > 150) {
-                    if ((isoDate >= (parsedDate - HalfAyearInMS)) && (everySeventhDateCounter === 0)) {
-                        //converts date to iso string
-                        isoDate = new Date(isoDate).toISOString();
-                        //change the date into YYYY-MM-DD format, by only showing the first 10 letters
-                        isoDate = isoDate.substring(0, 10);
-                        socialMediaDates.push(isoDate);
-                    }
-                    everySeventhDateCounter ++;
-                    if (everySeventhDateCounter === 7) {
-                        everySeventhDateCounter = 0;
-                    }
-                } else {
-                    if (isoDate >= (parsedDate - HalfAyearInMS)) {
-                        //converts date to iso string
-                        isoDate = new Date(isoDate).toISOString();
-                        //change the date into YYYY-MM-DD format, by only showing the first 10 letters
-                        isoDate = isoDate.substring(0, 10);
-                        socialMediaDates.push(isoDate);
-                    } 
+                socialMediaDatesNoLimit.push(isoDate);
+                if ((isoDate >= (parsedDate - HalfAyearInMS)) && (everySeventhDateCounter === 0)) {
+                    //converts date to iso string
+                    isoDate = new Date(isoDate).toISOString();
+                    //change the date into YYYY-MM-DD format, by only showing the first 10 letters
+                    isoDate = isoDate.substring(0, 10);
+                    socialMediaDates.push(isoDate);
                 }
+                everySeventhDateCounter ++;
+                if (everySeventhDateCounter === 7) {
+                    everySeventhDateCounter = 0;
+                }           
             }
-            return socialMediaDates
+            if (socialMediaDates.length < 10) {
+            	return socialMediaDatesNoLimit
+            } else {
+            	return socialMediaDates
+            }  
         };
 
         function settingButtonCSS(selectedSocialMediaPlatform) {
