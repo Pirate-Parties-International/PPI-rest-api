@@ -9,10 +9,11 @@
         $scope.address = { //object contains all possible filters for the API
             subType: "T",
             socialPlatform: "",
-            sort: "",
+            sort: "code",
             partyCode: "",
             offset: 0,
-            direction: "desc"
+            direction: "desc",
+            recent: ""
         };
         //sets default checked radio button when the page loads 
         $scope.radioBtn = "all";
@@ -140,32 +141,43 @@
         };*/
 
         //a toggle that sorts entries by reach in descending order
-        $scope.sortByEnagement = function() {
+        $scope.sortBy = function(sortType) {
             resetArray()
-            $("#asc-desc-views").addClass("reach-selected");
-            if ($scope.address.sort !== "likes") {
-                $scope.address.sort = "likes";
-                $scope.address.offset = 0;
-                $scope.direction = "desc"
+            $scope.address.sort = sortType;
+            $scope.loadMore();
+        }
+
+        $scope.sortAscDesc = function () {
+            resetArray()
+            if ($scope.address.direction === "desc") {
+                $scope.address.direction = "asc";
             } else {
-                if ($scope.address.direction === "desc") {
-                    $scope.address.direction = "asc"
-                } else {
-                    $scope.address.direction = "desc"
-                }
+                $scope.address.direction = "desc";
             }
             $scope.loadMore();
-            };
+        }
+        $scope.limitPostDay = function(timeLimit) {
+            if (timeLimit  === $scope.address.recent) {
+                $scope.address.recent = "";
+            } else {
+
+                $scope.address.recent = timeLimit;
+                
+            }
+            resetArray()
+            $scope.loadMore();
+        }
 
         $scope.defaultSort = function() {
                 resetArray()
                 $scope.address = {
                     subType: "T",
                     socialPlatform: "",
-                    sort: "",
+                    sort: "code",
                     partyCode: "",
                     offset: 0,
-                    direction: "desc"
+                    direction: "desc",
+                    recent: ""
                 };
                 $scope.loadMore();
                 $(".up").removeClass("arrow-color")

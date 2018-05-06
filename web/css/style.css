@@ -703,8 +703,11 @@ the rest is for both
 }
 
 /* Filter menu on post and picture pages */
-.engagement-btn-div {
+.sort-btn-div {
     display: flex;
+}
+.filter-row-margin {
+    margin-top: 4px;
 }
 .asc-desc-arrow {
     margin-left: 8px;
