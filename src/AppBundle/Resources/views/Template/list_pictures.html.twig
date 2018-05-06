@@ -44,7 +44,13 @@
                                     <span class="party-dropdown-font valign" ng-attr-id="{{items.code}}">{{items.name.en}}</span>
                                 </li>
                             </ul>
-                        <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortDescViews()" id="asc-desc-views">Engagement</a>
+                        <a class="waves-effect waves-light btn filter-button z-depth-0  sort-white" ng-click="sortByEnagement()" id="asc-desc-views">
+                        <div class="engagement-btn-div">
+                            Engagement
+                            <i ng-if="address.sort === 'likes'" class="material-icons asc-desc-arrow" ng-class="{'asc-desc-hide-arrow': address.direction === 'asc'}">arrow_downward</i>
+                            <i ng-if="address.sort === 'likes'" class="material-icons asc-desc-arrow" ng-class="{'asc-desc-hide-arrow': address.direction === 'desc'}">arrow_upward</i>
+                        </div>
+                        </a>
                      </div>
                 </div>
                 <!-- cards while loading and loading circle-->

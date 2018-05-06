@@ -4,14 +4,15 @@
     app.controller('postController', ['$scope', 'pictureAndPostFactory', function($scope, pictureAndPostFactory) {
         //URL that gets all socialmedia posts that are (primarily) pictures
         $scope.data = []; //stores past and currenty visible data
-        $scope.masterArray = []; //stores al the data
+        $scope.masterArray = []; //stores all the data
         $scope.originalArray = []; // The purpose of this array is to store the original layout of the masterArray
         $scope.address = { //object contains all possible filters for the API
             subType: "T",
             socialPlatform: "",
             sort: "",
             partyCode: "",
-            offset: 0
+            offset: 0,
+            direction: "desc"
         };
         //sets default checked radio button when the page loads 
         $scope.radioBtn = "all";
@@ -23,6 +24,7 @@
             $scope.loading = true;
             $scope.backgroundClass = "loading-background";
             pictureAndPostFactory.partyList().then(function(successResponse) {
+                console.log(successResponse)
                 $scope.partyList = Object.values(successResponse)
                 $scope.partyListObject = successResponse;
                 pictureAndPostFactory.postList($scope.address).then(function(successResponse) {
@@ -138,20 +140,22 @@
         };*/
 
         //a toggle that sorts entries by reach in descending order
-        $scope.sortDescViews = function() {
+        $scope.sortByEnagement = function() {
             resetArray()
-            if ($("#asc-desc-views").hasClass("reach-selected")) {
-                $("#asc-desc-views").removeClass("reach-selected");
-                $scope.address.sort = "";
-                $scope.address.offset = 0;
-                $scope.loadMore();
-            } else {
-                $("#asc-desc-views").addClass("reach-selected");
+            $("#asc-desc-views").addClass("reach-selected");
+            if ($scope.address.sort !== "likes") {
                 $scope.address.sort = "likes";
                 $scope.address.offset = 0;
-                $scope.loadMore();
+                $scope.direction = "desc"
+            } else {
+                if ($scope.address.direction === "desc") {
+                    $scope.address.direction = "asc"
+                } else {
+                    $scope.address.direction = "desc"
+                }
+            }
+            $scope.loadMore();
             };
-        };
 
         $scope.defaultSort = function() {
                 resetArray()
@@ -160,7 +164,8 @@
                     socialPlatform: "",
                     sort: "",
                     partyCode: "",
-                    offset: 0
+                    offset: 0,
+                    direction: "desc"
                 };
                 $scope.loadMore();
                 $(".up").removeClass("arrow-color")

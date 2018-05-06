@@ -11,7 +11,8 @@
             socialPlatform: "",
             sort: "",
             partyCode: "",
-            offset: 0
+            offset: 0,
+            direction: "desc"
         };
 
         //sets default checked radio button when the page loads 
@@ -131,20 +132,24 @@
         };*/
 
         //a toggle that sorts entries by reach in descending order
-        $scope.sortDescViews = function() {
+        $scope.sortByEnagement = function() {
+            console.log($scope.address)
             resetArray()
-            if ($("#asc-desc-views").hasClass("reach-selected")) {
-                $("#asc-desc-views").removeClass("reach-selected");
-                $scope.address.sort = "";
-                $scope.address.offset = 0;
-                $scope.loadMore();
-            } else {
-                $("#asc-desc-views").addClass("reach-selected");
+            $("#asc-desc-views").addClass("reach-selected");
+            if ($scope.address.sort !== "likes") {
                 $scope.address.sort = "likes";
                 $scope.address.offset = 0;
-                $scope.loadMore();
+                $scope.direction = "desc"
+            } else {
+                console.log("WE ARE HERE")
+                if ($scope.address.direction === "desc") {
+                    $scope.address.direction = "asc"
+                } else {
+                    $scope.address.direction = "desc"
+                }
+            }
+            $scope.loadMore();
             };
-        };
 
         $scope.defaultSort = function() {
                 resetArray()
@@ -153,7 +158,8 @@
                     socialPlatform: "",
                     sort: "",
                     partyCode: "",
-                    offset: 0
+                    offset: 0,
+                    direction: "desc"
                 };
                 $scope.loadMore();
                 $(".up").removeClass("arrow-color")

@@ -519,7 +519,6 @@ the rest is for both
     -webkit-transition: opacity 1s ease-out;
 }
 
-
 /*card post */
 .card-post {
     background-size: contain;
@@ -704,8 +703,15 @@ the rest is for both
 }
 
 /* Filter menu on post and picture pages */
-
-
+.engagement-btn-div {
+    display: flex;
+}
+.asc-desc-arrow {
+    margin-left: 8px;
+}
+.asc-desc-hide-arrow {
+    display: none;
+}
 .filter-button {
     background: #29b6f6;
     border-radius: 0px !important;
