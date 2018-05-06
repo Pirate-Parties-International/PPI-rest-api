@@ -2,7 +2,7 @@
     $(function() {
         google.charts.load("current", { packages: ["corechart", "line"] });
         sessionStorage.clear();
-        var partyApiAddress = "/api/v1/history/party/" + partyCode;
+        var partyApiAddress = "http://api.piratetimes.net/api/v1/history/party/" + partyCode;
         var selectedSocialMediaPlatform;
          // roughly half a year in miliseconds, not accountig for leap years;
         var HalfAyearInMS = 15778463000;
@@ -36,19 +36,28 @@
             var isoDate;
             for (var i = statsArrayLength; i > 0; i--){
                 isoDate = Date.parse(socialMediaStatsArray[i]["date"]);
-
-                if ((isoDate >= (parsedDate - HalfAyearInMS)) && (everySeventhDateCounter === 0)) {
-                    //converts date to iso string
-                    isoDate = new Date(isoDate).toISOString();
-                    //change the date into YYYY-MM-DD format, by only showing the first 10 letters
-                    isoDate = isoDate.substring(0, 10);
-                    socialMediaDates.push(isoDate);
+                //we only want to limit ourselves to every 7th datapoint if we have enough datapoints to begin with
+                if ( socialMediaStatsArray.length > 150) {
+                    if ((isoDate >= (parsedDate - HalfAyearInMS)) && (everySeventhDateCounter === 0)) {
+                        //converts date to iso string
+                        isoDate = new Date(isoDate).toISOString();
+                        //change the date into YYYY-MM-DD format, by only showing the first 10 letters
+                        isoDate = isoDate.substring(0, 10);
+                        socialMediaDates.push(isoDate);
+                    }
+                    everySeventhDateCounter ++;
+                    if (everySeventhDateCounter === 7) {
+                        everySeventhDateCounter = 0;
+                    }
+                } else {
+                    if (isoDate >= (parsedDate - HalfAyearInMS)) {
+                        //converts date to iso string
+                        isoDate = new Date(isoDate).toISOString();
+                        //change the date into YYYY-MM-DD format, by only showing the first 10 letters
+                        isoDate = isoDate.substring(0, 10);
+                        socialMediaDates.push(isoDate);
+                    } 
                 }
-                everySeventhDateCounter ++;
-                if (everySeventhDateCounter === 7) {
-                    everySeventhDateCounter = 0;
-                }
-
             }
             return socialMediaDates
         };
@@ -104,7 +113,6 @@
 
         function callGraphCreationFunction(dataset, SocialMediaType, SocialMediaTitle) {
             google.charts.setOnLoadCallback(function() { drawBasic(dataset, SocialMediaType, SocialMediaTitle) });
-            console.log("test")
         };
 
         // calls function that creates graphs data and changes the clicked button so that we know what is selected
