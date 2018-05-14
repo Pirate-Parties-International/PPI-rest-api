@@ -13,7 +13,7 @@ angular.module("app").factory("pictureAndPostFactory", function($http) {
             return promise
         },
         postList: function(x) {
-            var promise = $http.get(address + "social/?_format=json&sub_type=" + x.subType + "&order_by=" + x.sort + "&direction=" + x.direction + "&code=" + x.partyCode + "&type=" + x.socialPlatform + "&offset=" + x.offset + "&recent=" + x.recent)
+            var promise = $http.get(address + "social/?_format=json&sub_type=" + x.subType + "&order_by=" + x.sort + "&direction=" + x.direction + "&code=" + x.partyCode + "&type=" + x.socialPlatform + "&offset=" + x.offset + "&recent=" + x.recent + "&fields=" + x.fields)
                 .then(function(response) {
                     //First function handles success
                     return response.data;
