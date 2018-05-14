@@ -2,12 +2,13 @@
     $(function() {
         google.charts.load("current", { packages: ["corechart", "line"] });
         sessionStorage.clear();
-        var partyApiAddress = "/api/v1/history/party/" + partyCode;
+        var partyApiAddress = "api/v1/history/party/" + partyCode;
         var selectedSocialMediaPlatform;
          // roughly half a year in miliseconds, not accountig for leap years;
         var HalfAyearInMS = 15778463000;
         var everySeventhDate;
         var socialMediaDates = [];
+        var socialMediaDatesNoLimit = []
         //get data through the api
 
 
@@ -36,7 +37,8 @@
             var isoDate;
             for (var i = statsArrayLength; i > 0; i--){
                 isoDate = Date.parse(socialMediaStatsArray[i]["date"]);
-
+                //we only want to limit ourselves to every 7th datapoint if we have enough datapoints to begin with
+                socialMediaDatesNoLimit.push(isoDate);
                 if ((isoDate >= (parsedDate - HalfAyearInMS)) && (everySeventhDateCounter === 0)) {
                     //converts date to iso string
                     isoDate = new Date(isoDate).toISOString();
@@ -47,10 +49,13 @@
                 everySeventhDateCounter ++;
                 if (everySeventhDateCounter === 7) {
                     everySeventhDateCounter = 0;
-                }
-
+                }           
             }
-            return socialMediaDates
+            if (socialMediaDates.length < 10) {
+            	return socialMediaDatesNoLimit
+            } else {
+            	return socialMediaDates
+            }  
         };
 
         function settingButtonCSS(selectedSocialMediaPlatform) {
@@ -104,7 +109,6 @@
 
         function callGraphCreationFunction(dataset, SocialMediaType, SocialMediaTitle) {
             google.charts.setOnLoadCallback(function() { drawBasic(dataset, SocialMediaType, SocialMediaTitle) });
-            console.log("test")
         };
 
         // calls function that creates graphs data and changes the clicked button so that we know what is selected

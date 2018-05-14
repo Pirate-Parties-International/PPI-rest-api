@@ -9,16 +9,18 @@
         $scope.address = { //object contains all possible filters for the API
             subType: "I",
             socialPlatform: "",
-            sort: "",
+            sort: "code",
             partyCode: "",
-            offset: 0
+            offset: 0,
+            direction: "desc",
+            recent: ""
         };
 
         //sets default checked radio button when the page loads 
         $scope.radioBtn = "all";
 
 
-        //this functions loads more data for the infinite scroll
+        //this functorderions loads more data for the infinite scroll
         // it constantily updates the array from which ng-repeat gets its data
         $scope.loadData = function() {
             //Function that gets the data 
@@ -131,29 +133,42 @@
         };*/
 
         //a toggle that sorts entries by reach in descending order
-        $scope.sortDescViews = function() {
+        $scope.sortBy = function(sortType) {
             resetArray()
-            if ($("#asc-desc-views").hasClass("reach-selected")) {
-                $("#asc-desc-views").removeClass("reach-selected");
-                $scope.address.sort = "";
-                $scope.address.offset = 0;
-                $scope.loadMore();
-            } else {
-                $("#asc-desc-views").addClass("reach-selected");
-                $scope.address.sort = "likes";
-                $scope.address.offset = 0;
-                $scope.loadMore();
-            };
-        };
+            $scope.address.sort = sortType;
+            $scope.loadMore();
+        }
 
+        $scope.sortAscDesc = function () {
+            resetArray()
+            if ($scope.address.direction === "desc") {
+                $scope.address.direction = "asc";
+            } else {
+                $scope.address.direction = "desc";
+            }
+            $scope.loadMore();
+        }
+        $scope.limitPostDay = function(timeLimit) {
+            if (timeLimit  === $scope.address.recent) {
+                $scope.address.recent = "";
+            } else {
+
+                $scope.address.recent = timeLimit;
+                
+            }
+            resetArray()
+            $scope.loadMore();
+        }
         $scope.defaultSort = function() {
                 resetArray()
                 $scope.address = {
                     subType: "I",
                     socialPlatform: "",
-                    sort: "",
+                    sort: "code",
                     partyCode: "",
-                    offset: 0
+                    offset: 0,
+                    direction: "desc",
+                    recent: ""
                 };
                 $scope.loadMore();
                 $(".up").removeClass("arrow-color")
