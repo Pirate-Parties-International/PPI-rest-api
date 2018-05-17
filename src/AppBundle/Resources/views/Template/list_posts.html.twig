@@ -10,36 +10,39 @@
 
 
 {% block content %}
-{% verbatim %} 
+{% verbatim %}
     <div class="container" ng-app="app" ng-controller="postController">
         <!--loading screen without loading circle -->
         <div id="loading-background" ng-class="backgroundClass" ng-if="loading">
         </div>
         <div class="section valign-wrapper">
             <div class="singlePage" infinite-scroll="loadMore()" infinite-scroll-distance="1">
-                <div class="row">
-                    <div class="col s12 center">
+                 <div class="row center">
+                    <div class="col s12">
+                        <!-- Filter reset button -->
                         <a class="waves-effect waves-light btn filter-button z-depth-0" ng-click="defaultSort()">Reset filters</a>
                         <!-- Platform selection dropdown -->
                         <a class="waves-effect waves-light dropdown-button btn filter-button platform-button z-depth-0 sort-white asc" data-activates="platform-selection" data-beloworigin="true">{{selectedPlatform()}}</a>
                             <ul id="platform-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-filter">
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="platformBtn = 'all'; filterPlatform(platformBtn)"><input class="with-gap platform-button" name="platform" type="radio" id="all-platforms" value="all" ng-model="platformBtn" ng-click="filterPlatform(platformBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="platformBtn = 'all'; filterPlatform(platformBtn)">
+                                    <input class="with-gap platform-button" name="platform" type="radio" id="all-platforms" value="all" ng-model="platformBtn" ng-click="filterPlatform(platformBtn)">
                                     <label for="all-platforms" class="filter-dropdown-font radioButtonLabel">All</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="platformBtn = 'fb'; filterPlatform(platformBtn)"><input class="with-gap" name="platform" type="radio" id="FB-platform" value="fb" ng-model='platformBtn' ng-click="filterPlatform(platformBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="platformBtn = 'fb'; filterPlatform(platformBtn)">
+                                    <input class="with-gap" name="platform" type="radio" id="FB-platform" value="fb" ng-model='platformBtn' ng-click="filterPlatform(platformBtn)">
                                     <label for="FB-platform" class="filter-dropdown-font radioButtonLabel">Facebook</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="platformBtn = 'tw'; filterPlatform(platformBtn)"><input class="with-gap" name="platform" type="radio" id="TW-platform" value="tw" ng-model='platformBtn' ng-click="filterPlatform(platformBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="platformBtn = 'tw'; filterPlatform(platformBtn)">
+                                    <input class="with-gap" name="platform" type="radio" id="TW-platform" value="tw" ng-model='platformBtn' ng-click="filterPlatform(platformBtn)">
                                     <label for="TW-platform" class="filter-dropdown-font radioButtonLabel">Twitter</label></li>
-                                <!-- <li class="filter-menu-items dropdown-menu-social-filter" ng-click="platformBtn = 'G+'"><input class="with-gap" name="platform" type="radio" id="G+-platform" value="G+ "ng-model="platformBtn" ng-click="filterPlatform(platformBtn)">
-                                    <label for="G+-platform" class="dropdown-font-text radioButtonLabel">Google+</label></li> -->
+                                <!-- <li class="filter-menu-items dropdown-menu-social-filter" ng-click="platformBtn = 'G+'">
+                                    <input class="with-gap" name="platform" type="radio" id="G+-platform" value="G+ "ng-model="platformBtn" ng-click="filterPlatform(platformBtn)">
+                                    <label for="G+-platform" class="dropdown-font-text radioButtonLabel">Google+</label></li>
+                                -->
                             </ul>
-                            <!-- Party selection dropdown -->
-                            <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" ng-click="emptyInput()"data-activates="party-selection" data-beloworigin="true" id="party-selection-button"> All <span class="hide-bellow-1250">Parties</span></a>
+                        <!-- Party selection dropdown -->
+                        <a class="waves-effect waves-light dropdown-button btn filter-button z-depth-0 sort-white asc" ng-click="emptyInput()"data-activates="party-selection" data-beloworigin="true" id="party-selection-button">Party<span class="hide-bellow-1250"> Selection</span></a>
                             <ul id="party-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-menu-parties">
-                                <!-- <li class="filter-menu-items party-dropdown" ng-click="filterParty(all)"><input class="with-gap" type="radio" id="all-parties" value="all" ng-click="filterParty(all)">
-                                    <label for="all-parties" class="party-dropdown-font">All parties</label>
-                                </li>-->
                                 <!--both dropdown-text-input-li and dropdown-text-input are using !important" -->
                                 <li class="dropdown-text-input-li">
                                     <input placeholder="SEARCH" class="dropdown-text-input" name="party" type="text" ng-model="partySelection" id="party-selection-search" autofocus>
@@ -49,26 +52,32 @@
                                 </li>
                             </ul>
                     </div>
-                    <div class="col s12 center filter-row-margin">
+                    <div class="col s12 filter-row-margin">
                         <span>TIME LIMIT:</span>
                         <a class="waves-effect waves-light dropdown-button btn filter-button recent-button z-depth-0 sort-white asc" data-activates="recent-selection">{{selectedRecent()}}</a>
                             <ul id="recent-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-filter">
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = 'none'; filterRecent(recentBtn)"><input class="with-gap recent-button" name="recent" type="radio" id="all-recent" value="none" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = 'none'; filterRecent(recentBtn)">
+                                    <input class="with-gap recent-button" name="recent" type="radio" id="all-recent" value="none" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
                                     <label for="all-recent" class="filter-dropdown-font radioButtonLabel">No limit</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '1 day'; filterRecent(recentBtn)"><input class="with-gap" name="recent" type="radio" id="1 day" value="1 day" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '1 day'; filterRecent(recentBtn)">
+                                    <input class="with-gap" name="recent" type="radio" id="1 day" value="1 day" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
                                     <label for="1 day" class="filter-dropdown-font radioButtonLabel">1 day</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '1 week'; filterRecent(recentBtn)"><input class="with-gap" name="recent" type="radio" id="1 week" value="1 week" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '1 week'; filterRecent(recentBtn)">
+                                    <input class="with-gap" name="recent" type="radio" id="1 week" value="1 week" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
                                     <label for="1 week" class="filter-dropdown-font radioButtonLabel">1 week</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '1 month'; filterRecent(recentBtn)"><input class="with-gap" name="recent" type="radio" id="1 month" value="1 month" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '1 month'; filterRecent(recentBtn)">
+                                    <input class="with-gap" name="recent" type="radio" id="1 month" value="1 month" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
                                     <label for="1 month" class="filter-dropdown-font radioButtonLabel">1 month</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '6 months'; filterRecent(recentBtn)"><input class="with-gap" name="recent" type="radio" id="6 months" value="6 months" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '6 months'; filterRecent(recentBtn)">
+                                    <input class="with-gap" name="recent" type="radio" id="6 months" value="6 months" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
                                     <label for="6 months" class="filter-dropdown-font radioButtonLabel">6 months</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '1 year'; filterRecent(recentBtn)"><input class="with-gap" name="recent" type="radio" id="1 year" value="1 year" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="recentBtn = '1 year'; filterRecent(recentBtn)">
+                                    <input class="with-gap" name="recent" type="radio" id="1 year" value="1 year" ng-model="recentBtn" ng-click="filterRecent(recentBtn)">
                                     <label for="1 year" class="filter-dropdown-font radioButtonLabel">1 year</label>
                                 </li>
                             </ul>
@@ -76,22 +85,28 @@
                         <span>&nbsp;SORTED BY:</span>
                         <a class="waves-effect waves-light dropdown-button btn filter-button sort-button z-depth-0 sort-white asc" data-activates="sort-selection">{{selectedSort()}}</a>
                             <ul id="sort-selection" class="dropdown-content arrow-color z-depth-0 filter-menu dropdown-filter">
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'date-desc'; filterSort(sortBtn)"><input class="with-gap sort-button" name="sort" type="radio" id="date-desc" value="date-desc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'date-desc'; filterSort(sortBtn)">
+                                    <input class="with-gap sort-button" name="sort" type="radio" id="date-desc" value="date-desc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
                                     <label for="date-desc" class="filter-dropdown-font radioButtonLabel">Most recent</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'date-asc'; filterSort(sortBtn)"><input class="with-gap" name="sort" type="radio" id="date-asc" value="date-asc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'date-asc'; filterSort(sortBtn)">
+                                    <input class="with-gap" name="sort" type="radio" id="date-asc" value="date-asc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
                                     <label for="date-asc" class="filter-dropdown-font radioButtonLabel">Least recent</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'likes-desc'; filterSort(sortBtn)"><input class="with-gap" name="sort" type="radio" id="likes-desc" value="likes-desc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'likes-desc'; filterSort(sortBtn)">
+                                    <input class="with-gap" name="sort" type="radio" id="likes-desc" value="likes-desc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
                                     <label for="likes-desc" class="filter-dropdown-font radioButtonLabel">Highest engagement</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'likes-asc'; filterSort(sortBtn)"><input class="with-gap" name="sort" type="radio" id="likes-asc" value="likes-asc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'likes-asc'; filterSort(sortBtn)">
+                                    <input class="with-gap" name="sort" type="radio" id="likes-asc" value="likes-asc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
                                     <label for="likes-asc" class="filter-dropdown-font radioButtonLabel">Lowest engagement</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'code-asc'; filterSort(sortBtn)"><input class="with-gap" name="sort" type="radio" id="code-asc" value="code-asc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'code-asc'; filterSort(sortBtn)">
+                                    <input class="with-gap" name="sort" type="radio" id="code-asc" value="code-asc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
                                     <label for="code-asc" class="filter-dropdown-font radioButtonLabel">Party name (A-Z)</label>
                                 </li>
-                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'code-desc'; filterSort(sortBtn)"><input class="with-gap" name="sort" type="radio" id="code-desc" value="code-desc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
+                                <li class="filter-menu-items dropdown-menu-social-filter" ng-click="sortBtn = 'code-desc'; filterSort(sortBtn)">
+                                    <input class="with-gap" name="sort" type="radio" id="code-desc" value="code-desc" ng-model="sortBtn" ng-click="filterSort(sortBtn)">
                                     <label for="code-desc" class="filter-dropdown-font radioButtonLabel">Party name (Z-A)</label>
                                 </li>
                             <ul>
@@ -121,7 +136,7 @@
                                 </span>
                             </div>
                             <div class="card-content right-align card-content-additions">
-                                <p class="card-text"><span class="emphasis">unknown</span> people <i class="material-icons really-tiny">info_outline</i><p>
+                                <p class="card-text"><span class="emphasis">unknown</span> likes <i class="material-icons really-tiny">info_outline</i><p>
                             </div>
                         </div>
                     </div>
@@ -148,8 +163,8 @@
                             <div class="card-content card-content-additions card-post-bottom">
                                 <span class="card-post-smaller">{{items.post_time | date }}</span>
                                 <span class="card-text card-picture-engagement-position">
-                                    <span class="emphasis-posts">{{items.post_likes}}</span> <span ng-show="items.post_likes!=1">people</span>
-                                    <span ng-show="items.post_likes==1">person</span>
+                                    <span class="emphasis-posts">{{items.post_likes}}</span> <span ng-show="items.post_likes!=1">likes</span>
+                                    <span ng-show="items.post_likes==1">like</span>
                                     <span class="tooltip"><i class="material-icons really-tiny tooltip">info_outline</i>
                                     <span class="tooltiptext">Social engagement score</span></span>
                                 <span>

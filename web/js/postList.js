@@ -13,14 +13,15 @@
             partyCode: "",
             offset: 0,
             direction: "desc",
-            recent: "",
-            fields: "time,text,likes"
+            recent: ""
         };
+
         //sets default checked radio button when the page loads
         $scope.platformBtn = "all";
         $scope.recentBtn   = "none";
         $scope.sortBtn     = "Most recent";
-        //this functions loads more data for the infinite scroll
+
+        //this function loads more data for the infinite scroll
         // it constantily updates the array from which ng-repeat gets its data
         $scope.loadData = function() {
             //Function that gets both the post data and list of parties
@@ -87,7 +88,7 @@
                     currentValue["post_text"] = "Error, no text retrieved, go look at the original post"
                 }
             };
-        }
+        };
 
         //determines if post if from FB or TW and creates an URL
         $scope.getUrl = function(data) {
@@ -178,33 +179,33 @@
         };*/
 
         //a toggle that sorts entries by reach in descending order
-        // $scope.sortBy = function(sortType) {
-        //     resetArray()
-        //     $scope.address.sort = sortType;
-        //     $scope.loadMore();
-        // }
+        /*$scope.sortBy = function(sortType) {
+            resetArray()
+            $scope.address.sort = sortType;
+            $scope.loadMore();
+        }
 
-        // $scope.sortAscDesc = function () {
-        //     resetArray()
-        //     if ($scope.address.direction === "desc") {
-        //         $scope.address.direction = "asc";
-        //     } else {
-        //         $scope.address.direction = "desc";
-        //     }
-        //     $scope.loadMore();
-        // }
+        $scope.sortAscDesc = function () {
+            resetArray()
+            if ($scope.address.direction === "desc") {
+                $scope.address.direction = "asc";
+            } else {
+                $scope.address.direction = "desc";
+            }
+            $scope.loadMore();
+        }
 
-        // $scope.limitPostDay = function(timeLimit) {
-        //     if (timeLimit  === $scope.address.recent) {
-        //         $scope.address.recent = "";
-        //     } else {
+        $scope.limitPostDay = function(timeLimit) {
+            if (timeLimit  === $scope.address.recent) {
+                $scope.address.recent = "";
+            } else {
 
-        //         $scope.address.recent = timeLimit;
+                $scope.address.recent = timeLimit;
                 
-        //     }
-        //     resetArray()
-        //     $scope.loadMore();
-        // }
+            }
+            resetArray()
+            $scope.loadMore();
+        }*/
 
         $scope.defaultSort = function() {
             resetArray()
@@ -215,8 +216,7 @@
                 partyCode: "",
                 offset: 0,
                 direction: "desc",
-                recent: "",
-                fields: "time,text,likes"
+                recent: ""
             };
             $scope.loadMore();
             $(".up").removeClass("arrow-color")
@@ -287,7 +287,7 @@
                 $("#asc-desc-views").removeClass("desc")
                 $("#asc-desc-views").addClass("asc")
                 $scope.sortAscViews()       
-            }*/
+            }
         //same reason as above
         /* else {
                 $("#asc-desc-views").addClass("toggled")
