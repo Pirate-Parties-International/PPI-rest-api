@@ -9,16 +9,17 @@
         $scope.address = { //object contains all possible filters for the API
             subType: "I",
             socialPlatform: "",
-            sort: "code",
+            sort: "time",
             partyCode: "",
             offset: 0,
             direction: "desc",
             recent: ""
         };
 
-        //sets default checked radio button when the page loads 
-        $scope.radioBtn = "all";
-
+        //sets default checked radio buttons when the page loads
+        $scope.platformBtn = "all";
+        $scope.recentBtn   = "none";
+        $scope.sortBtn     = "date-desc";
 
         //this functorderions loads more data for the infinite scroll
         // it constantily updates the array from which ng-repeat gets its data
@@ -27,20 +28,26 @@
             //it transforms the object into an array and runs
             $scope.loading = true;
             $scope.backgroundClass = "loading-background";
-            pictureAndPostFactory.postList($scope.address).then(function(successResponse) {
-                if (successResponse == undefined) {
-                    console.log("test")
-                    $scope.noData = true;
+            pictureAndPostFactory.partyList().then(function(successResponse) {
+                console.log(successResponse)
+                $scope.partyList = Object.values(successResponse)
+                $scope.partyListObject = successResponse;
+                pictureAndPostFactory.postList($scope.address).then(function(successResponse) {
+                    if (successResponse == undefined) {
+                        console.log("test")
+                        $scope.noData = true;
+                        $scope.loading = false;
+                        return
+                    };
+                    $scope.masterArray = $scope.originalArray.concat(successResponse);
+                    $scope.originalArray = $scope.masterArray.slice();
+                    $scope.loadMore();
+                    $scope.backgroundClass = "";
                     $scope.loading = false;
-                    return
-                };
-                $scope.masterArray = $scope.originalArray.concat(successResponse);
-                $scope.originalArray = $scope.masterArray.slice();
-                $scope.loadMore();
-                $scope.backgroundClass = "";
-                $scope.loading = false;
+                });
             });
         };
+
         $scope.loadMore = function() {
             infiniteArray()
             if (($scope.data.length / 100) == 0) {
@@ -57,6 +64,7 @@
                 $scope.loadData();
             };
         };
+
         //this function slowly serves data from the masterArray
         function infiniteArray() {
             var last = [];
@@ -76,6 +84,7 @@
                 }
             };
         }
+
         //determines if post if from FB or TW and creates an URL
         $scope.getUrl = function(data) {
             var url = ""
@@ -90,7 +99,7 @@
         //function changes the text in the Platform selection button, based on wahat you've selected
         $scope.selectedPlatform = function() {
             var text = "Platform"
-            switch ($scope.radioBtn) {
+            switch ($scope.platformBtn) {
                 case "all":
                     text = "Platform"
                     break;
@@ -104,6 +113,36 @@
             return text
         };
 
+        //function changes the text in the Recent selection button, based on what was selected
+        $scope.selectedRecent = function() {
+            return $scope.recentBtn
+        };
+
+        //function changes the text in the Sort selection button, based on what was selected
+        $scope.selectedSort = function() {
+            var sortText = "Most recent"
+            switch ($scope.sortBtn) {
+                case "likes-asc":
+                    sortText = "Lowest engagement"
+                    break;
+                case "likes-desc":
+                    sortText = "Highest engagement"
+                    break;
+                case "date-asc":
+                    sortText = "Least recent"
+                    break;
+                case "date-desc":
+                    sortText = "Most recent"
+                    break;
+                case "code-asc":
+                    sortText = "Party name (A-Z)"
+                    break;
+                case "code-desc":
+                    sortText = "Party name (Z-A)"
+                    break;
+            };
+            return sortText
+        };
 
         //This function is called when filtering, so that new data is added into an empty array
         function resetArray() {
@@ -113,10 +152,9 @@
         };
 
         //using a factory gets a list of all pirate parties using $http.get and it transforms the object into array of objects
-
-        pictureAndPostFactory.partyList().then(function(successResponse) {
+        /*pictureAndPostFactory.partyList().then(function(successResponse) {
             $scope.partyList = Object.values(successResponse)
-        });
+        });*/
 
         $scope.emptyInput = function() {
             $scope.partySelection = "";
@@ -133,7 +171,7 @@
         };*/
 
         //a toggle that sorts entries by reach in descending order
-        $scope.sortBy = function(sortType) {
+        /*$scope.sortBy = function(sortType) {
             resetArray()
             $scope.address.sort = sortType;
             $scope.loadMore();
@@ -148,6 +186,7 @@
             }
             $scope.loadMore();
         }
+
         $scope.limitPostDay = function(timeLimit) {
             if (timeLimit  === $scope.address.recent) {
                 $scope.address.recent = "";
@@ -158,30 +197,56 @@
             }
             resetArray()
             $scope.loadMore();
-        }
+        }*/
+
         $scope.defaultSort = function() {
-                resetArray()
-                $scope.address = {
-                    subType: "I",
-                    socialPlatform: "",
-                    sort: "code",
-                    partyCode: "",
-                    offset: 0,
-                    direction: "desc",
-                    recent: ""
-                };
-                $scope.loadMore();
-                $(".up").removeClass("arrow-color")
-                $(".down").removeClass("arrow-color")
-                $("#asc-desc-views").removeClass("reach-selected");
-            }
-            //function that filters parties
+            resetArray()
+            $scope.address = {
+                subType: "I",
+                socialPlatform: "",
+                sort: "time",
+                partyCode: "",
+                offset: 0,
+                direction: "desc",
+                recent: ""
+            };
+            $scope.loadMore();
+            $(".up").removeClass("arrow-color")
+            $(".down").removeClass("arrow-color")
+            $("#asc-desc-views").removeClass("reach-selected");
+            $scope.platformBtn = "all";
+            $scope.recentBtn   = "none";
+            $scope.sortBtn     = "date-desc";
+        }
+
+        //function that filters parties
         $scope.filterParty = function(code) {
             resetArray()
-            $scope.address.partyCode = code;
+            if (code == "all") {
+                $scope.address.partyCode = "";
+            } else {
+                $scope.address.partyCode = code;
+            }
             $scope.loadMore();
         }
 
+        //function that filters recent posts
+        $scope.filterRecent = function(recent) {
+            resetArray()
+            $scope.address.recent = recent;
+            $scope.loadMore();
+        }
+
+        //function that sorts posts
+        $scope.filterSort = function(sortType) {
+            resetArray()
+            var sortArr = sortType.split("-");
+            $scope.address.sort = sortArr[0];
+            $scope.address.direction = sortArr[1];
+            $scope.loadMore();
+        }
+
+        //function that filters platforms
         $scope.filterPlatform = function(platform) {
             if (platform == "all") {
                 resetArray()
@@ -193,6 +258,7 @@
                 $scope.loadMore();
             };
         };
+
         //clicking enter after searching for party "clicks" on the first party in the list
         $("#party-selection-search").on('keydown', function(e) {
             if (e.keyCode == 13) {

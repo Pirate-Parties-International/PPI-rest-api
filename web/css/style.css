@@ -715,6 +715,7 @@ the rest is for both
 .asc-desc-hide-arrow {
     display: none;
 }
+
 .filter-button {
     background: #29b6f6;
     border-radius: 0px !important;
@@ -731,6 +732,14 @@ the rest is for both
     min-width: 177px;
 }
 
+.recent-button {
+    min-width: 127px;
+}
+
+.sort-button {
+    min-width: 227px;
+}
+
 .filter-menu-items {
     height: 100%;
 }
@@ -739,7 +748,7 @@ the rest is for both
     width: 100%;
 }
 
-.platform-dropdown-font {
+.filter-dropdown-font {
     color: #3f3f3f;
 }
 
@@ -748,7 +757,7 @@ the rest is for both
     font-size: 0.8em !important;
 }
 
-.dropdown-platform {
+.dropdown-filter {
     border-bottom: 1px #e6e6e6 solid;
     border-left: 1px #e6e6e6 solid;
     border-right: 1px #e6e6e6 solid;

@@ -23,7 +23,6 @@ angular.module("app").factory("pictureAndPostFactory", function($http) {
                 });
             return promise
         },
-
     };
     return pictureAndPostFactory;
 });
