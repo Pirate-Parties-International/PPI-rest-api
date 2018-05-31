@@ -131,9 +131,14 @@
                     <div class="col l8 m12 offset-l2 placement-class" ng-repeat="n in [].constructor(20) track by $index">
                          <div class="card">
                             <div class="card-image card-image-img">
+                                <div class="display-inline-block">
+                                    <img ng-src="/img/generic.png" class="card-post-logo circle">
+                                </div>
+<!--
                                 <span class="card-title-bottom card-belt">
-                                    <img class="card-belt-social-img" ng-src="/img/{{items.type}}.png" style="width:29px;height:29px;">
+                                    <img class="card-belt-social-img" ng-src="/img/generic.png" style="width:29px;height:29px;">
                                 </span>
+-->
                             </div>
                             <div class="card-content right-align card-content-additions">
                                 <p class="card-text"><span class="emphasis">unknown</span> likes <i class="material-icons really-tiny">info_outline</i><p>
@@ -161,7 +166,7 @@
                                 </div>
                             </div>
                             <div class="card-content card-content-additions card-post-bottom">
-                                <span class="card-post-smaller">{{items.post_time | date }}</span>
+                                <span class="card-post-smaller">{{items.post_time | date}}</span>
                                 <span class="card-text card-picture-engagement-position">
                                     <span class="emphasis-posts">{{items.post_likes}}</span> <span ng-show="items.post_likes!=1">likes</span>
                                     <span ng-show="items.post_likes==1">like</span>

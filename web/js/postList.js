@@ -16,10 +16,10 @@
             recent: ""
         };
 
-        //sets default checked radio button when the page loads
+        //sets default checked radio buttons when the page loads
         $scope.platformBtn = "all";
         $scope.recentBtn   = "none";
-        $scope.sortBtn     = "Most recent";
+        $scope.sortBtn     = "date-desc";
 
         //this function loads more data for the infinite scroll
         // it constantily updates the array from which ng-repeat gets its data
@@ -224,7 +224,7 @@
             $("#asc-desc-views").removeClass("reach-selected");
             $scope.platformBtn = "all";
             $scope.recentBtn   = "none";
-            $scope.sortBtn     = "Most recent";
+            $scope.sortBtn     = "date-desc";
         }
 
         //function that filters parties
