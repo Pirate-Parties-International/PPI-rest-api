@@ -99,7 +99,7 @@ class ConnectionService
 
 
     /**
-     * Stops sending requests if the app hits Facebook's rate limit (untested)
+     * Stops sending requests if the app hits Facebook's rate limit
      * @param  object $request
      * @return object
      */
@@ -177,9 +177,32 @@ class ConnectionService
 		    return json_decode($data);
 
         } catch (\Exception $e) {
-            $this->log->error($username . " - " . $e->getMessage());
-            return false;
+            if ($e->getMessage() == "Application request limit reached") {
+                $response = $this->catchTwRateLimit($tw, $username, $tweets, $maxId);
+            } else {
+                $this->log->error($username . " - " . $e->getMessage());
+                return false;
+            }
         }
+    }
+
+
+    /**
+     * Backup for if the normal rate limiting stops working
+     * @param  object $tw
+     * @param  string $username
+     * @param  bool   $tweets
+     * @param  int    $maxId
+     */
+    public function catchTwRateLimit($tw, $username, $tweets, $maxId) {
+        $this->log->warning(" - Twitter rate limit reached!");
+        $connected = false;
+
+        $waitUntil = strtotime("+15 minutes");
+        $this->log->notice("       - Resetting rate limit. Please wait until " . date('H:i:s', $waitUntil) . "...");
+        time_sleep_until($waitUntil);
+
+        $this->getTwRequest($tw, $username, $tweets, $maxId);
     }
 
 
@@ -188,6 +211,8 @@ class ConnectionService
      * @param  object $tw
      */
     public function getTwRateLimit($tw) {
+        return;
+
         $data   = null;
         $method = 'GET';
         $url    = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
@@ -197,7 +222,7 @@ class ConnectionService
 	        	->buildOauth($url, $method)
 	        	->performRequest();
 	        $data = json_decode($response, true);
-        } while (!isset($data['resources'])); // make sure we have a response before continuing
+        } while (!isset($data['resources']['application'])); // make sure we have a response before continuing
 
         $limitCheck = $data['resources']['application']['/application/rate_limit_status'];
         // $this->log->debug("       + (" . $limitCheck['remaining'] . " requests remaining, resetting at " . date('H:i:s', $limitCheck['reset']) . ") ");
