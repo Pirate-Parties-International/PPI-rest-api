@@ -191,7 +191,7 @@ class TwitterService
             }
 
             $timeCheck = $twTime->getTimestamp(); // check time of last tweet scraped
-            $this->connect->getTwRateLimit($this->tw);
+            // $this->connect->getTwRateLimit($this->tw);
 
             // make new request to get next page of results
             $tweetData = $this->connect->getTwRequest($this->tw, $this->twUsername, true, $id);
