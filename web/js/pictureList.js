@@ -32,7 +32,7 @@
                 console.log(successResponse)
                 $scope.partyList = Object.values(successResponse)
                 $scope.partyListObject = successResponse;
-                pictureAndPostFactory.pictureList($scope.address).then(function(successResponse) {
+                pictureAndPostFactory.postList($scope.address).then(function(successResponse) {
                     if (successResponse == undefined) {
                         console.log("test")
                         $scope.noData = true;
