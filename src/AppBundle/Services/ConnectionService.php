@@ -66,7 +66,7 @@ class ConnectionService
 
         try {
             $response = $this->fb->getClient()->sendRequest($request);
-            // $this->testFbRateLimit();
+            $this->getFbRateLimit();
 
         } catch(Facebook\Exceptions\FacebookResponseException $e) {
             // When Graph returns an error
@@ -80,11 +80,11 @@ class ConnectionService
 
         } catch(Facebook\Exceptions\FacebookThrottleException $e) {
             // When the app hits the rate limit
-            $response = $this->getFbRateLimit($request);
+            $response = $this->catchFbRateLimit($request);
 
         } catch(\Exception $e) {
-            if ($e->getMessage() == "Application request limit reached") {
-                $response = $this->getFbRateLimit($request);
+            if ($e->getCode() == 4) { // if the app hits the rate limit
+                $response = $this->catchFbRateLimit($request);
             } else {
                 $this->log->error($fbPageId . " - Exception: " . $e->getMessage());
                 return false;
@@ -99,11 +99,36 @@ class ConnectionService
 
 
     /**
+     * Checks the Facebook rate limit status
+     * @param  object $tw
+     */
+    public function getFbRateLimit() {
+        $handler = (array) $this->fb->getClient()->getHttpClientHandler();
+        $json = json_encode($handler);
+        $json = str_replace('\u0000*\u0000', '', $json);
+        $array = json_decode($json, true);
+        $string = $array['rawResponse'];
+
+        $callPos   = strpos($string, "x-app-usage");
+        $subString = substr($string, $callPos+27, 20);
+        $callEnd   = strpos($subString, ',');
+        $callCount = substr($subString, 0, $callEnd);
+        $this->log->debug("         - (" . $callCount . "/100 requests made in the last hour) ");
+
+        if ($callCount > 98) {
+            $waitUntil = strtotime("+10 minutes");
+            $this->log->notice("  - Facebook rate limit reached! Resuming at " . date('H:i:s', $waitUntil) . "...");
+            time_sleep_until($waitUntil);
+        }
+    }
+
+
+    /**
      * Stops sending requests if the app hits Facebook's rate limit
      * @param  object $request
      * @return object
      */
-    public function getFbRateLimit($request = null) {
+    public function catchFbRateLimit($request = null) {
         $connected = false;
 
         $this->log->warning(" - Facebook rate limit reached!");
@@ -114,7 +139,7 @@ class ConnectionService
 
         do {
             try {
-                $waitUntil = strtotime("+20 minutes");
+                $waitUntil = strtotime("+10 minutes");
 
                 $this->log->notice("  - Please wait until " . date('H:i:s', $waitUntil) . "...");
                 time_sleep_until($waitUntil);
@@ -177,28 +202,13 @@ class ConnectionService
 		    return json_decode($data);
 
         } catch (\Exception $e) {
-            $this->log->error($username . " - " . $e->getMessage());
-            return false;
+            if ($e->getCode() == 4) { // if the app hits the rate limit
+                $this->catchTwRateLimit($tw, $username, $tweets, $maxId);
+            } else {
+                $this->log->error($username . " - " . $e->getMessage());
+                return false;
+            }
         }
-    }
-
-
-    /**
-     * Backup for if the normal rate limiting stops working
-     * @param  object $tw
-     * @param  string $username
-     * @param  bool   $tweets
-     * @param  int    $maxId
-     */
-    public function catchTwRateLimit($tw, $username, $tweets, $maxId) {
-        $this->log->warning(" - Twitter rate limit reached!");
-        $connected = false;
-
-        $waitUntil = strtotime("+15 minutes");
-        $this->log->notice("       - Resetting rate limit. Please wait until " . date('H:i:s', $waitUntil) . "...");
-        time_sleep_until($waitUntil);
-
-        $this->getTwRequest($tw, $username, $tweets, $maxId);
     }
 
 
@@ -212,10 +222,10 @@ class ConnectionService
         $url    = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
 
         do { // check rate limit
-	        $response = $tw
-	        	->buildOauth($url, $method)
-	        	->performRequest();
-	        $data = json_decode($response, true);
+            $response = $tw
+                ->buildOauth($url, $method)
+                ->performRequest();
+            $data = json_decode($response, true);
         } while (!isset($data['resources']['application'])); // make sure we have a response before continuing
 
         $limitCheck = $data['resources']['application']['/application/rate_limit_status'];
@@ -225,6 +235,24 @@ class ConnectionService
             $this->log->notice("  - Twitter rate limit reached! Resuming at " . date('H:i:s', $limitCheck['reset']) . "...");
             time_sleep_until($limitCheck['reset']);
         }
+    }
+
+
+    /**
+     * Stops sending requests if the app hits Twitter's rate limit
+     * @param  object $tw
+     * @param  string $username
+     * @param  bool   $tweets
+     * @param  int    $maxId
+     */
+    public function catchTwRateLimit($tw, $username, $tweets, $maxId) {
+        $this->log->warning(" - Twitter rate limit reached!");
+
+        $waitUntil = strtotime("+15 minutes");
+        $this->log->notice("       - Resetting rate limit. Please wait until " . date('H:i:s', $waitUntil) . "...");
+        time_sleep_until($waitUntil);
+
+        $this->getTwRequest($tw, $username, $tweets, $maxId);
     }
 
 
