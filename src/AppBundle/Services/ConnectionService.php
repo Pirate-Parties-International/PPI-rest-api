@@ -177,12 +177,8 @@ class ConnectionService
 		    return json_decode($data);
 
         } catch (\Exception $e) {
-            if ($e->getMessage() == "Application request limit reached") {
-                $response = $this->catchTwRateLimit($tw, $username, $tweets, $maxId);
-            } else {
-                $this->log->error($username . " - " . $e->getMessage());
-                return false;
-            }
+            $this->log->error($username . " - " . $e->getMessage());
+            return false;
         }
     }
 
@@ -211,8 +207,6 @@ class ConnectionService
      * @param  object $tw
      */
     public function getTwRateLimit($tw) {
-        return;
-
         $data   = null;
         $method = 'GET';
         $url    = 'https://api.twitter.com/1.1/application/rate_limit_status.json';
@@ -225,7 +219,7 @@ class ConnectionService
         } while (!isset($data['resources']['application'])); // make sure we have a response before continuing
 
         $limitCheck = $data['resources']['application']['/application/rate_limit_status'];
-        // $this->log->debug("       + (" . $limitCheck['remaining'] . " requests remaining, resetting at " . date('H:i:s', $limitCheck['reset']) . ") ");
+        $this->log->debug("       + (" . $limitCheck['remaining'] . " requests remaining, resetting at " . date('H:i:s', $limitCheck['reset']) . ") ");
 
         if ($limitCheck['remaining'] < 2) { // give ourselves a little bit of wiggle room
             $this->log->notice("  - Twitter rate limit reached! Resuming at " . date('H:i:s', $limitCheck['reset']) . "...");
