@@ -27,11 +27,13 @@ class ConnectionService
 
     public function exception_handler($e) {
         $message = $e->getMessage();
+        $code    = $e->getCode();
 
-        if ($message == "Application request limit reached") {
-            $this->getFbRateLimit();
+        if ($code == 4 || $message == "(#4) Application request limit reached" || $message == "Application request limit reached") {
+            $this->catchFbRateLimit();
         } else {
-            $this->log->error($message);
+            $this->log->error($code . ": " . $message);
+            return false;
         }
     }
 
@@ -83,10 +85,8 @@ class ConnectionService
             $response = $this->catchFbRateLimit($request);
 
         } catch(\Exception $e) {
-            if ($e->getCode() == 4) { // if the app hits the rate limit
-                $response = $this->catchFbRateLimit($request);
-            } else {
-                $this->log->error($fbPageId . " - Exception: " . $e->getMessage());
+            $handleError = $this->exception_handler($e);
+            if ($handleError == false) {
                 return false;
             }
         }
@@ -104,54 +104,52 @@ class ConnectionService
      */
     public function getFbRateLimit() {
         $handler = (array) $this->fb->getClient()->getHttpClientHandler();
-        $json = json_encode($handler);
-        $json = str_replace('\u0000*\u0000', '', $json);
-        $array = json_decode($json, true);
-        $string = $array['rawResponse'];
+        $json    = json_encode($handler);
+        $json    = str_replace('\u0000*\u0000', '', $json);
+        $array   = json_decode($json, true);
+        $string  = $array['rawResponse'];
 
         $callPos   = strpos($string, "x-app-usage");
-        $subString = substr($string, $callPos+27, 20);
+        $subString = substr($string, $callPos+27, 5);
         $callEnd   = strpos($subString, ',');
         $callCount = substr($subString, 0, $callEnd);
-        $this->log->debug("         - (" . $callCount . "/100 requests made in the last hour) ");
+
+        if (is_int($callCount / 10) || $callCount > 98) {
+            $this->log->debug("     + (" . $callCount . "/100 requests made in the last hour) ");
+        }
 
         if ($callCount > 98) {
             $waitUntil = strtotime("+10 minutes");
             $this->log->notice("  - Facebook rate limit reached! Resuming at " . date('H:i:s', $waitUntil) . "...");
             time_sleep_until($waitUntil);
+            return false;
         }
+
+        return true;
     }
 
 
     /**
-     * Stops sending requests if the app hits Facebook's rate limit
+     * Stops sending requests if the app hits Facebook's rate limit (if getFbRateLimit fails)
      * @param  object $request
      * @return object
      */
     public function catchFbRateLimit($request = null) {
-        $connected = false;
+        $continue = false;
 
-        $this->log->warning(" - Facebook rate limit reached!");
+        do {
+            try {
+                $continue = $this->getFbRateLimit();
+            } catch(\Exception $e) {
+                $this->log->warning("     - " . $e->getMessage());
+            }
+        } while ($continue == false);
 
         if (is_null($request)) {
             $request = $this->fb->request('GET', $this->fbPageId, ['fields' => 'engagement']);
         }
 
-        do {
-            try {
-                $waitUntil = strtotime("+10 minutes");
-
-                $this->log->notice("  - Please wait until " . date('H:i:s', $waitUntil) . "...");
-                time_sleep_until($waitUntil);
-
-                $response = $this->fb->getClient()->sendRequest($request);
-                $connected = true;
-
-            } catch(\Exception $e) {
-                $this->log->error(" - " . $e->getMessage());
-            }
-        } while ($connected == false);
-
+        $response = $this->fb->getClient()->sendRequest($request);
         return $response;
     }
 
