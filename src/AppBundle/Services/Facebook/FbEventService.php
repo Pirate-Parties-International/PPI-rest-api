@@ -74,6 +74,7 @@ class FbEventService extends FacebookService
 
             $timeCheck = $event->getField('updated_time')->getTimestamp(); // check time of last scraped post
             $pageCount++;
+            $this->connect->getFbRateLimit();
 
         } while ($timeCheck > $timeLimit && $fdEvents = $fb->next($fdEvents));
         // while next page is not null and within our time limit
@@ -179,6 +180,7 @@ class FbEventService extends FacebookService
 
         do {
             $this->log->debug("       + Page " . $pageCount);
+
             foreach ($fdEvents as $key => $event) {
                 if (in_array($event->getField('id'), $temp, true)) {
                     // if event was already counted this session
@@ -187,7 +189,10 @@ class FbEventService extends FacebookService
                 }
                 $temp['events'][] = $event->getField('id');
             }
+
             $pageCount++;
+            $this->connect->getFbRateLimit();
+
         } while ($fdEvents = $fb->next($fdEvents)); // while next page is not null
 
         if ($loopCount > 0) {

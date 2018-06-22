@@ -142,7 +142,6 @@ class FacebookService
         }
 
         $this->log->info("    + Info and stats... ok");
-
         $array['cover'] = $this->getCover($partyCode, $graphNode);
 
         return $array;

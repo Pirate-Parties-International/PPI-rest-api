@@ -87,6 +87,7 @@ class FbPostService extends FacebookService
 
             $timeCheck = $post->getField('created_time')->getTimestamp(); // check time of last scraped post
             $pageCount++;
+            $this->connect->getFbRateLimit();
 
         } while ($timeCheck > $timeLimit && $fdPosts = $fb->next($fdPosts));
         // while next page is not null and within our time limit
@@ -205,6 +206,7 @@ class FbPostService extends FacebookService
             }
 
             $pageCount++;
+            $this->connect->getFbRateLimit();
 
         } while ($timeCheck > $oldCount['time'] && $fdPcount = $fb->next($fdPcount)); // while next page is not null
 
@@ -257,6 +259,7 @@ class FbPostService extends FacebookService
 
         do {
             $this->log->debug("       + Page " . $pageCount);
+
             foreach ($fdVcount as $key => $post) {
                 if (in_array($post->getField('id'), $temp, true)) {
                     // if video was already counted this session
@@ -265,7 +268,10 @@ class FbPostService extends FacebookService
                 }
                 $temp['videos'][] = $post->getField('id');
             }
+
             $pageCount++;
+            $this->connect->getFbRateLimit();
+
         } while ($fdVcount = $fb->next($fdVcount)); // while next page is not null
 
         if ($loopCount > 0) {
