@@ -82,6 +82,7 @@ class FbImageService extends FacebookService
 
                 $timeCheck = $photo->getField('updated_time')->getTimestamp(); // check time of last scraped post
                 $pageCount++;
+                $this->connect->getFbRateLimit();
 
             } while ($timeCheck > $timeLimit && $fdPhotos = $fb->next($fdPhotos));
             // while next page is not null and within our time limit
@@ -186,6 +187,7 @@ class FbImageService extends FacebookService
             $this->log->debug("       + Page " . $pageCount);
             $photoCount[] = $album->getField('count');
             $pageCount++;
+            $this->connect->getFbRateLimit();
         }
 
         if ($loopCount > 0) {
