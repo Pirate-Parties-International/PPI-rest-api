@@ -32,12 +32,23 @@ class ConnectionService
      * @param  string $pageId <optional>
      * @return bool
      */
-    public function exception_handler($e, $pageId = null) {
+    public function exception_handler($e, $pageId = null, $fb = false) {
         $message = $e->getMessage();
         $code    = $e->getCode();
 
-        if ($code == 4 || $message == "(#4) Application request limit reached" || $message == "Application request limit reached") {
-            $this->catchFbRateLimit();
+        if ($fb) {
+            switch ($code) {
+                case 4: // request limit reached
+                    $this->catchFbRateLimit();
+                    break;
+                case 28: // connection timeout
+                case 35: // unknown SSL error
+                    $this->log->warning($pageId . " - " . $code . ": " . $message);
+                    return false;
+                default:
+                    $this->log->error($pageId . " - " . $code . ": " . $message);
+                    return false;
+            }
         } else {
             $this->log->error($pageId . " - " . $code . ": " . $message);
             return false;
@@ -98,7 +109,7 @@ class ConnectionService
                 $this->log->warning($fbPageId . " - Error 100: " . $e->getMessage());
                 return false;
             } else {
-                $handleError = $this->exception_handler($e, $fbPageId);
+                $handleError = $this->exception_handler($e, $fbPageId, true);
                 if ($handleError == false) {
                     return false;
                 }
@@ -126,7 +137,12 @@ class ConnectionService
         $callPos   = strpos($string, "x-app-usage");
         $subString = substr($string, $callPos+27, 5);
         $callEnd   = strpos($subString, ',');
-        $callCount = substr($subString, 0, $callEnd);
+        $callCount = (int) substr($subString, 0, $callEnd);
+
+        if (!is_int($callCount)) {
+            $this->log->warning("FB call count was '" . $callCount . "', not an int.");
+            return false;
+        }
 
         if (is_int($callCount / 5) || $callCount > 95) {
             $this->log->debug("     + (" . $callCount . "/100 requests made)");
