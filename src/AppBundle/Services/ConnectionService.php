@@ -39,6 +39,7 @@ class ConnectionService
         if ($fb) {
             switch ($code) {
                 case 4: // request limit reached
+                    $this->log->error($code . ": " . $message);
                     $this->catchFbRateLimit();
                     break;
                 case 28: // connection timeout
@@ -134,13 +135,14 @@ class ConnectionService
         $array   = json_decode($json, true);
         $string  = $array['rawResponse'];
 
-        $callPos   = strpos($string, "x-app-usage");
-        $subString = substr($string, $callPos+27, 5);
-        $callEnd   = strpos($subString, ',');
-        $callCount = (int) substr($subString, 0, $callEnd);
+        $callPos    = strpos($string, "x-app-usage");
+        $subString  = substr($string, $callPos+27, 5);
+        $callEnd    = strpos($subString, ',');
+        $callString = substr($subString, 0, $callEnd);
+        $callCount  = (int) $callString;
 
-        if (!is_int($callCount)) {
-            $this->log->warning("FB call count was '" . $callCount . "', not an int.");
+        if (!is_int($callCount) || $callCount == 0) {
+            $this->log->warning("   - FB call count was not an int, it was '" . $callString . "'.");
             return false;
         }
 
@@ -150,7 +152,16 @@ class ConnectionService
 
         if ($callCount > 95) {
             $waitUntil = strtotime("+10 minutes");
-            $this->log->notice("  - Facebook rate limit reached! Retrying at " . date('H:i:s', $waitUntil) . "...");
+
+            if ($callCount < 100) {
+                $callStatus = 'approaching';
+            } else if ($callCount == 100) {
+                $callStatus = 'reached';
+            } else {
+                $callStatus = 'exceeded';
+            }
+
+            $this->log->notice("  - Facebook rate limit " . $callStatus . "! Retrying at " . date('H:i:s', $waitUntil) . "...");
             time_sleep_until($waitUntil);
             return false;
         }
@@ -169,12 +180,12 @@ class ConnectionService
         do {
             try {
                 $continue = $this->getFbRateLimit();
-                $this->getFbGraphNode($this->fbPageId, $this->fbFields);
             } catch(\Exception $e) {
                 $this->log->error("     - " . $e->getMessage());
             }
         } while ($continue == false);
 
+        $this->getFbGraphNode($this->fbPageId, $this->fbFields);
     }
 
 
