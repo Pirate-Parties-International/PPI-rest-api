@@ -93,6 +93,9 @@ class ImageService
         }
 
         preg_match('/.+\.(png|jpg)/i', $imgSrc, $matches);
+        if (!isset($matches[1])) {
+            return false;
+        }
         $imgFmt = $matches[1];
 
         try {
