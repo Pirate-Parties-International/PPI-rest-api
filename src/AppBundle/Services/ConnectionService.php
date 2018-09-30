@@ -65,7 +65,7 @@ class ConnectionService
         $settings = [
             'app_id'                => $this->container->getParameter('fb_app_id'),
             'app_secret'            => $this->container->getParameter('fb_app_secret'),
-            'default_graph_version' => 'v2.7',
+            'default_graph_version' => 'v2.8',
         ];
 
         $this->fb = new Facebook($settings);
